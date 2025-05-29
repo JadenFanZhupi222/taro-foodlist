@@ -1,0 +1,67 @@
+@use '../../../use/variables' as *;
+
+.profile-edit {
+  min-height: 100vh;
+  background: #fff;
+  padding: 3.5rem 1.5rem 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.avatar-edit {
+  margin-bottom: 1.5rem;
+}
+
+.avatar-wrapper {
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+.avatar {
+  width: 6rem;
+  height: 6rem;
+  border-radius: 50%;
+  background: $color-bg-main;
+  display: block;
+}
+
+.nickname-input {
+  width: 100%;
+  font-size: $font-size-base;
+  padding: 0.75rem;
+  border: 1px solid $color-border;
+  border-radius: $radius-base;
+  margin-bottom: 1.2rem;
+  box-sizing: border-box;
+  background: #fafbfc;
+  min-height: 2.5rem;
+  line-height: 1.5;
+  resize: none;
+  overflow-y: auto;
+}
+
+.button-primary {
+  width: 100%;
+  max-width: 12rem;
+  min-height: 3rem;
+  background: $color-primary;
+  color: $color-text-light;
+  border: none;
+  border-radius: $radius-btn;
+  font-size: $font-size-base;
+  font-weight: 500;
+  padding: 0;
+  margin-top: 2rem;
+  box-shadow: $shadow-btn;
+  letter-spacing: 0.1em;
+  transition: background 0.2s;
+  align-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  &:active {
+    opacity: 0.85;
+  }
+} 

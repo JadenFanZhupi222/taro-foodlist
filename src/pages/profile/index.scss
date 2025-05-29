@@ -1,0 +1,116 @@
+@use '../../use/variables' as *;
+
+.profile {
+  min-height: 100vh;
+  background-color: $color-bg-main;
+  padding: 1.5rem 0 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.user-card {
+  background-color: $color-bg-card;
+  border-radius: $radius-base;
+  padding: 1.5rem 1.25rem 1.25rem 1.25rem;
+  display: flex;
+  align-items: center;
+  margin: 0 1rem 1.25rem 1rem;
+  box-shadow: $shadow-card;
+
+  .avatar-nickname {
+    display: flex;
+    align-items: center;
+    flex: 1;
+  }
+
+  .avatar {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    margin-right: 1rem;
+    border: 0.1rem solid $color-primary;
+    background: #fff;
+    box-shadow: 0 0.1rem 0.3rem rgba(0,0,0,0.04);
+  }
+
+  .user-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    .nickname {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: $color-text-main;
+      margin-bottom: 0.3rem;
+    }
+  }
+
+  .edit-btn {
+    margin-left: 1rem;
+    font-size: $font-size-small;
+    color: $color-primary;
+    background: #fff0f0;
+    border: none;
+    border-radius: $radius-btn;
+    padding: 0.4rem 1.2rem;
+    box-shadow: 0 0.1rem 0.3rem rgba(255,107,107,0.08);
+    transition: background 0.2s;
+    &:active {
+      background: #ffeaea;
+    }
+  }
+}
+
+.menu-section {
+  background-color: $color-bg-card;
+  border-radius: $radius-base;
+  padding: 1rem 0 0 0;
+  margin: 0 1rem 1.25rem 1rem;
+  box-shadow: $shadow-card;
+
+  .section-title {
+    font-size: 1rem;
+    color: $color-primary;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    margin-left: 1.25rem;
+    letter-spacing: 0.05rem;
+  }
+
+  .menu-list {
+    .menu-item {
+      display: flex;
+      align-items: center;
+      padding: 0 1.25rem;
+      height: 2.5rem;
+      border-bottom: 1px solid $color-border;
+      background: none;
+      transition: background 0.2s;
+      &:last-child {
+        border-bottom: none;
+      }
+      &:active {
+        background: #f8f8f8;
+      }
+      .menu-icon {
+        width: 1.1rem;
+        height: 1.1rem;
+        margin-right: 0.7rem;
+      }
+      .menu-title {
+        flex: 1;
+        font-size: 1rem;
+        color: $color-text-main;
+        font-weight: 500;
+      }
+      .arrow-icon {
+        width: 0.9rem;
+        height: 0.9rem;
+        opacity: 0.4;
+      }
+    }
+  }
+} 

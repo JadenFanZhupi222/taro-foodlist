@@ -1,0 +1,130 @@
+@use '../../use/variables' as *;
+
+.recipe-detail {
+  min-height: 100vh;
+  background-color: $color-bg-main;
+
+  &__image {
+    width: 100%;
+    height: 240px;
+    object-fit: cover;
+  }
+
+  &__content {
+    padding: 20px;
+    margin-top: -20px;
+    background-color: $color-bg-card;
+    border-radius: $radius-base;
+    min-height: calc(100vh - 220px);
+  }
+
+  &__header {
+    margin-bottom: 24px;
+  }
+
+  &__name {
+    font-size: $font-size-title;
+    font-weight: 600;
+    color: $color-text-main;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  &__type {
+    font-size: $font-size-small;
+    color: $color-text-secondary;
+    display: block;
+  }
+
+  &__section {
+    margin-bottom: 24px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  &__section-title {
+    font-size: $font-size-large;
+    font-weight: 500;
+    color: $color-text-main;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  &__ingredients {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  &__ingredient {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: $color-bg-main;
+    border-radius: $radius-base;
+  }
+
+  &__ingredient-name {
+    font-size: $font-size-small;
+    color: $color-text-main;
+  }
+
+  &__ingredient-amount {
+    font-size: $font-size-small;
+    color: $color-text-secondary;
+  }
+
+  &__steps {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__step {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    background-color: $color-bg-main;
+    border-radius: $radius-base;
+  }
+
+  &__step-number {
+    width: 24px;
+    height: 24px;
+    background-color: $color-primary;
+    color: $color-text-light;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: $font-size-small;
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+
+  &__step-content {
+    font-size: $font-size-small;
+    color: $color-text-main;
+    line-height: 1.5;
+    flex: 1;
+  }
+
+  &__edit-btn {
+    margin-top: 32px;
+    background-color: $color-primary;
+    color: $color-text-light;
+    border: none;
+    border-radius: $radius-base;
+    padding: 12px;
+    font-size: $font-size-base;
+    font-weight: 500;
+    width: 100%;
+
+    &:active {
+      opacity: 0.8;
+    }
+  }
+} 

@@ -1,0 +1,74 @@
+@use '../../use/variables' as *;
+
+.date-selector {
+  display: flex;
+  overflow-x: auto;
+  padding: 0.35rem 0.5rem 0.35rem 0.8rem;
+  background-color: $color-bg-card;
+  border-bottom: 1px solid $color-border;
+  -webkit-overflow-scrolling: touch;
+  height: 3.6rem;
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.4rem 0.8rem;
+    margin-right: 0.4rem;
+    border-radius: 0 !important;
+    min-width: 3.6rem;
+    width: 4rem;
+    min-height: 3rem;
+    height: 3rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    font: inherit !important;
+    border-bottom: 1px solid $color-border !important;
+
+    .date-selector__item-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0.4rem 0.8rem;
+      border-radius: 0 !important;
+      height: 100%;
+      width: 100%;
+      transition: all 0.3s;
+    }
+
+    &.active .date-selector__item-inner {
+      background: $color-primary !important;
+      color: $color-text-light !important;
+      border-radius: 0 !important;
+      font-weight: bold !important;
+      box-shadow: 0 2px 8px rgba(255,107,107,0.08) !important;
+      transition: background 0.2s, color 0.2s !important;
+    }
+  }
+
+  &__item .date-selector__day,
+  &__item .date-selector__date {
+    color: inherit;
+  }
+
+  &__item.active .date-selector__day,
+  &__item.active .date-selector__date {
+    color: $color-text-light;
+  }
+
+  &__day {
+    font-size: $font-size-small;
+    margin-bottom: 0.18rem;
+  }
+
+  &__date {
+    font-size: 1.05rem;
+    font-weight: 500;
+  }
+} 

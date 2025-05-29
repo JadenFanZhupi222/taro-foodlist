@@ -1,0 +1,19 @@
+@use '../../use/variables' as *;
+
+.login-btn {
+  font-size: $font-size-small;
+  padding: 8px 16px;
+  line-height: 1.5;
+  border-radius: $radius-btn;
+  border: 1px solid $color-primary;
+  background: none;
+
+  &.login {
+    color: $color-primary;
+  }
+
+  &.logout {
+    color: $color-text-secondary;
+    border-color: $color-text-secondary;
+  }
+} 
