@@ -1,7 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import { callCloud } from '@/utils/cloud'
 import type { Family } from '@/store/family/types'
-import { setFamily, clearFamily, setInviteFamily, clearInviteFamily } from '@/store/family/familySlice'
+import { setFamily, clearFamily, setInviteFamily } from '@/store/family/familySlice'
 import { toast } from '@/utils/toast'
 import Taro from '@tarojs/taro'
 

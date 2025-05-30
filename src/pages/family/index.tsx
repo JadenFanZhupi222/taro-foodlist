@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { View, Text } from '@tarojs/components'
 import { useSelector, useDispatch } from 'react-redux'
-import { RootState } from '@/store'
-import { fetchFamily, createFamily, joinFamily } from '@/thunks/family/thunks'
+import { fetchFamily, createFamily } from '@/thunks/family/thunks'
 import Taro, { useShareAppMessage } from '@tarojs/taro'
 import './index.scss'
 import type { AppDispatch } from '@/store'
@@ -10,15 +9,15 @@ import Loading from '@/components/Loading'
 import MemberCardList from '@/components/family/memberCardList'
 import NoFamilyScreen from '@/components/family/noFamilyScreen'
 import ShareInvitationBtn from '@/components/family/shareInvitationBtn'
-import { toast } from '@/utils/toast'
+import { selectCurrentFamily, selectFamilyLoading, selectCreateFamilyLoading } from '@/store/family/selectors'
+import { selectUser } from '@/store/user/selectors'
 
 export default function Family() {
   const dispatch = useDispatch<AppDispatch>()
-  const family = useSelector((state: RootState) => state.family.currentFamily)
-  const fetchLoading = useSelector((state: RootState) => state.family.fetchLoading)
-  const createLoading = useSelector((state: RootState) => state.family.createLoading)
-  const user = useSelector((state: RootState) => state.user.current)
-  const [familyName, setFamilyName] = useState('')
+  const family = useSelector(selectCurrentFamily)
+  const fetchLoading = useSelector(selectFamilyLoading)
+  const createLoading = useSelector(selectCreateFamilyLoading)
+  const user = useSelector(selectUser)
 
   useEffect(() => {
     dispatch(fetchFamily())
@@ -41,9 +40,7 @@ export default function Family() {
 
   // 创建家庭
   const handleCreate = async (familyName: string) => {
-    console.log('familyName', familyName)
     await dispatch(createFamily(familyName)).unwrap()
-    setFamilyName('')
   }
 
   // 退出家庭（如有云函数可补充）
