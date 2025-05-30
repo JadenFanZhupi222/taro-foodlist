@@ -2,7 +2,10 @@
 @use "sass:color";
 
 .family {
-  padding: 2rem;
+  padding-left: 1.2rem;
+  padding-right: 1.2rem;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
   background: $color-bg-main;
   min-height: 100vh;
 
@@ -23,34 +26,17 @@
   }
 
   .family-members {
+    max-width: 28rem;
+    min-width: 22rem;
+    min-height: 15rem;
+    padding: 1.2rem;
+    margin-left: auto;
+    margin-right: auto;
+    box-sizing: border-box;
     background: #fff;
     border-radius: $radius-lg;
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    padding: 1.2rem 1rem;
     margin-bottom: 2rem;
-    .section-title {
-      font-size: 1.1rem;
-      font-weight: 500;
-      margin-bottom: 1rem;
-      color: $color-primary;
-    }
-    .member-item {
-      display: flex;
-      align-items: center;
-      padding: 0.6rem 0;
-      border-bottom: 1px solid $color-border;
-      &:last-child { border-bottom: none; }
-      .member-name {
-        flex: 1;
-        font-size: 1.1rem;
-        color: $color-text-main;
-      }
-      .member-role {
-        font-size: 0.95rem;
-        color: $color-success;
-        margin-left: 1rem;
-      }
-    }
   }
 
   .family-actions {

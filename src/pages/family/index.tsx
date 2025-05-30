@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { View, Text, Button, Input, Image } from '@tarojs/components'
+import { View, Text } from '@tarojs/components'
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '@/store'
 import { fetchFamily, createFamily, joinFamily } from '@/thunks/family/thunks'
@@ -7,6 +7,8 @@ import Taro from '@tarojs/taro'
 import './index.scss'
 import type { AppDispatch } from '@/store'
 import Loading from '@/components/Loading'
+import MemberCardList from '@/components/family/memberCardList'
+import NoFamilyScreen from '@/components/family/noFamilyScreen'
 
 export default function Family() {
   const dispatch = useDispatch<AppDispatch>()
@@ -14,7 +16,6 @@ export default function Family() {
   const fetchLoading = useSelector((state: RootState) => state.family.fetchLoading)
   const createLoading = useSelector((state: RootState) => state.family.createLoading)
   const user = useSelector((state: RootState) => state.user.current)
-  const [showCreate, setShowCreate] = useState(false)
   const [familyName, setFamilyName] = useState('')
 
   useEffect(() => {
@@ -31,7 +32,6 @@ export default function Family() {
       return
     }
     await dispatch(createFamily(familyName)).unwrap()
-    setShowCreate(false)
     setFamilyName('')
   }
 
@@ -50,55 +50,17 @@ export default function Family() {
         <>
           <View className='family-header'>
             <Text className='family-title'>{family.name}</Text>
-            <Text className='family-owner'>家庭ID: {family.id}</Text>
           </View>
           <View className='family-members'>
-            <Text className='section-title'>成员列表</Text>
-            {family.membersInfo && family.membersInfo.length > 0 ? (
-              family.membersInfo.map((m) => (
-                <View className='member-item' key={m.openId}>
-                  {/* 头像可扩展 */}
-                  {m.avatar && <Image className='member-avatar' src={m.avatar} />}
-                  <Text className='member-name'>{m.openId === user?.openId ? '我' : m.nickname || m.openId}</Text>
-                  <Text className='member-role'>{m.role === 'owner' ? '家庭管理员' : '成员'}</Text>
-                </View>
-              ))
-            ) : (
-              <Text>暂无成员</Text>
-            )}
-          </View>
-          <View className='family-actions'>
-            <Button onClick={handleInvite} type='primary'>邀请成员</Button>
-            {/* <Button onClick={handleLeave} type='warn'>退出家庭</Button> */}
+            <MemberCardList members={(family.membersInfo || []).map(m => ({
+              ...m,
+              role: m.role === 'owner' ? 'owner' : 'member',
+            }))} currentUserId={user?.openId} />
           </View>
         </>
       ) : (
-        <View className='family-empty'>
-          <Text>你还没有家庭，快去创建一个吧！</Text>
-          {showCreate ? (
-            <View className='create-family-box'>
-              <Input
-                value={familyName}
-                onInput={e => setFamilyName(e.detail.value)}
-                placeholder='输入家庭名称'
-                maxlength={12}
-              />
-              <View className='button-row'>
-                <Button
-                  onClick={handleCreate}
-                  loading={createLoading}
-                  type='primary'
-                  size='mini'
-                >创建</Button>
-                <Button onClick={() => setShowCreate(false)} size='mini'>取消</Button>
-              </View>
-              <Loading visible={createLoading} text='创建中...' mask={false} />
-            </View>
-          ) : (
-            <Button onClick={() => setShowCreate(true)} type='primary'>创建家庭</Button>
-          )}
-        </View>
+        <NoFamilyScreen onCreate={handleCreate} loading={createLoading} />
       )}
     </View>
   )
-} 
+}

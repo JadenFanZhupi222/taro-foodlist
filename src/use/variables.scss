@@ -9,6 +9,13 @@ $color-text-light: #fff !default;
 $color-success: #21ba45 !default; // 你原来是158817，建议加个新版绿色
 $color-danger: #ff4d4f !default;
 $color-warning: #faad14 !default;
+$color-primary-rgb: 255, 87, 87;
+$color-member-bg: #fdf6f7; // 主色淡化背景
+$color-member-border: #ffe0e0; // 主色淡化边框
+$color-member-avatar-shadow: #ffe0e0; // 头像外圈
+$color-member-text: #222;
+$color-member-role-member-bg: #f0f0f0;
+$color-member-role-member-text: #888;
 
 // 字体
 $font-family-base: 'PingFang SC', 'Helvetica Neue', Arial, 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif !default;

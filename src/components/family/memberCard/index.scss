@@ -1,0 +1,55 @@
+@use "sass:color";
+@use '../../../use/variables' as *;
+
+.member-row {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr auto;
+  align-items: center;
+  background: $color-member-bg;
+  border-radius: $radius-lg;
+  padding: 0.8rem 1rem;
+  box-shadow: 0 4px 16px rgba($color-primary, 0.05);
+  border: 2px solid color.scale($color-primary, $lightness: 40%);
+  transition: box-shadow 0.2s, border-color 0.2s, background 0.2s;
+  .member-avatar {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: $color-bg-main;
+    object-fit: cover;
+    box-shadow: 0 0 0 3px color.scale($color-primary, $lightness: 40%);
+  }
+  .member-name {
+    font-size: 1.18rem;
+    color: $color-member-text;
+    margin-left: 1rem;
+    font-weight: bold;
+    letter-spacing: 0.02em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+  .member-role {
+    font-size: 0.98rem;
+    padding: 0.1rem 0.7rem;
+    border-radius: 1rem;
+    justify-self: end;
+    &.owner {
+      background: #e6f9e6;
+      color: $color-success;
+    }
+    &.member {
+      background: $color-member-role-member-bg;
+      color: $color-member-role-member-text;
+    }
+  }
+}
+.member-row.me {
+  border-color: $color-primary;
+  box-shadow: 0 4px 16px rgba($color-primary, 0.1);
+  .member-name {
+    color: $color-member-text;
+    font-weight: bold;
+  }
+}

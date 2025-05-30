@@ -1,0 +1,60 @@
+@use '../../../use/variables' as *;
+@use "sass:color";
+
+.family-empty {
+  text-align: center;
+  margin-top: 4rem;
+  color: $color-text-main;
+  .create-family-box {
+    margin-top: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.2rem;
+    justify-content: center;
+    input {
+      flex: 2;
+      font-size: 1.1rem;
+      border-radius: $radius-md;
+      border: 1px solid $color-border;
+      padding: 0.6rem 1rem;
+      margin-bottom: 1.2rem;
+      width: 16rem;
+      max-width: 80vw;
+    }
+    .button-row {
+      display: flex;
+      gap: 1.2rem;
+      justify-content: center;
+      width: 100%;
+    }
+    button {
+      flex: 1;
+      font-size: 1.1rem;
+      border-radius: $radius-md;
+      background: $color-primary;
+      color: $color-bg-card;
+      font-weight: 500;
+      transition: background 0.2s, transform 0.2s;
+      &:active {
+        background: color.scale($color-primary, $lightness: 10%);
+        transform: scale(0.97);
+      }
+      min-width: 6rem;
+    }
+  }
+  button {
+    margin-top: 2rem;
+    font-size: 1.2rem;
+    border-radius: $radius-lg;
+    background: $color-primary;
+    color: $color-bg-card;
+    font-weight: 500;
+    padding: 0.8rem 0;
+    transition: background 0.2s, transform 0.2s;
+    &:active {
+      background: color.scale($color-primary, $lightness: 10%);
+      transform: scale(0.97);
+    }
+  }
+}
