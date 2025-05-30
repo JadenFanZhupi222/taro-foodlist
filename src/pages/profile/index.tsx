@@ -109,7 +109,6 @@ const Profile = () => {
         nickname={displayNickname}
         onEdit={handleEdit}
         user={user}
-        loading={loginLoading}
       >
         <LoginButton className='edit-btn' />
       </UserCard>

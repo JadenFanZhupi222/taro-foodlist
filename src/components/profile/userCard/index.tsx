@@ -8,19 +8,18 @@ interface UserCardProps {
   children?: React.ReactNode
   user?: any
   className?: string
-  loading?: boolean
 }
 
-const UserCard = ({ avatar, nickname, onEdit, children, user, className = '', loading = false }: UserCardProps) => {
+const UserCard = ({ avatar, nickname, onEdit, children, user, className = '' }: UserCardProps) => {
   return (
     <View className={`user-card ${className}`}>
-      <View className='avatar-nickname' onClick={user ? onEdit : undefined} style={{ cursor: user ? 'pointer' : 'default', display: 'flex', alignItems: 'center' }}>
+      <View className='avatar-nickname' onClick={user ? onEdit : undefined} style={{ cursor: user ? 'pointer' : 'default' }}>
         <Image className='avatar' src={avatar} />
         <View className='user-info' style={{ marginLeft: 16 }}>
           <Text className='nickname'>{nickname}</Text>
         </View>
       </View>
-      <View style={{ marginTop: 16, display: 'flex', justifyContent: 'center' }}>
+      <View className='usercard-action'>
         {children}
       </View>
     </View>
