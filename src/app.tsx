@@ -24,7 +24,6 @@ if (typeof AbortController === 'undefined') {
   useEffect(() => {
     // 初始化云开发环境
     if (process.env.TARO_ENV === 'weapp') {
-      console.log('env', process.env.TARO_APP_CLOUD_ENV)
       Taro.cloud.init({
         env: process.env.TARO_APP_CLOUD_ENV,
         traceUser: true

@@ -1,0 +1,19 @@
+component: scf
+name: create-family
+inputs:
+  description: 创建家庭
+  runtime: Nodejs18.15
+  memorySize: 256
+  handler: index.main
+  installDependency: true
+  timeout: 20
+  eip: false
+  publicAccess: true
+  vpcConfig:
+    vpcId: ""
+    subnetId: ""
+  events: []
+  layers: []
+  initTimeout: 65
+  protocolParams: null
+  protocolType: "" 

@@ -1,4 +1,4 @@
-import Taro from '@tarojs/taro'
+import type { User } from '../user/types'
 
 export interface FamilyMember {
   userId: string
@@ -10,12 +10,16 @@ export interface Family {
   id: string
   name: string
   owner: string
-  members: FamilyMember[]
+  members: string[]
+  membersInfo?: User[]
   createdAt: Date
 }
 
 export interface FamilyState {
   currentFamily: Family | null
+  fetchLoading: boolean
+  createLoading: boolean
+  joinLoading: boolean
 }
 
 // Action Types

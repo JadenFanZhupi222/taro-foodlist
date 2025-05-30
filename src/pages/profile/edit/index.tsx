@@ -7,6 +7,8 @@ import Taro from '@tarojs/taro'
 import { RootState } from '@/store'
 import type { AppDispatch } from '@/store'
 import './index.scss'
+import { useAvatarUpload } from '@/hooks/useAvatarUpload'
+import Loading from '@/components/Loading'
 
 const defaultAvatarUrl = 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0'
 
@@ -22,12 +24,9 @@ const ProfileEdit = () => {
   const handleChooseAvatar = async (e: { detail: { avatarUrl: string } }) => {
     const { avatarUrl } = e.detail
     if (avatarUrl) {
-      const uploadRes = await Taro.cloud.uploadFile({
-        cloudPath: `avatar/${user?.openId}/${Date.now()}.jpg`,
-        filePath: avatarUrl
-      })
-      setAvatarFileId(uploadRes.fileID)
-      setAvatar(uploadRes.fileID)
+      setAvatar(avatarUrl)
+      const fileID = await useAvatarUpload(avatarUrl, user!.openId)
+      setAvatarFileId(fileID)
       Taro.showToast({ title: '头像已选择', icon: 'success' })
     }
   }
@@ -35,8 +34,13 @@ const ProfileEdit = () => {
   // 保存资料
   const handleSave = async () => {
     if (!user) return
+    let fileID = avatarFileId
+    if (!avatarFileId) {
+      fileID = await useAvatarUpload(avatar, user!.openId)
+      setAvatarFileId(fileID)
+    }
     try {
-      await dispatch(updateUserInfo({ avatar, avatarFileId, nickname, openId: user.openId })).unwrap()
+      await dispatch(updateUserInfo({ avatar, avatarFileId: fileID, nickname, openId: user.openId })).unwrap()
       Taro.showToast({ title: '保存成功', icon: 'success' })
       Taro.navigateBack()
     } catch (e) {
@@ -47,6 +51,7 @@ const ProfileEdit = () => {
 
   return (
     <View className='profile-edit'>
+      <Loading visible={profileLoading} text='保存中...' mask />
       <View className='avatar-edit'>
         <Button
           className='avatar-wrapper'
@@ -61,13 +66,13 @@ const ProfileEdit = () => {
       <Input
         className='nickname-input'
         type='nickname'
-        placeholder={user?.nickName ? `原昵称：${user.nickName}` : '请输入昵称'}
+        placeholder={user?.nickname ? `原昵称：${user.nickname}` : '请输入昵称'}
         value={nickname}
         onInput={e => setNickname(e.detail.value)}
         style={{ marginTop: 24 }}
         disabled={profileLoading}
       />
-      <Button className='button-primary' onClick={handleSave} loading={profileLoading} disabled={profileLoading}>保存</Button>
+      <Button className='button-primary' onClick={handleSave} disabled={profileLoading}>保存</Button>
     </View>
   )
 }

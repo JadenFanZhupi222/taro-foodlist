@@ -6,6 +6,9 @@ $color-border: #f0f0f0 !default;
 $color-text-main: #333 !default;
 $color-text-secondary: #666 !default;
 $color-text-light: #fff !default;
+$color-success: #21ba45 !default; // 你原来是158817，建议加个新版绿色
+$color-danger: #ff4d4f !default;
+$color-warning: #faad14 !default;
 
 // 字体
 $font-family-base: 'PingFang SC', 'Helvetica Neue', Arial, 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif !default;
@@ -22,4 +25,20 @@ $radius-btn: 1.75rem !default;
 
 // 阴影
 $shadow-card: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1) !default;
-$shadow-btn: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1) !default; 
+$shadow-btn: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1) !default;
+
+// 新增通用变量（如有重复请忽略）
+$radius-lg: 1rem !default;
+$radius-md: 0.5rem !default;
+$radius-sm: 0.25rem !default;
+
+$shadow-sm: 0 1px 4px rgba(0,0,0,0.04) !default;
+$shadow-md: 0 2px 8px rgba(0,0,0,0.08) !default;
+
+$font-size-lg: 1.2rem !default;
+$font-size-sm: 0.95rem !default;
+
+$space-xs: 0.5rem !default;
+$space-sm: 1rem !default;
+$space-md: 2rem !default;
+$space-lg: 3rem !default;

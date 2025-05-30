@@ -1,3 +1,173 @@
+@use '../../use/variables' as *;
+@use "sass:color";
+
 .family {
-  padding: 20px;
+  padding: 2rem;
+  background: $color-bg-main;
+  min-height: 100vh;
+
+  .family-header {
+    margin-bottom: 2rem;
+    text-align: center;
+    .family-title {
+      font-size: 1.6rem;
+      font-weight: bold;
+      color: $color-primary;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+    .family-owner {
+      font-size: 1rem;
+      color: $color-text-secondary;
+    }
+  }
+
+  .family-members {
+    background: #fff;
+    border-radius: $radius-lg;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    padding: 1.2rem 1rem;
+    margin-bottom: 2rem;
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+      color: $color-primary;
+    }
+    .member-item {
+      display: flex;
+      align-items: center;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid $color-border;
+      &:last-child { border-bottom: none; }
+      .member-name {
+        flex: 1;
+        font-size: 1.1rem;
+        color: $color-text-main;
+      }
+      .member-role {
+        font-size: 0.95rem;
+        color: $color-success;
+        margin-left: 1rem;
+      }
+    }
+  }
+
+  .family-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+    button {
+      flex: 1;
+      font-size: 1.2rem;
+      border-radius: $radius-lg;
+      background: $color-primary;
+      color: #fff;
+      font-weight: 500;
+      padding: 0.8rem 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: background 0.2s, transform 0.2s;
+      &:active {
+        background: color.scale($color-primary, $lightness: 10%);
+        transform: scale(0.97);
+      }
+    }
+  }
+
+  .family-empty {
+    text-align: center;
+    margin-top: 4rem;
+    color: $color-text-main;
+    .create-family-box {
+      margin-top: 2.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.2rem;
+      justify-content: center;
+      input {
+        flex: 2;
+        font-size: 1.1rem;
+        border-radius: $radius-md;
+        border: 1px solid $color-border;
+        padding: 0.6rem 1rem;
+        margin-bottom: 1.2rem;
+        width: 16rem;
+        max-width: 80vw;
+      }
+      .button-row {
+        display: flex;
+        gap: 1.2rem;
+        justify-content: center;
+        width: 100%;
+      }
+      button {
+        flex: 1;
+        font-size: 1.1rem;
+        border-radius: $radius-md;
+        background: $color-primary;
+        color: #fff;
+        font-weight: 500;
+        transition: background 0.2s, transform 0.2s;
+        &:active {
+          background: color.scale($color-primary, $lightness: 10%);
+          transform: scale(0.97);
+        }
+        min-width: 6rem;
+      }
+    }
+    button {
+      margin-top: 2rem;
+      font-size: 1.2rem;
+      border-radius: $radius-lg;
+      background: $color-primary;
+      color: #fff;
+      font-weight: 500;
+      padding: 0.8rem 0;
+      transition: background 0.2s, transform 0.2s;
+      &:active {
+        background: color.scale($color-primary, $lightness: 10%);
+        transform: scale(0.97);
+      }
+    }
+  }
+}
+
+// Loading组件样式
+.loading-mask {
+  position: fixed;
+  left: 0; top: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.7);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  .loading-content {
+    background: #fff;
+    border-radius: $radius-lg;
+    padding: 2rem 2.5rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    .loading-spinner {
+      width: 2.5rem;
+      height: 2.5rem;
+      border: 4px solid $color-primary;
+      border-top: 4px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1rem;
+    }
+    .loading-text {
+      font-size: 1.1rem;
+      color: $color-primary;
+    }
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 } 

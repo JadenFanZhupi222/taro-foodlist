@@ -3,18 +3,22 @@ import Taro from '@tarojs/taro'
 import type { Family } from '@/store/family/types'
 import { setFamily, clearFamily } from '@/store/family/familySlice'
 
+// 获取家庭信息
 export const fetchFamily = createAsyncThunk(
   'family/fetchFamily',
   async (_, { dispatch }) => {
     try {
       const { result } = await Taro.cloud.callFunction({
-        name: 'get-family'
+        name: 'get-family-info'
       })
-      const r = result as { success: boolean; data?: Family; message?: string }
-      if (r.success && r.data) {
+      const r = result as { code: number; data?: Family; message?: string }
+      if (r.code === 0 && r.data) {
         dispatch(setFamily(r.data))
       } else {
-        throw new Error(r.message || '获取家庭信息失败')
+        dispatch(clearFamily())
+        if (r.code !== 1) {
+          throw new Error(r.message || '获取家庭信息失败')
+        }
       }
     } catch (error) {
       console.error('获取家庭信息失败:', error)
@@ -24,17 +28,19 @@ export const fetchFamily = createAsyncThunk(
   }
 )
 
+// 创建家庭
 export const createFamily = createAsyncThunk(
   'family/createFamily',
-  async (name: string, { dispatch }) => {
+  async (familyName: string, { dispatch }) => {
     try {
       const { result } = await Taro.cloud.callFunction({
         name: 'create-family',
-        data: { name }
+        data: { familyName }
       })
-      const r = result as { success: boolean; data?: Family; message?: string }
-      if (r.success && r.data) {
-        dispatch(setFamily(r.data))
+      const r = result as { code: number; data?: Family; message?: string }
+      if (r.code === 0 && r.data) {
+        // 创建成功后重新获取家庭信息，以获取完整的成员信息
+        await dispatch(fetchFamily())
         Taro.showToast({ title: '创建成功', icon: 'success' })
       } else {
         throw new Error(r.message || '创建家庭失败')
@@ -47,6 +53,7 @@ export const createFamily = createAsyncThunk(
   }
 )
 
+// 加入家庭
 export const joinFamily = createAsyncThunk(
   'family/joinFamily',
   async (familyId: string, { dispatch }) => {
@@ -55,8 +62,8 @@ export const joinFamily = createAsyncThunk(
         name: 'join-family',
         data: { familyId }
       })
-      const r = result as { success: boolean; data?: Family; message?: string }
-      if (r.success && r.data) {
+      const r = result as { code: number; data?: Family; message?: string }
+      if (r.code === 0 && r.data) {
         dispatch(setFamily(r.data))
         Taro.showToast({ title: '加入成功', icon: 'success' })
       } else {

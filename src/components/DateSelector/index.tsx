@@ -17,7 +17,6 @@ const MIN_DATE = new Date('2025-05-01')
 const MAX_DATE = addDays(startOfDay(new Date()), 7)
 
 const DateSelector: React.FC<DateSelectorProps> = ({ selectedDate, onDateChange }) => {
-  console.log('selectedDate', selectedDate)
   const [dateList, setDateList] = useState<Date[]>([])
   const itemRefs = useRef<(HTMLDivElement | null)[]>([])
   const hasAutoScrolled = useRef(false)

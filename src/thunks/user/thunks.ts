@@ -22,7 +22,6 @@ export const wechatLogin = createAsyncThunk(
     })
     const cloudResult = result as CloudFunctionResult
     if (cloudResult.success && cloudResult.data) {
-      console.log('data in wechatLogin Thunk', cloudResult.data)
       dispatch(setUser(cloudResult.data))
       Taro.showToast({ title: '登录成功', icon: 'success' })
     } else {

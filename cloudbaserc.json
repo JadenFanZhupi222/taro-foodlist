@@ -1,0 +1,70 @@
+{
+    "version": "2.0",
+    "envId": "dev-4gs517j09b896e44",
+    "functionRoot": "cloudfunctions",
+    "functions": [
+    {
+      "name": "get-family-info",
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "timeout": 20,
+      "memorySize": 256,
+      "description": "获取家庭信息"
+    },
+    {
+      "name": "create-family",
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "timeout": 20,
+      "memorySize": 256,
+      "description": "创建家庭"
+    },
+    {
+      "name": "join-family",
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "timeout": 20,
+      "memorySize": 256,
+      "description": "加入家庭"
+    },
+    {
+      "name": "wechat-login",
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "timeout": 20,
+      "memorySize": 256,
+      "description": "微信登录"
+    },
+    {
+      "name": "get-user-info",
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "timeout": 20,
+      "memorySize": 256,
+      "description": "用openId数组获取用户信息"
+    },
+    {
+      "name": "update-user-info",
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "timeout": 20,
+      "memorySize": 256,
+      "description": "更新用户头像和昵称"
+    },
+    {
+      "name": "logout",
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "timeout": 20,
+      "memorySize": 256,
+      "description": "退出登录"
+    }
+  ]
+}

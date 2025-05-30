@@ -6,6 +6,7 @@ export interface User {
   nickname: string;
   avatar: string;
   createTime?: Date;
+  role?: string;
 }
 
 export interface UserState {

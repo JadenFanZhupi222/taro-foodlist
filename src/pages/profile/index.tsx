@@ -1,9 +1,11 @@
 import { View, Image, Text } from '@tarojs/components'
-import { useSelector, useDispatch } from 'react-redux'
-import { selectUser } from '@/store/user/selectors'
+import { useSelector } from 'react-redux'
+import { selectUser, selectLoginLoading } from '@/store/user/selectors'
 import Taro from '@tarojs/taro'
 import LoginButton from '@/components/LoginButton'
 import './index.scss'
+import Loading from '@/components/Loading'
+import UserCard from '@/components/profile/userCard'
 
 // 导入图标
 import historyIcon from '@/assets/icons/history.png'
@@ -18,7 +20,7 @@ const defaultAvatarUrl = 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia0
 
 const Profile = () => {
   const user = useSelector(selectUser)
-  const dispatch = useDispatch()
+  const loginLoading = useSelector(selectLoginLoading)
 
   // 生成"微信用户xxxxx"
   const getDefaultNickname = () => {
@@ -30,7 +32,6 @@ const Profile = () => {
 
   // 判断显示头像和昵称
   const displayAvatar = !user ? defaultAvatarUrl : user.avatar
-  console.log('displayAvatar', displayAvatar)
 
   const displayNickname = !user
     ? '未登录'
@@ -101,19 +102,17 @@ const Profile = () => {
 
   return (
     <View className='profile'>
+      <Loading visible={loginLoading} mask={true} />
       {/* 用户信息卡片 */}
-      <View className='user-card'>
-        <View className='avatar-nickname' onClick={user ? handleEdit : undefined} style={{ cursor: user ? 'pointer' : 'default', display: 'flex', alignItems: 'center' }}>
-          <Image className='avatar' src={displayAvatar} />
-          <View className='user-info' style={{ marginLeft: 16 }}>
-            <Text className='nickname'>{displayNickname}</Text>
-            {user && null}
-          </View>
-        </View>
-        <View style={{ marginTop: 16, display: 'flex', justifyContent: 'center' }}>
-          <LoginButton className='edit-btn' />
-        </View>
-      </View>
+      <UserCard
+        avatar={displayAvatar}
+        nickname={displayNickname}
+        onEdit={handleEdit}
+        user={user}
+        loading={loginLoading}
+      >
+        <LoginButton className='edit-btn' />
+      </UserCard>
 
       {/* 功能列表 */}
       <View className='menu-section'>

@@ -1,11 +1,12 @@
 import { createSlice } from '@reduxjs/toolkit'
 import { initialState as baseInitialState } from './initialState'
-import { updateUserInfo, login, wechatLogin } from '@/thunks/user/thunks'
+import { updateUserInfo, login, wechatLogin, logoutUser } from '@/thunks/user/thunks'
 
 const initialState = {
   ...baseInitialState,
   loginLoading: false,
   profileLoading: false,
+  logoutLoading: false,
 }
 
 const userSlice = createSlice({
@@ -38,6 +39,10 @@ const userSlice = createSlice({
       .addCase(updateUserInfo.pending, (state) => { state.profileLoading = true })
       .addCase(updateUserInfo.fulfilled, (state) => { state.profileLoading = false })
       .addCase(updateUserInfo.rejected, (state) => { state.profileLoading = false })
+      // 退出登录 loading
+      .addCase(logoutUser.pending, (state) => { state.logoutLoading = true })
+      .addCase(logoutUser.fulfilled, (state) => { state.logoutLoading = false })
+      .addCase(logoutUser.rejected, (state) => { state.logoutLoading = false })
   }
 })
 
