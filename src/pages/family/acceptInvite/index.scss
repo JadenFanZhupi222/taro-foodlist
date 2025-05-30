@@ -1,0 +1,61 @@
+@use '../../../use/variables' as *;
+@use 'sass:color';
+
+.accept-invite {
+  min-height: 100vh;
+  background: $color-bg-main;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 2.5rem;
+
+  .family-header {
+    margin-bottom: 2rem;
+    text-align: center;
+    .family-title {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: $color-primary;
+      margin-bottom: 0.8rem;
+      display: block;
+      letter-spacing: 0.08em;
+      text-shadow: 0 2px 8px rgba($color-primary, 0.08);
+    }
+  }
+
+  .family-members {
+    width: 92vw;
+    max-width: 28rem;
+    min-width: 20rem;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 5vh;
+    padding: 0;
+  }
+
+  .accept-btn {
+    background: $color-primary;
+    color: $color-bg-card;
+    border-radius: $radius-lg;
+    font-size: 1.08rem;
+    font-weight: 600;
+    padding: 0.7rem 0;
+    margin: 0 auto 0 auto;
+    width: 70vw;
+    max-width: 14rem;
+    min-width: 7rem;
+    box-shadow: $shadow-btn;
+    letter-spacing: 0.06em;
+    display: block;
+    text-align: center;
+    transition: background 0.2s, box-shadow 0.2s;
+    &:active {
+      background: color.scale($color-primary, $lightness: 10%);
+      box-shadow: $shadow-btn-active;
+    }
+    &:disabled {
+      opacity: 0.6;
+    }
+  }
+} 

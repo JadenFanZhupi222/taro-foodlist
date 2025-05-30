@@ -65,6 +65,15 @@
       "timeout": 20,
       "memorySize": 256,
       "description": "退出登录"
+    },
+    {
+      "name": "get-family-info-by-id",
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "timeout": 20,
+      "memorySize": 256,
+      "description": "通过familyId获取家庭信息"
     }
   ]
 }

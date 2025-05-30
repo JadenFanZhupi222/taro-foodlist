@@ -1,0 +1,9 @@
+{
+  "name": "get-family-info-by-id",
+  "version": "1.0.0",
+  "description": "通过familyId获取家庭信息",
+  "main": "index.js",
+  "dependencies": {
+    "@cloudbase/node-sdk": "^3.7.0"
+  }
+} 

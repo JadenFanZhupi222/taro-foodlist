@@ -1,6 +1,62 @@
+@use '../../../use/variables' as *;
+
 .member-list {
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
   margin-top: 1rem;
+}
+
+.member-list-bg {
+  position: relative;
+  width: 100%;
+  max-width: 28rem;
+  min-width: 20rem;
+  min-height: 40vh;
+  max-height: 50vh;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 1.2rem 1.2rem 0.5rem 1.2rem;
+}
+
+.member-list-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  height: 1.5rem;
+  margin-bottom: 0.2rem;
+}
+
+.member-list-count {
+  font-size: 0.98rem;
+  color: $color-text-secondary;
+  margin-right: 0.3rem;
+}
+
+.member-list-scroll {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+}
+.member-list-scroll::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Webkit */
+}
+
+.member-list-scroll .member-row {
+  margin-bottom: 1.1rem;
+}
+
+.member-list-scroll .member-row:last-child {
+  margin-bottom: 0;
 }

@@ -7,6 +7,7 @@ export default defineAppConfig({
     'pages/profile/index', // 个人中心
     'pages/profile/edit/index', // 个人中心编辑
     'pages/family/index',  // 家庭管理
+    'pages/family/acceptInvite/index', // 接受家庭邀请
   ],
   window: {
     backgroundTextStyle: 'light',

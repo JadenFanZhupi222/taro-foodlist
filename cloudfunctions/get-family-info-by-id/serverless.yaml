@@ -1,0 +1,13 @@
+# 腾讯云 CloudBase 云函数 serverless 配置
+
+component: scf
+name: get-family-info-by-id
+inputs:
+  name: get-family-info-by-id
+  runtime: Nodejs18.15
+  handler: index.main
+  installDependency: true
+  timeout: 20
+  memorySize: 256
+  description: 通过familyId获取家庭信息
+  src: ./ 

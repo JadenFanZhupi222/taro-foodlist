@@ -7,6 +7,7 @@ import './index.scss'
 import { useEffect } from 'react'
 import Taro from '@tarojs/taro'
 import Loading from '@/components/Loading'
+import { toast } from '@/utils/toast'
 
 interface LoginButtonProps {
   className?: string
@@ -42,10 +43,7 @@ const LoginButton = ({ className = '' }: LoginButtonProps) => {
         await dispatch(logoutUser())
       }
     } catch (error) {
-      Taro.showToast({
-        title: '退出失败',
-        icon: 'none'
-      })
+      toast({ title: '退出失败', icon: 'none' })
     }
   }
 

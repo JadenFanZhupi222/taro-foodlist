@@ -1,94 +1,80 @@
 // 云函数入口文件
-const cloud = require('wx-server-sdk')
-
-cloud.init({
-  env: cloud.DYNAMIC_CURRENT_ENV
+const cloud = require('@cloudbase/node-sdk')
+const tcb = cloud.init({
+  env: process.env.TCB_ENV || process.env.SCF_NAMESPACE
 })
+const db = tcb.database()
+const _ = db.command
 
-const db = cloud.database()
+// 获取成员详细信息
+async function getMembersInfo(openIdList) {
+  // 调用 get-user-info 云函数，返回 membersInfo
+  const res = await tcb.callFunction({
+    name: 'get-user-info',
+    data: { openIdList }
+  })
+  if (res.result && res.result.code === 0) {
+    return res.result.data
+  }
+  return []
+}
 
-// 云函数入口函数
+// 主入口
 exports.main = async (event, context) => {
-  const wxContext = cloud.getWXContext()
-  const openId = wxContext.OPENID
-  const { familyId } = event
-
+  const { familyId, openId } = event
+  if (!familyId || !openId) {
+    return { code: 1, message: '参数缺失' }
+  }
+  const familyColl = db.collection('family')
+  const userColl = db.collection('user')
   try {
-    // 检查用户是否已有家庭
-    const existingFamily = await db.collection('family')
-      .where({
-        members: db.command.elemMatch({
-          userId: openId
-        })
-      })
-      .get()
-
-    if (existingFamily.data.length > 0) {
-      return {
-        code: 1,
-        data: null,
-        message: '用户已加入其他家庭'
-      }
+    // 1. 查找家庭
+    const familyRes = await familyColl.doc(familyId).get()
+    if (!familyRes.data) {
+      return { code: 2, message: '家庭不存在' }
     }
-
-    // 获取目标家庭信息
-    const familyResult = await db.collection('family')
-      .doc(familyId)
-      .get()
-
-    if (!familyResult.data) {
-      return {
-        code: 2,
-        data: null,
-        message: '家庭不存在'
-      }
-    }
-
-    const family = familyResult.data
-
-    // 检查家庭成员数量
-    if (family.members.length >= 10) {
+    const family = familyRes.data[0]
+    const members = family.members
+    // 2. 幂等性：如已是成员则跳过，否则加入
+    let needUpdateFamily = !members.includes(openId)
+    if (!needUpdateFamily) {
+      // 已经是成员，直接返回
+      const membersInfo = await getMembersInfo(members || [])
       return {
         code: 3,
-        data: null,
-        message: '家庭成员已达上限'
+        message: '已加入该家庭',
+        data: {
+          ...family,
+          membersInfo
+        }
       }
     }
-
-    // 添加新成员
-    const result = await db.collection('family')
-      .doc(familyId)
-      .update({
-        data: {
-          members: db.command.push({
-            userId: openId,
-            role: 'member',
-            permissions: ['view', 'comment']
-          }),
-          updatedAt: db.serverDate()
-        }
+    if (needUpdateFamily) {
+      await familyColl.doc(familyId).update({
+        members: _.push([openId]),
+        updatedAt: new Date()
       })
-
+    }
+    // 3. 更新用户表
+    await userColl.where({ openId }).update({
+      family_id: familyId,
+      role: 'member',
+      updatedAt: Date.now()
+    })
+    // 4. 获取最新家庭信息
+    const newFamilyRes = await familyColl.doc(familyId).get()
+    const newFamily = newFamilyRes.data
+    // 5. 获取成员详细信息
+    const membersInfo = await getMembersInfo(newFamily.members || [])
+    // 6. 返回结构
     return {
       code: 0,
       data: {
-        ...family,
-        members: [
-          ...family.members,
-          {
-            userId: openId,
-            role: 'member',
-            permissions: ['view', 'comment']
-          }
-        ]
-      },
-      message: '加入家庭成功'
+        ...newFamily,
+        membersInfo
+      }
     }
-  } catch (error) {
-    return {
-      code: -1,
-      data: null,
-      message: '加入家庭失败：' + error.message
-    }
+  } catch (err) {
+    return { code: 500, message: err.message || '服务器错误' }
   }
 } 

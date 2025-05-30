@@ -7,6 +7,7 @@ import { selectUser } from '@/store/user/selectors'
 import { selectRecipes } from '@/store/recipe/selectors'
 import { addRecipe, updateRecipe } from '@/store/recipe/actions'
 import './index.scss'
+import { toast } from '@/utils/toast'
 
 const CATEGORIES = ['大荤', '小荤', '炒菜', '汤类', '其他']
 
@@ -39,7 +40,7 @@ const RecipeEdit: FC = () => {
 
   const handleSave = () => {
     if (!user) {
-      Taro.showToast({ title: '请先登录', icon: 'none' })
+      toast({ title: '请先登录', icon: 'none' })
       return
     }
     const recipe = {
@@ -62,7 +63,7 @@ const RecipeEdit: FC = () => {
     } else {
       dispatch(addRecipe(recipe))
     }
-    Taro.showToast({ title: '保存成功', icon: 'success' })
+    toast({ title: '保存成功', icon: 'success' })
     Taro.navigateBack()
   }
 

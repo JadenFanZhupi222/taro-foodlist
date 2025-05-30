@@ -6,8 +6,10 @@ $color-border: #f0f0f0 !default;
 $color-text-main: #333 !default;
 $color-text-secondary: #666 !default;
 $color-text-light: #fff !default;
-$color-success: #21ba45 !default; // 你原来是158817，建议加个新版绿色
+$color-success: #21ba45 !default;
+$color-success-light: #e6f9e6 !default;
 $color-danger: #ff4d4f !default;
+$color-error-light: #fff0f0 !default;
 $color-warning: #faad14 !default;
 $color-primary-rgb: 255, 87, 87;
 $color-member-bg: #fdf6f7; // 主色淡化背景
@@ -33,6 +35,7 @@ $radius-btn: 1.75rem !default;
 // 阴影
 $shadow-card: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1) !default;
 $shadow-btn: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1) !default;
+$shadow-btn-active: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1) !default;
 
 // 新增通用变量（如有重复请忽略）
 $radius-lg: 1rem !default;

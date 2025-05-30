@@ -9,6 +9,7 @@ import type { AppDispatch } from '@/store'
 import './index.scss'
 import { useAvatarUpload } from '@/hooks/useAvatarUpload'
 import Loading from '@/components/Loading'
+import { toast } from '@/utils/toast'
 
 const defaultAvatarUrl = 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0'
 
@@ -27,7 +28,7 @@ const ProfileEdit = () => {
       setAvatar(avatarUrl)
       const fileID = await useAvatarUpload(avatarUrl, user!.openId)
       setAvatarFileId(fileID)
-      Taro.showToast({ title: '头像已选择', icon: 'success' })
+      toast({ title: '头像已选择', icon: 'success' })
     }
   }
 
@@ -41,11 +42,11 @@ const ProfileEdit = () => {
     }
     try {
       await dispatch(updateUserInfo({ avatar, avatarFileId: fileID, nickname, openId: user.openId })).unwrap()
-      Taro.showToast({ title: '保存成功', icon: 'success' })
+      toast({ title: '保存成功', icon: 'success' })
       Taro.navigateBack()
     } catch (e) {
       console.error(e)
-      Taro.showToast({ title: '保存失败', icon: 'error' })
+      toast({ title: '保存失败', icon: 'error' })
     }
   }
 

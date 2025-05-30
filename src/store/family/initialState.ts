@@ -7,6 +7,8 @@ export interface FamilyState {
   fetchLoading: boolean
   createLoading: boolean
   joinLoading: boolean
+  inviteFamily: Family | null
+  inviteFamilyLoading: boolean
 }
 
 export const initialState: FamilyState = {
@@ -14,5 +16,7 @@ export const initialState: FamilyState = {
   membersInfo: [],
   fetchLoading: false,
   createLoading: false,
-  joinLoading: false
+  joinLoading: false,
+  inviteFamily: null,
+  inviteFamilyLoading: false
 } 

@@ -12,4 +12,8 @@ export const selectIsFamilyOwner = (state: RootState) => {
   const currentFamily = state.family.currentFamily
   const currentUser = state.user.current
   return currentFamily?.owner === currentUser?.openId
-} 
+}
+
+export const selectJoinLoading = (state: RootState) => state.family.joinLoading
+export const selectInviteFamily = (state: RootState) => state.family.inviteFamily
+export const selectInviteFamilyLoading = (state: RootState) => state.family.inviteFamilyLoading 

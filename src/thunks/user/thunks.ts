@@ -3,6 +3,8 @@ import Taro from '@tarojs/taro'
 import { setUser, setCode, logout } from '@/store/user/userSlice'
 import { CloudFunctionResult } from '@/types/cloud'
 import type { RootState } from '@/store'
+import { toast } from '@/utils/toast'
+import { callCloud } from '@/utils/cloud'
 
 // 云函数返回类型
 interface UpdateUserInfoResult {
@@ -16,16 +18,13 @@ interface UpdateUserInfoResult {
 export const wechatLogin = createAsyncThunk(
   'user/wechatLogin',
   async (code: string, { dispatch }) => {
-    const { result } = await Taro.cloud.callFunction({
-      name: 'wechat-login',
-      data: { code }
-    })
+    const result = await callCloud('wechat-login', { code })
     const cloudResult = result as CloudFunctionResult
     if (cloudResult.success && cloudResult.data) {
       dispatch(setUser(cloudResult.data))
-      Taro.showToast({ title: '登录成功', icon: 'success' })
+      toast({ title: '登录成功', icon: 'success' })
     } else {
-      Taro.showToast({ title: cloudResult.message || '登录失败', icon: 'error' })
+      toast({ title: cloudResult.message || '登录失败', icon: 'error' })
     }
   }
 )
@@ -45,10 +44,7 @@ export const login = createAsyncThunk(
 export const updateUserInfo = createAsyncThunk(
   'user/updateUserInfo',
   async ({ avatarFileId, avatar, nickname, openId }: { avatarFileId: string; avatar: string; nickname: string; openId: string }, { dispatch, getState }) => {
-    const { result } = await Taro.cloud.callFunction({
-      name: 'update-user-info',
-      data: { avatarFileId, nickname, openId }
-    })
+    const result = await callCloud('update-user-info', { avatarFileId, nickname, openId })
     const typedResult = result as UpdateUserInfoResult
     // 只要 success 就用本地 user 信息和新数据更新
     const user = (getState() as RootState).user.current
@@ -68,12 +64,12 @@ export const logoutUser = createAsyncThunk(
   'user/logoutUser',
   async (_, { dispatch }) => {
     try {
-      await Taro.cloud.callFunction({ name: 'logout' })
+      await callCloud('logout')
       dispatch(logout())
-      Taro.showToast({ title: '已退出登录', icon: 'success' })
+      toast({ title: '已退出登录', icon: 'success' })
     } catch (error) {
       console.error('退出登录失败:', error)
-      Taro.showToast({ title: '退出失败', icon: 'error' })
+      toast({ title: '退出失败', icon: 'error' })
       throw error
     }
   }

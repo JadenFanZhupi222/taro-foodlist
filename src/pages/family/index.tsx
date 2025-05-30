@@ -3,12 +3,14 @@ import { View, Text } from '@tarojs/components'
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '@/store'
 import { fetchFamily, createFamily, joinFamily } from '@/thunks/family/thunks'
-import Taro from '@tarojs/taro'
+import Taro, { useShareAppMessage } from '@tarojs/taro'
 import './index.scss'
 import type { AppDispatch } from '@/store'
 import Loading from '@/components/Loading'
 import MemberCardList from '@/components/family/memberCardList'
 import NoFamilyScreen from '@/components/family/noFamilyScreen'
+import ShareInvitationBtn from '@/components/family/shareInvitationBtn'
+import { toast } from '@/utils/toast'
 
 export default function Family() {
   const dispatch = useDispatch<AppDispatch>()
@@ -24,20 +26,24 @@ export default function Family() {
     Taro.showShareMenu({ withShareTicket: true })
   }, [dispatch])
 
-  // 创建家庭
-  const handleCreate = async () => {
-    console.log('familyName', familyName)
-    if (!familyName.trim()) {
-      Taro.showToast({ title: '请输入家庭名称', icon: 'none' })
-      return
+  useShareAppMessage(() => {
+    if (family) {
+      return {
+        title: `邀请你加入家庭【${family.name}】`,
+        path: `/pages/family/acceptInvite/index?familyId=${family._id}`
+      }
     }
+    return {
+      title: '家庭空间',
+      path: '/pages/family/index'
+    }
+  })
+
+  // 创建家庭
+  const handleCreate = async (familyName: string) => {
+    console.log('familyName', familyName)
     await dispatch(createFamily(familyName)).unwrap()
     setFamilyName('')
-  }
-
-  // 邀请成员（微信原生分享）
-  const handleInvite = () => {
-    Taro.showToast({ title: '请点击右上角"···"分享小程序邀请成员', icon: 'none' })
   }
 
   // 退出家庭（如有云函数可补充）
@@ -57,6 +63,7 @@ export default function Family() {
               role: m.role === 'owner' ? 'owner' : 'member',
             }))} currentUserId={user?.openId} />
           </View>
+          <ShareInvitationBtn />
         </>
       ) : (
         <NoFamilyScreen onCreate={handleCreate} loading={createLoading} />

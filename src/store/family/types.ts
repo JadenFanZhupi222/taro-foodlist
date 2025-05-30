@@ -7,7 +7,7 @@ export interface FamilyMember {
 }
 
 export interface Family {
-  id: string
+  _id: string
   name: string
   owner: string
   members: string[]

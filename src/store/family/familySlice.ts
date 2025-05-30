@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
 import { initialState } from './initialState'
-import { fetchFamily, createFamily, joinFamily } from '@/thunks/family/thunks'
+import { fetchFamily, createFamily, joinFamily, fetchFamilyById } from '@/thunks/family/thunks'
 
 const familySlice = createSlice({
   name: 'family',
@@ -13,6 +13,12 @@ const familySlice = createSlice({
     clearFamily(state) {
       state.currentFamily = null
       state.membersInfo = []
+    },
+    setInviteFamily(state, action) {
+      state.inviteFamily = action.payload
+    },
+    clearInviteFamily(state) {
+      state.inviteFamily = null
     }
   },
   extraReducers: (builder) => {
@@ -26,8 +32,11 @@ const familySlice = createSlice({
       .addCase(joinFamily.pending, (state) => { state.joinLoading = true })
       .addCase(joinFamily.fulfilled, (state) => { state.joinLoading = false })
       .addCase(joinFamily.rejected, (state) => { state.joinLoading = false })
+      .addCase(fetchFamilyById.pending, (state) => { state.inviteFamilyLoading = true })
+      .addCase(fetchFamilyById.fulfilled, (state) => { state.inviteFamilyLoading = false })
+      .addCase(fetchFamilyById.rejected, (state) => { state.inviteFamilyLoading = false })
   }
 })
 
-export const { setFamily, clearFamily } = familySlice.actions
+export const { setFamily, clearFamily, setInviteFamily, clearInviteFamily } = familySlice.actions
 export const familyReducer = familySlice.reducer 

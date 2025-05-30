@@ -1,22 +1,35 @@
-interface FamilyMember {
-  userId: string
-  role: 'owner' | 'member'
-  permissions: string[]
+// join-family 云函数类型声明
+
+interface JoinFamilyEvent {
+  familyId: string;
+  openId: string;
+}
+
+interface User {
+  _id: string;
+  openId: string;
+  nickname: string;
+  avatar: string;
+  family_id?: string;
+  role: 'owner' | 'member';
+  createdAt: number;
+  updatedAt: number;
 }
 
 interface Family {
-  _id: string
-  name: string
-  family_owner: string
-  members: FamilyMember[]
-  createdAt: Date
-  updatedAt: Date
+  _id: string;
+  name: string;
+  family_owner: string;
+  members: string[];
+  membersInfo?: User[];
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface JoinFamilyResult {
-  code: number
-  data: Family | null
-  message: string
+  code: number;
+  data?: Family & { membersInfo: User[] };
+  message?: string;
 }
 
 interface CloudFunctionContext {
@@ -26,10 +39,6 @@ interface CloudFunctionContext {
   ENV: string
 }
 
-interface CloudFunctionEvent {
-  familyId: string
-}
+declare function main(event: JoinFamilyEvent, context: CloudFunctionContext): Promise<JoinFamilyResult>
 
-declare function main(event: CloudFunctionEvent, context: CloudFunctionContext): Promise<JoinFamilyResult>
-
-export { main, Family, FamilyMember, JoinFamilyResult } 
+export { main, Family, User, JoinFamilyResult } 
