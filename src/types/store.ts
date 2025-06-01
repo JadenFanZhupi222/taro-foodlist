@@ -4,7 +4,7 @@ export interface User {
   openId: string;
   nickname: string;
   avatar: string;
-  familyId?: string;
+  family_id?: string;
   role: 'owner' | 'member';
   createdAt: number;
   updatedAt: number;

@@ -74,6 +74,42 @@
       "timeout": 20,
       "memorySize": 256,
       "description": "通过familyId获取家庭信息"
+    },
+    {
+      "name": "create-recipe",
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "timeout": 20,
+      "memorySize": 256,
+      "description": "创建菜谱并关联到家庭"
+    },
+    {
+      "name": "update-recipe",
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "timeout": 20,
+      "memorySize": 256,
+      "description": "更新菜谱"
+    },
+    {
+      "name": "delete-recipe",
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "timeout": 20,
+      "memorySize": 256,
+      "description": "删除菜谱并从家庭 recipes 移除"
+    },
+    {
+      "name": "get-recipes",
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "timeout": 20,
+      "memorySize": 256,
+      "description": "获取家庭所有菜谱"
     }
   ]
 }

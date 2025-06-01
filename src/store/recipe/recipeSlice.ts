@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
 import { initialState } from './initialState'
+import { fetchRecipes, createRecipe, updateRecipeById, deleteRecipeById } from '@/thunks/recipe/thunks'
 
 const recipeSlice = createSlice({
   name: 'recipe',
@@ -18,11 +19,11 @@ const recipeSlice = createSlice({
       state.recipes.push(action.payload)
     },
     updateRecipe(state, action) {
-      const idx = state.recipes.findIndex(r => r.id === action.payload.id)
+      const idx = state.recipes.findIndex(r => r._id === action.payload._id)
       if (idx !== -1) state.recipes[idx] = action.payload
     },
     deleteRecipe(state, action) {
-      state.recipes = state.recipes.filter(r => r.id !== action.payload)
+      state.recipes = state.recipes.filter(r => r._id !== action.payload)
     },
     addComment(state, action) {
       state.comments.push(action.payload)
@@ -32,6 +33,21 @@ const recipeSlice = createSlice({
       state.currentRecipe = null
       state.comments = []
     }
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchRecipes.pending, (state) => { state.fetchLoading = true })
+      .addCase(fetchRecipes.fulfilled, (state) => { state.fetchLoading = false })
+      .addCase(fetchRecipes.rejected, (state) => { state.fetchLoading = false })
+      .addCase(createRecipe.pending, (state) => { state.createLoading = true })
+      .addCase(createRecipe.fulfilled, (state) => { state.createLoading = false })
+      .addCase(createRecipe.rejected, (state) => { state.createLoading = false })
+      .addCase(updateRecipeById.pending, (state) => { state.updateLoading = true })
+      .addCase(updateRecipeById.fulfilled, (state) => { state.updateLoading = false })
+      .addCase(updateRecipeById.rejected, (state) => { state.updateLoading = false })
+      .addCase(deleteRecipeById.pending, (state) => { state.deleteLoading = true })
+      .addCase(deleteRecipeById.fulfilled, (state) => { state.deleteLoading = false })
+      .addCase(deleteRecipeById.rejected, (state) => { state.deleteLoading = false })
   }
 })
 

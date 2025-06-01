@@ -1,0 +1,20 @@
+component: scf
+name: update-recipe
+inputs:
+  description: 更新菜谱
+  runtime: Nodejs18.15
+  memorySize: 256
+  handler: index.main
+  installDependency: true
+  timeout: 20
+  eip: false
+  publicAccess: true
+  vpcConfig:
+    vpcId: ""
+    subnetId: ""
+  events: []
+  layers: []
+  initTimeout: 65
+  protocolParams: null
+  protocolType: ""
+  region: ap-shanghai 

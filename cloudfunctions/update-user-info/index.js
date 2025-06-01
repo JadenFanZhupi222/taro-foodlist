@@ -1,4 +1,3 @@
-
 'use strict';
 
 const tcb = require('@cloudbase/node-sdk');
@@ -12,8 +11,9 @@ exports.main = async (event, context) => {
   const { openId, avatarFileId, nickname } = event;
   if (!openId || !avatarFileId || !nickname) {
     return {
-      success: false,
-      message: '头像和昵称不能为空'
+      code: 1,
+      message: '头像和昵称不能为空',
+      data: null
     };
   }
 
@@ -26,13 +26,15 @@ exports.main = async (event, context) => {
     });
 
     return {
-      success: true,
-      message: '更新成功'
+      code: 0,
+      message: '更新成功',
+      data: null
     };
   } catch (error) {
     return {
-      success: false,
+      code: 2,
       message: '更新失败',
+      data: null,
       error
     };
   }

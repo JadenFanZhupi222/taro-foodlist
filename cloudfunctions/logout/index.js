@@ -11,13 +11,15 @@ exports.main = async (event, context) => {
     // 清除用户登录态
     // 注意：微信小程序会自动清除登录态，这里主要是为了记录日志
     return {
-      success: true,
-      message: '退出登录成功'
+      code: 0,
+      message: '退出登录成功',
+      data: null
     }
   } catch (error) {
     return {
-      success: false,
+      code: 2,
       message: '退出登录失败',
+      data: null,
       error: error.message
     }
   }

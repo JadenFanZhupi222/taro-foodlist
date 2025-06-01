@@ -1,31 +1,22 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import Taro from '@tarojs/taro'
 import { setUser, setCode, logout } from '@/store/user/userSlice'
-import { CloudFunctionResult } from '@/types/cloud'
 import type { RootState } from '@/store'
 import { toast } from '@/utils/toast'
 import { callCloud } from '@/utils/cloud'
-
-// 云函数返回类型
-interface UpdateUserInfoResult {
-  success: boolean;
-  message: string;
-  data?: unknown; // update 结果
-  error?: unknown;
-}
+import type { User } from '@/store/user/types'
+import { setToken, setUser as setUserStorage, clearAuth } from '@/utils/auth'
 
 // 微信登录（接收 code 参数，调用云函数）
 export const wechatLogin = createAsyncThunk(
   'user/wechatLogin',
   async (code: string, { dispatch }) => {
-    const result = await callCloud('wechat-login', { code })
-    const cloudResult = result as CloudFunctionResult
-    if (cloudResult.success && cloudResult.data) {
-      dispatch(setUser(cloudResult.data))
-      toast({ title: '登录成功', icon: 'success' })
-    } else {
-      toast({ title: cloudResult.message || '登录失败', icon: 'error' })
-    }
+    const cloudResult = await callCloud<User>('wechat-login', { code })
+    dispatch(setUser(cloudResult.data!))
+    // 持久化 user 和 token
+    setUserStorage(cloudResult.data!)
+    setToken(cloudResult.data!.token!)
+    toast({ title: '登录成功', icon: 'success' })
   }
 )
 
@@ -44,16 +35,12 @@ export const login = createAsyncThunk(
 export const updateUserInfo = createAsyncThunk(
   'user/updateUserInfo',
   async ({ avatarFileId, avatar, nickname, openId }: { avatarFileId: string; avatar: string; nickname: string; openId: string }, { dispatch, getState }) => {
-    const result = await callCloud('update-user-info', { avatarFileId, nickname, openId })
-    const typedResult = result as UpdateUserInfoResult
-    // 只要 success 就用本地 user 信息和新数据更新
+    const typedResult = await callCloud<unknown>('update-user-info', { avatarFileId, nickname, openId })
     const user = (getState() as RootState).user.current
-    if (typedResult && typedResult.success) {
-      if (user) {
-        dispatch(setUser({ ...user, avatar, nickname }))
-      }
-    } else {
-      throw new Error(typedResult && typedResult.message ? typedResult.message : '更新失败')
+    if (user) {
+      const updatedUser = { ...user, avatar, nickname }
+      dispatch(setUser(updatedUser))
+      setUserStorage(updatedUser)
     }
     return typedResult
   }
@@ -64,8 +51,9 @@ export const logoutUser = createAsyncThunk(
   'user/logoutUser',
   async (_, { dispatch }) => {
     try {
-      await callCloud('logout')
+      await callCloud<null>('logout')
       dispatch(logout())
+      clearAuth()
       toast({ title: '已退出登录', icon: 'success' })
     } catch (error) {
       console.error('退出登录失败:', error)

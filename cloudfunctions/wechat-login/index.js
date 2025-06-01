@@ -1,5 +1,3 @@
-
-
 'use strict';
 
 const cloud = require('wx-server-sdk');
@@ -8,13 +6,27 @@ const app = cloudbase.init({
   env: cloud.DYNAMIC_CURRENT_ENV,
 });
 const db = app.database();
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_EXPIRES_IN = '7d';
 
 exports.main = async (event, context) => {
   // 检查是否传入了code参数
   if (!event.code) {
     return {
-      success: false,
-      message: '缺少必要的code参数'
+      code: 1,
+      message: '缺少必要的code参数',
+      data: null
+    };
+  }
+
+  // 检查 JWT_SECRET 是否设置
+  if (!JWT_SECRET) {
+    return {
+      code: 2,
+      message: 'JWT_SECRET 未设置',
+      data: null,
+      error: 'secretOrPrivateKey必须有值'
     };
   }
 
@@ -35,9 +47,19 @@ exports.main = async (event, context) => {
 
     if (user.data.length > 0) {
       // 用户已存在，返回用户信息
+      const token = jwt.sign({
+        openId: user.data[0].openId,
+        userId: user.data[0]._id,
+        family_id: user.data[0].family_id,
+        role: user.data[0].role
+      }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
       return {
-        success: true,
-        data: user.data[0]
+        code: 0,
+        message: '登录成功',
+        data: {
+          ...user.data[0],
+          token
+        }
       };
     } else {
       // 用户不存在，创建用户
@@ -54,9 +76,18 @@ exports.main = async (event, context) => {
         createTime: createTime
       });
 
+      // 生成token
+      const token = jwt.sign({
+        openId: openId,
+        userId: newUser.id,
+        familyId: '',
+        role: ''
+      }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+
       // 返回新创建的用户信息
       return {
-        success: true,
+        code: 0,
+        message: '注册并登录成功',
         data: {
           _id: newUser.id,
           openId: openId,
@@ -64,7 +95,8 @@ exports.main = async (event, context) => {
           unionId: unionId,
           nickname: nickname,
           avatar: avatar,
-          createTime: createTime
+          createTime: createTime,
+          token
         }
       };
     }
@@ -74,8 +106,9 @@ exports.main = async (event, context) => {
 
     // 处理错误情况
     return {
-      success: false,
+      code: 2,
       message: '微信登录失败',
+      data: null,
       error: error.message,
       // 添加更多错误详情
       errorDetails: {

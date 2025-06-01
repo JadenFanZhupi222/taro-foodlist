@@ -1,223 +1,201 @@
-import { View, Input, Textarea, Button, Text } from '@tarojs/components'
+import { View, Input, Textarea, Button, Text, ScrollView, Image } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useRouter } from '@tarojs/taro'
-import { FC, useEffect, useState } from 'react'
+import { FC, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { selectUser } from '@/store/user/selectors'
 import { selectRecipes } from '@/store/recipe/selectors'
-import { addRecipe, updateRecipe } from '@/store/recipe/actions'
+import { createRecipe, updateRecipeById } from '@/thunks/recipe/thunks'
 import './index.scss'
 import { toast } from '@/utils/toast'
+import { User as GlobalUser } from '@/types/store'
+import { AppDispatch } from '@/store'
 
 const CATEGORIES = ['大荤', '小荤', '炒菜', '汤类', '其他']
 
-interface RecipeForm {
-  name: string
-  type: string
-  image: string
-  description: string
-  steps: string[]
-  ingredients: { name: string; amount: string }[]
+// 用于生成唯一id，兼容小程序
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2, 6)
 }
 
 const RecipeEdit: FC = () => {
   const router = useRouter()
   const { id } = router.params
-  const user = useSelector(selectUser)
+  const user = useSelector(selectUser) as GlobalUser | null
   const recipes = useSelector(selectRecipes)
-  const dispatch = useDispatch()
+  const dispatch = useDispatch<AppDispatch>()
 
-  const editingRecipe = id ? recipes.find(r => r.id === id) : null
+  const editingRecipe = id ? recipes.find(r => r._id === id) : null
 
   const [name, setName] = useState(editingRecipe?.name || '')
   const [type, setType] = useState(editingRecipe?.type || '')
-  const [image, setImage] = useState(editingRecipe?.image || '')
+  const [imageLocal, setImageLocal] = useState('')
   const [description, setDescription] = useState(editingRecipe?.description || '')
-  const [steps, setSteps] = useState(editingRecipe?.steps.join('\n') || '')
   const [ingredients, setIngredients] = useState(
-    editingRecipe?.ingredients.map(i => `${i.name}:${i.amount}`).join('\n') || ''
+    editingRecipe?.ingredients?.map(i => ({ ...i, id: genId() })) || [{ id: genId(), name: '', amount: '' }]
   )
+  const [steps, setSteps] = useState(
+    editingRecipe?.steps?.map(s => ({ id: genId(), text: s })) || [{ id: genId(), text: '' }]
+  )
+  const [deletingIngredientIds, setDeletingIngredientIds] = useState<string[]>([])
+  const [deletingStepIds, setDeletingStepIds] = useState<string[]>([])
 
-  const handleSave = () => {
+  const handleChooseImage = async () => {
+    const res = await Taro.chooseImage({ count: 1, sizeType: ['compressed'] })
+    if (res.tempFilePaths && res.tempFilePaths[0]) {
+      setImageLocal(res.tempFilePaths[0])
+    }
+  }
+
+  const handleSave = async () => {
     if (!user) {
       toast({ title: '请先登录', icon: 'none' })
       return
     }
+    console.log('user', user)
+    const familyId = user.family_id
+    if (!familyId) {
+      toast({ title: '请先加入家庭', icon: 'none' })
+      return
+    }
+    if (!name.trim()) {
+      toast({ title: '请输入菜名', icon: 'none' })
+      return
+    }
+    if (!type) {
+      toast({ title: '请选择分类', icon: 'none' })
+      return
+    }
+    let imageUrl = imageLocal
+    if (imageLocal) {
+      const uploadRes = await Taro.cloud.uploadFile({
+        cloudPath: `recipe-images/${Date.now()}-${Math.floor(Math.random()*10000)}.jpg`,
+        filePath: imageLocal
+      })
+      imageUrl = uploadRes.fileID
+    }
     const recipe = {
-      id: editingRecipe?.id || Date.now().toString(),
-      name,
+      name: name.trim(),
       type,
-      image,
-      description,
-      steps: steps.split('\n').map(s => s.trim()).filter(Boolean),
-      ingredients: ingredients.split('\n').map(line => {
-        const [name, amount] = line.split(':')
-        return { name: name?.trim() || '', amount: amount?.trim() || '' }
-      }).filter(i => i.name),
-      createdBy: user._id,
-      createdAt: editingRecipe?.createdAt || new Date(),
-      updatedAt: new Date()
+      image: imageUrl.trim(),
+      description: description.trim(),
+      steps: steps.map(s => s.text.trim()).filter(Boolean),
+      ingredients: ingredients.filter(i => i.name.trim()).map(({ name, amount }) => ({ name, amount })),
+      createdBy: user._id
     }
     if (editingRecipe) {
-      dispatch(updateRecipe(recipe))
+      await dispatch(updateRecipeById({ recipeId: editingRecipe._id, recipe }))
     } else {
-      dispatch(addRecipe(recipe))
+      await dispatch(createRecipe({ familyId, recipe }))
     }
     toast({ title: '保存成功', icon: 'success' })
     Taro.navigateBack()
   }
 
-  const handleAddStep = () => {
-    setSteps(prev => prev ? prev + '\n' : '')
+  // 食材操作
+  const handleAddIngredient = () => setIngredients([...ingredients, { id: genId(), name: '', amount: '' }])
+  const handleRemoveIngredient = (id: string) => {
+    setDeletingIngredientIds(ids => [...ids, id])
+    setTimeout(() => {
+      setIngredients(ings => ings.filter(i => i.id !== id))
+      setDeletingIngredientIds(ids => ids.filter(did => did !== id))
+    }, 300)
+  }
+  const handleIngredientChange = (id: string, field: 'name' | 'amount', value: string) => {
+    setIngredients(ingredients.map(item => item.id === id ? { ...item, [field]: value } : item))
   }
 
-  const handleRemoveStep = (index: number) => {
-    const arr = steps.split('\n')
-    arr.splice(index, 1)
-    setSteps(arr.join('\n'))
+  // 步骤操作
+  const handleAddStep = () => setSteps([...steps, { id: genId(), text: '' }])
+  const handleRemoveStep = (id: string) => {
+    setDeletingStepIds(ids => [...ids, id])
+    setTimeout(() => {
+      setSteps(steps => steps.filter(s => s.id !== id))
+      setDeletingStepIds(ids => ids.filter(did => did !== id))
+    }, 300)
+  }
+  const handleStepChange = (id: string, value: string) => setSteps(steps.map(s => s.id === id ? { ...s, text: value } : s))
+
+  // 内部渲染函数
+  function renderIngredientRow(item: typeof ingredients[0]) {
+    return (
+      <View className={`form-ingredient-row${deletingIngredientIds.includes(item.id) ? ' fade-out' : ' fade-in'}`} key={item.id}>
+        <Input className='form-input' value={item.name} onInput={e => handleIngredientChange(item.id, 'name', e.detail.value)} placeholder='食材名称' />
+        <Input className='form-input' value={item.amount} onInput={e => handleIngredientChange(item.id, 'amount', e.detail.value)} placeholder='用量' />
+        <Button className='form-remove-btn' onClick={() => handleRemoveIngredient(item.id)}>删除</Button>
+      </View>
+    )
   }
 
-  const handleStepChange = (index: number, value: string) => {
-    const arr = steps.split('\n')
-    arr[index] = value
-    setSteps(arr.join('\n'))
+  function renderStepRow(step: typeof steps[0], idx: number) {
+    return (
+      <View className={`form-step-row${deletingStepIds.includes(step.id) ? ' fade-out' : ' fade-in'}`} key={step.id}>
+        <Text className='form-step-number'>{idx + 1}</Text>
+        <Textarea className='form-textarea' value={step.text} onInput={e => handleStepChange(step.id, e.detail.value)} placeholder='请输入步骤' />
+        <Button className='form-remove-btn' onClick={() => handleRemoveStep(step.id)}>删除</Button>
+      </View>
+    )
   }
 
-  const handleAddIngredient = () => {
-    setIngredients(prev => prev ? prev + '\n' : '')
-  }
-
-  const handleRemoveIngredient = (index: number) => {
-    const arr = ingredients.split('\n')
-    arr.splice(index, 1)
-    setIngredients(arr.join('\n'))
-  }
-
-  const handleIngredientChange = (index: number, field: 'name' | 'amount', value: string) => {
-    const arr = ingredients.split('\n')
-    const [name, amount] = arr[index]?.split(':') || ['', '']
-    arr[index] = field === 'name' ? `${value}:${amount || ''}` : `${name || ''}:${value}`
-    setIngredients(arr.join('\n'))
+  function renderImageSection() {
+    return (
+      <View className='form-section'>
+        <Text className='form-label'>图片</Text>
+        {imageLocal ? (
+          <View style={{ marginBottom: '2vh' }}>
+            <Image src={imageLocal} style={{ width: '30vw', height: '30vw', borderRadius: '2vw', objectFit: 'cover' }} />
+          </View>
+        ) : null}
+        <Button className='form-add-btn' onClick={handleChooseImage}>
+          {imageLocal ? '更换图片' : '上传图片'}
+        </Button>
+      </View>
+    )
   }
 
   return (
-    <View className='recipe-edit'>
-      <View className='recipe-edit__form'>
-        <View className='recipe-edit__field'>
-          <Text className='recipe-edit__label'>菜名</Text>
-          <Input
-            className='recipe-edit__input'
-            value={name}
-            onInput={e => setName(e.detail.value)}
-            placeholder='请输入菜名'
-          />
-        </View>
-
-        <View className='recipe-edit__field'>
-          <Text className='recipe-edit__label'>分类</Text>
-          <View className='recipe-edit__categories'>
-            {CATEGORIES.map(category => (
-              <View
-                key={category}
-                className={`recipe-edit__category ${type === category ? 'active' : ''}`}
-                onClick={() => setType(category)}
-              >
-                {category}
-              </View>
-            ))}
+    <View className='recipe-edit-page'>
+      <ScrollView className='recipe-edit-scroll' scrollY>
+        <View className='form-card'>
+          <Text className='form-title'>家庭食谱</Text>
+          <View className='form-section'>
+            <Text className='form-label'>菜名</Text>
+            <Input className='form-input' value={name} onInput={e => setName(e.detail.value)} placeholder='请输入菜名' />
           </View>
-        </View>
-
-        <View className='recipe-edit__field'>
-          <Text className='recipe-edit__label'>图片</Text>
-          <Input
-            className='recipe-edit__input'
-            value={image}
-            onInput={e => setImage(e.detail.value)}
-            placeholder='请输入图片URL'
-          />
-        </View>
-
-        <View className='recipe-edit__field'>
-          <Text className='recipe-edit__label'>描述</Text>
-          <Textarea
-            className='recipe-edit__textarea'
-            value={description}
-            onInput={e => setDescription(e.detail.value)}
-            placeholder='请输入描述'
-          />
-        </View>
-
-        <View className='recipe-edit__field'>
-          <Text className='recipe-edit__label'>食材</Text>
-          <View className='recipe-edit__ingredients'>
-            {ingredients.split('\n').map((line, index) => {
-              const [name, amount] = line.split(':')
-              return (
-                <View key={index} className='recipe-edit__ingredient'>
-                  <Input
-                    className='recipe-edit__input'
-                    value={name}
-                    onInput={e => handleIngredientChange(index, 'name', e.detail.value)}
-                    placeholder='食材名称'
-                  />
-                  <Input
-                    className='recipe-edit__input'
-                    value={amount}
-                    onInput={e => handleIngredientChange(index, 'amount', e.detail.value)}
-                    placeholder='用量'
-                  />
-                  <Button
-                    className='recipe-edit__remove-btn'
-                    onClick={() => handleRemoveIngredient(index)}
-                  >
-                    删除
-                  </Button>
-                </View>
-              )
-            })}
-            <Button
-              className='recipe-edit__add-btn'
-              onClick={handleAddIngredient}
-            >
-              添加食材
-            </Button>
-          </View>
-        </View>
-
-        <View className='recipe-edit__field'>
-          <Text className='recipe-edit__label'>步骤</Text>
-          <View className='recipe-edit__steps'>
-            {steps.split('\n').map((step, index) => (
-              <View key={index} className='recipe-edit__step'>
-                <Text className='recipe-edit__step-number'>{index + 1}</Text>
-                <Textarea
-                  className='recipe-edit__textarea'
-                  value={step}
-                  onInput={e => handleStepChange(index, e.detail.value)}
-                  placeholder='请输入步骤'
-                />
-                <Button
-                  className='recipe-edit__remove-btn'
-                  onClick={() => handleRemoveStep(index)}
+          <View className='form-section'>
+            <Text className='form-label'>分类</Text>
+            <View className='form-categories'>
+              {CATEGORIES.map(category => (
+                <View
+                  key={category}
+                  className={`form-category ${type === category ? 'active' : ''}`}
+                  onClick={() => setType(category)}
                 >
-                  删除
-                </Button>
-              </View>
-            ))}
-            <Button
-              className='recipe-edit__add-btn'
-              onClick={handleAddStep}
-            >
-              添加步骤
-            </Button>
+                  {category}
+                </View>
+              ))}
+            </View>
+          </View>
+          {renderImageSection()}
+          <View className='form-section'>
+            <Text className='form-label'>描述</Text>
+            <Textarea className='form-textarea' value={description} onInput={e => setDescription(e.detail.value)} placeholder='请输入描述' />
+          </View>
+          <View className='form-section'>
+            <Text className='form-label'>食材</Text>
+            {ingredients.map(renderIngredientRow)}
+            <Button className='form-add-btn' onClick={handleAddIngredient}>添加食材</Button>
+          </View>
+          <View className='form-section'>
+            <Text className='form-label'>步骤</Text>
+            {steps.map(renderStepRow)}
+            <Button className='form-add-btn' onClick={handleAddStep}>添加步骤</Button>
+          </View>
+          <View className='form-actions'>
+            <Button className='form-save-btn' onClick={handleSave}>保存</Button>
           </View>
         </View>
-      </View>
-
-      <Button className='recipe-edit__save-btn' onClick={handleSave}>
-        保存
-      </Button>
+      </ScrollView>
     </View>
   )
 }

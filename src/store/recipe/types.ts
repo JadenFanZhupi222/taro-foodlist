@@ -1,17 +1,19 @@
+export interface Ingredient {
+  name: string
+  amount: string
+}
+
 export interface Recipe {
-  id: string
+  _id: string
   name: string
   type: string
-  image: string
-  description: string
-  steps: string[]
-  ingredients: {
-    name: string
-    amount: string
-  }[]
-  createdBy: string
-  createdAt: Date
-  updatedAt: Date
+  image?: string
+  description?: string
+  steps?: string[]
+  ingredients?: Ingredient[]
+  createdBy?: string
+  createdAt?: number
+  updatedAt?: number
 }
 
 export interface Comment {
@@ -25,6 +27,10 @@ export interface RecipeState {
   recipes: Recipe[]
   currentRecipe: Recipe | null
   comments: Comment[]
+  fetchLoading: boolean
+  createLoading: boolean
+  updateLoading: boolean
+  deleteLoading: boolean
 }
 
 export const RECIPE_ACTIONS = {
@@ -35,7 +41,11 @@ export const RECIPE_ACTIONS = {
   UPDATE_RECIPE: 'UPDATE_RECIPE',
   DELETE_RECIPE: 'DELETE_RECIPE',
   ADD_COMMENT: 'ADD_COMMENT',
-  CLEAR_RECIPES: 'CLEAR_RECIPES'
+  CLEAR_RECIPES: 'CLEAR_RECIPES',
+  SET_FETCH_LOADING: 'SET_FETCH_LOADING',
+  SET_CREATE_LOADING: 'SET_CREATE_LOADING',
+  SET_UPDATE_LOADING: 'SET_UPDATE_LOADING',
+  SET_DELETE_LOADING: 'SET_DELETE_LOADING',
 } as const
 
 export type RecipeActionType = typeof RECIPE_ACTIONS[keyof typeof RECIPE_ACTIONS]
@@ -49,3 +59,7 @@ export type RecipeAction =
   | { type: typeof RECIPE_ACTIONS.DELETE_RECIPE; payload: string }
   | { type: typeof RECIPE_ACTIONS.ADD_COMMENT; payload: Comment }
   | { type: typeof RECIPE_ACTIONS.CLEAR_RECIPES }
+  | { type: typeof RECIPE_ACTIONS.SET_FETCH_LOADING; payload: boolean }
+  | { type: typeof RECIPE_ACTIONS.SET_CREATE_LOADING; payload: boolean }
+  | { type: typeof RECIPE_ACTIONS.SET_UPDATE_LOADING; payload: boolean }
+  | { type: typeof RECIPE_ACTIONS.SET_DELETE_LOADING; payload: boolean }

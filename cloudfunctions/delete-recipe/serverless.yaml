@@ -1,0 +1,21 @@
+component: scf
+name: delete-recipe
+inputs:
+  description: 删除菜谱并从家庭 recipes 移除
+  runtime: Nodejs18.15
+  memorySize: 256
+  handler: index.main
+  installDependency: true
+  timeout: 20
+  eip: false
+  publicAccess: true
+  vpcConfig:
+    vpcId: ""
+    subnetId: ""
+  events: []
+  layers: []
+  initTimeout: 65
+  protocolParams: null
+  protocolType: ""
+  name: delete-recipe
+  region: ap-shanghai 

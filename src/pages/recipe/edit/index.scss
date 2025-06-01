@@ -1,157 +1,239 @@
+@use "sass:color";
 @use '../../../use/variables' as *;
 
-.recipe-edit {
-    min-height: 100vh;
-    background-color: $color-bg-main;
-    padding: 20px;
-    padding-bottom: calc(20px + env(safe-area-inset-bottom));
-  
-    &__form {
-      background-color: $color-bg-card;
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
+.recipe-edit-page {
+  min-height: 100vh;
+  background-color: $color-bg-main;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 0 3vh 0;
+  font-size: 3vw;
+
+  .recipe-edit-scroll {
+    width: 100vw;
+    height: 100vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .form-card {
+    width: 100vw;
+    max-width: 90vw;
+    background: $color-bg-card;
+    border-radius: 3vw;
+    box-shadow: 0 0.5vw 3vw rgba(0,0,0,0.06);
+    margin: 4vh 0 0 0;
+    padding: 5vh 4vw 5vh 4vw;
+    display: flex;
+    flex-direction: column;
+
+    .form-title {
+      font-size: 5vw;
+      font-weight: 700;
+      color: $color-text-main;
+      text-align: center;
+      margin-bottom: 4vh;
     }
-  
-    &__field {
-      margin-bottom: 24px;
-  
-      &:last-child {
-        margin-bottom: 0;
+
+    .form-section {
+      margin-bottom: 4vh;
+
+      .form-label {
+        font-size: 4vw;
+        font-weight: 600;
+        color: $color-text-main;
+        margin-bottom: 2vh;
+        display: block;
+      }
+      .form-input {
+        width: 100%;
+        height: 7vh;
+        background: #f8f8f8;
+        border-radius: 2vw;
+        padding: 0 2vw;
+        font-size: 3.8vw;
+        color: $color-text-main;
+        margin-bottom: 2vh;
+      }
+      .form-textarea {
+        width: 100%;
+        min-height: 16vh;
+        background: #f8f8f8;
+        border-radius: 2vw;
+        padding: 2vw;
+        font-size: 3.8vw;
+        color: $color-text-main;
+      }
+      .form-categories {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2vw;
+        .form-category {
+          padding: 2vh 4vw;
+          background: #f8f8f8;
+          border-radius: 3vw;
+          font-size: 3.8vw;
+          color: $color-text-secondary;
+          transition: all 0.3s;
+          &.active {
+            background: $color-primary;
+            color: $color-text-light;
+          }
+        }
+      }
+      .form-ingredient-row {
+        display: flex;
+        gap: 2vw;
+        align-items: stretch;
+        margin-bottom: 2vh;
+        .form-input { flex: 2; }
+        .form-remove-btn {
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: $color-primary;
+          color: $color-text-light;
+          border: none;
+          border-radius: 2vw;
+          padding: 2vh 4vw;
+          font-size: 3.5vw;
+          flex-shrink: 0;
+          &:active { opacity: 0.8; }
+        }
+      }
+      .form-step-row {
+        display: flex;
+        gap: 2vw;
+        align-items: stretch;
+        margin-bottom: 2vh;
+        .form-step-number {
+          width: 5vw;
+          height: 5vw;
+          background: $color-primary;
+          color: $color-text-light;
+          border-radius: 2.5vw;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 3.8vw;
+          font-weight: 600;
+          flex-shrink: 0;
+          margin-top: 1vh;
+          align-self: flex-start;
+        }
+        .form-textarea {
+          flex: 1;
+          min-height: 16vh;
+        }
+        .form-remove-btn {
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: $color-primary;
+          color: $color-text-light;
+          border: none;
+          border-radius: 2vw;
+          padding: 2vh 4vw;
+          font-size: 3.5vw;
+          flex-shrink: 0;
+          &:active { opacity: 0.8; }
+        }
+      }
+      .form-add-btn {
+        margin-top: 2vh;
+        background: #f8f8f8;
+        color: $color-text-secondary;
+        border: none;
+        border-radius: 2vw;
+        padding: 2.5vh;
+        font-size: 3.8vw;
+        width: 100%;
+        &:active { opacity: 0.8; }
       }
     }
-  
-    &__label {
-      font-size: 16px;
-      font-weight: 500;
-      color: $color-text-main;
-      margin-bottom: 12px;
-      display: block;
-    }
-  
-    &__input {
-      width: 100%;
-      height: 40px;
-      background-color: #f8f8f8;
-      border-radius: 8px;
-      padding: 0 12px;
-      font-size: 14px;
-      color: $color-text-main;
-    }
-  
-    &__textarea {
-      width: 100%;
-      min-height: 80px;
-      background-color: #f8f8f8;
-      border-radius: 8px;
-      padding: 12px;
-      font-size: 14px;
-      color: $color-text-main;
-    }
-  
-    &__categories {
+
+    .form-actions {
+      margin-top: 5vh;
       display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-  
-    &__category {
-      padding: 8px 16px;
-      background-color: #f8f8f8;
-      border-radius: 20px;
-      font-size: 14px;
-      color: $color-text-secondary;
-      transition: all 0.3s ease;
-  
-      &.active {
-        background-color: $color-primary;
-        color: $color-text-light;
-      }
-    }
-  
-    &__ingredients {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-  
-    &__ingredient {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-  
-      .recipe-edit__input {
-        flex: 1;
-      }
-    }
-  
-    &__steps {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-  
-    &__step {
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-    }
-  
-    &__step-number {
-      width: 24px;
-      height: 24px;
-      background-color: $color-primary;
-      color: $color-text-light;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
       justify-content: center;
-      font-size: 14px;
-      font-weight: 500;
-      flex-shrink: 0;
-    }
-  
-    &__add-btn {
-      margin-top: 12px;
-      background-color: #f8f8f8;
-      color: $color-text-secondary;
-      border: none;
-      border-radius: 8px;
-      padding: 12px;
-      font-size: 14px;
-      width: 100%;
-  
-      &:active {
-        opacity: 0.8;
+      .form-save-btn {
+        background: $color-primary;
+        color: $color-text-light;
+        border: none;
+        border-radius: 3vw;
+        padding: 3vh;
+        font-size: 4vw;
+        font-weight: 700;
+        width: 100%;
+        box-shadow: 0 0.5vw 3vw rgba($color-primary, 0.08);
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        margin: 0 auto;
+        max-width: 90vw;
+        z-index: 10;
+        &:active { opacity: 0.85; }
       }
     }
-  
-    &__remove-btn {
-      background-color: $color-primary;
-      color: $color-text-light;
-      border: none;
-      border-radius: 8px;
-      padding: 8px 16px;
-      font-size: 14px;
-      flex-shrink: 0;
-  
-      &:active {
-        opacity: 0.8;
-      }
-    }
-  
-    &__save-btn {
-      background-color: $color-primary;
-      color: $color-text-light;
-      border: none;
-      border-radius: 8px;
-      padding: 12px;
-      font-size: 16px;
-      font-weight: 500;
-      width: 100%;
-  
-      &:active {
-        opacity: 0.8;
-      }
-    }
-  } 
+  }
+}
+
+.fade-in {
+  animation: fadeInRow 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+.fade-out {
+  animation: fadeOutRow 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes fadeInRow {
+  from { opacity: 0; transform: translateY(-2vh) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes fadeOutRow {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(2vh) scale(0.95); }
+}
+
+.fade-in-ingredient-enter {
+  opacity: 0;
+  transform: translateY(-2vh) scale(0.95);
+}
+.fade-in-ingredient-enter-active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition: all 300ms cubic-bezier(0.4,0,0.2,1);
+}
+.fade-in-ingredient-exit {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.fade-in-ingredient-exit-active {
+  opacity: 0;
+  transform: translateY(2vh) scale(0.95);
+  transition: all 300ms cubic-bezier(0.4,0,0.2,1);
+}
+
+.fade-in-step-enter {
+  opacity: 0;
+  transform: translateY(-2vh) scale(0.95);
+}
+.fade-in-step-enter-active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition: all 300ms cubic-bezier(0.4,0,0.2,1);
+}
+.fade-in-step-exit {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.fade-in-step-exit-active {
+  opacity: 0;
+  transform: translateY(2vh) scale(0.95);
+  transition: all 300ms cubic-bezier(0.4,0,0.2,1);
+} 

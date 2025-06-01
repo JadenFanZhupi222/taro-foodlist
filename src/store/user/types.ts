@@ -1,4 +1,5 @@
-export interface User {
+// 后端原始用户类型
+export interface BackendUser {
   _id?: string;
   openId: string;
   appId: string;
@@ -7,6 +8,12 @@ export interface User {
   avatar: string;
   createTime?: Date;
   role?: string;
+  family_id?: string;
+}
+
+// 前端User类型，带token
+export interface User extends BackendUser {
+  token?: string;
 }
 
 export interface UserState {
