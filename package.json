@@ -43,6 +43,7 @@
   "author": "",
   "dependencies": {
     "@babel/runtime": "^7.24.4",
+    "@nutui/nutui-taro": "^4.3.13",
     "@reduxjs/toolkit": "^2.8.2",
     "@tarojs/components": "4.1.1",
     "@tarojs/helper": "4.1.1",
@@ -63,7 +64,9 @@
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-redux": "^9.2.0",
-    "redux-thunk": "^3.1.0"
+    "react-transition-group": "^4.4.5",
+    "redux-thunk": "^3.1.0",
+    "taro-ui": "^3.3.0"
   },
   "devDependencies": {
     "@babel/core": "^7.24.4",
