@@ -4,14 +4,16 @@ import { useRouter } from '@tarojs/taro'
 import { FC, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { selectUser } from '@/store/user/selectors'
-import { selectRecipes } from '@/store/recipe/selectors'
+import { selectRecipes, selectRecipeLoading } from '@/store/recipe/selectors'
 import { createRecipe, updateRecipeById } from '@/thunks/recipe/thunks'
 import './index.scss'
 import { toast } from '@/utils/toast'
 import { User as GlobalUser } from '@/types/store'
 import { AppDispatch } from '@/store'
-
-const CATEGORIES = ['大荤', '小荤', '炒菜', '汤类', '其他']
+import { RecipeCategory, RECIPE_CATEGORIES } from '@/store/recipe/types'
+import { updateRecipeInStore } from '@/store/recipe/recipeSlice'
+import { useAvatarUpload } from '@/hooks/useAvatarUpload'
+import Loading from '@/components/Loading'
 
 // 用于生成唯一id，兼容小程序
 function genId() {
@@ -23,13 +25,14 @@ const RecipeEdit: FC = () => {
   const { id } = router.params
   const user = useSelector(selectUser) as GlobalUser | null
   const recipes = useSelector(selectRecipes)
+  const { createLoading, updateLoading } = useSelector(selectRecipeLoading)
   const dispatch = useDispatch<AppDispatch>()
 
   const editingRecipe = id ? recipes.find(r => r._id === id) : null
 
   const [name, setName] = useState(editingRecipe?.name || '')
-  const [type, setType] = useState(editingRecipe?.type || '')
-  const [imageLocal, setImageLocal] = useState('')
+  const [type, setType] = useState<RecipeCategory>(editingRecipe?.type || '大荤')
+  const [imageLocal, setImageLocal] = useState(editingRecipe?.image || '')
   const [description, setDescription] = useState(editingRecipe?.description || '')
   const [ingredients, setIngredients] = useState(
     editingRecipe?.ingredients?.map(i => ({ ...i, id: genId() })) || [{ id: genId(), name: '', amount: '' }]
@@ -52,7 +55,6 @@ const RecipeEdit: FC = () => {
       toast({ title: '请先登录', icon: 'none' })
       return
     }
-    console.log('user', user)
     const familyId = user.family_id
     if (!familyId) {
       toast({ title: '请先加入家庭', icon: 'none' })
@@ -68,22 +70,20 @@ const RecipeEdit: FC = () => {
     }
     let imageUrl = imageLocal
     if (imageLocal) {
-      const uploadRes = await Taro.cloud.uploadFile({
-        cloudPath: `recipe-images/${Date.now()}-${Math.floor(Math.random()*10000)}.jpg`,
-        filePath: imageLocal
-      })
-      imageUrl = uploadRes.fileID
+      imageUrl = await useAvatarUpload(imageLocal, user._id)
     }
     const recipe = {
       name: name.trim(),
-      type,
+      type: type,
       image: imageUrl.trim(),
       description: description.trim(),
       steps: steps.map(s => s.text.trim()).filter(Boolean),
       ingredients: ingredients.filter(i => i.name.trim()).map(({ name, amount }) => ({ name, amount })),
-      createdBy: user._id
+      createdBy: user._id,
+      deleted: false
     }
     if (editingRecipe) {
+      dispatch(updateRecipeInStore({ recipeId: editingRecipe._id, recipe }))
       await dispatch(updateRecipeById({ recipeId: editingRecipe._id, recipe }))
     } else {
       await dispatch(createRecipe({ familyId, recipe }))
@@ -155,6 +155,7 @@ const RecipeEdit: FC = () => {
 
   return (
     <View className='recipe-edit-page'>
+      <Loading visible={createLoading || updateLoading} />
       <ScrollView className='recipe-edit-scroll' scrollY>
         <View className='form-card'>
           <Text className='form-title'>家庭食谱</Text>
@@ -165,7 +166,7 @@ const RecipeEdit: FC = () => {
           <View className='form-section'>
             <Text className='form-label'>分类</Text>
             <View className='form-categories'>
-              {CATEGORIES.map(category => (
+              {RECIPE_CATEGORIES.map(category => (
                 <View
                   key={category}
                   className={`form-category ${type === category ? 'active' : ''}`}

@@ -24,6 +24,7 @@ export interface Recipe {
   createdBy?: string
   createdAt?: number
   updatedAt?: number
+  deleted: boolean
 }
 
 export interface Comment {
@@ -35,7 +36,6 @@ export interface Comment {
 
 export interface RecipeState {
   recipes: Recipe[]
-  currentRecipe: Recipe | null
   comments: Comment[]
   fetchLoading: boolean
   createLoading: boolean
@@ -45,7 +45,6 @@ export interface RecipeState {
 
 export const RECIPE_ACTIONS = {
   SET_RECIPES: 'SET_RECIPES',
-  SET_CURRENT_RECIPE: 'SET_CURRENT_RECIPE',
   SET_COMMENTS: 'SET_COMMENTS',
   ADD_RECIPE: 'ADD_RECIPE',
   UPDATE_RECIPE: 'UPDATE_RECIPE',
@@ -62,7 +61,6 @@ export type RecipeActionType = typeof RECIPE_ACTIONS[keyof typeof RECIPE_ACTIONS
 
 export type RecipeAction =
   | { type: typeof RECIPE_ACTIONS.SET_RECIPES; payload: Recipe[] }
-  | { type: typeof RECIPE_ACTIONS.SET_CURRENT_RECIPE; payload: Recipe | null }
   | { type: typeof RECIPE_ACTIONS.SET_COMMENTS; payload: Comment[] }
   | { type: typeof RECIPE_ACTIONS.ADD_RECIPE; payload: Recipe }
   | { type: typeof RECIPE_ACTIONS.UPDATE_RECIPE; payload: Recipe }

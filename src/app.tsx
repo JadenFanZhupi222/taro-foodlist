@@ -1,3 +1,4 @@
+import '@nutui/nutui-react-taro/dist/style.css'
 import { PropsWithChildren, useEffect } from 'react'
 import Taro from '@tarojs/taro'
 import { Provider } from 'react-redux'

@@ -9,9 +9,6 @@ const recipeSlice = createSlice({
     setRecipes(state, action) {
       state.recipes = action.payload
     },
-    setCurrentRecipe(state, action) {
-      state.currentRecipe = action.payload
-    },
     setComments(state, action) {
       state.comments = action.payload
     },
@@ -22,6 +19,11 @@ const recipeSlice = createSlice({
       const idx = state.recipes.findIndex(r => r._id === action.payload._id)
       if (idx !== -1) state.recipes[idx] = action.payload
     },
+    updateRecipeInStore(state, action) {
+      const { recipeId, recipe } = action.payload
+      const idx = state.recipes.findIndex(r => r._id === recipeId)
+      if (idx !== -1) state.recipes[idx] = { ...state.recipes[idx], ...recipe }
+    },
     deleteRecipe(state, action) {
       state.recipes = state.recipes.filter(r => r._id !== action.payload)
     },
@@ -30,7 +32,6 @@ const recipeSlice = createSlice({
     },
     clearRecipes(state) {
       state.recipes = []
-      state.currentRecipe = null
       state.comments = []
     }
   },
@@ -51,5 +52,14 @@ const recipeSlice = createSlice({
   }
 })
 
-export const { setRecipes, setCurrentRecipe, setComments, addRecipe, updateRecipe, deleteRecipe, addComment, clearRecipes } = recipeSlice.actions
+export const { 
+  setRecipes,
+  setComments, 
+  addRecipe, 
+  updateRecipe, 
+  updateRecipeInStore,
+  deleteRecipe, 
+  addComment, 
+  clearRecipes 
+} = recipeSlice.actions
 export const recipeReducer = recipeSlice.reducer 

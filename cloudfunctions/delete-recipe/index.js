@@ -10,13 +10,12 @@ exports.main = async (event, context) => {
   const db = app.database();
 
   try {
-    // 1. 删除菜谱
-    await db.collection('recipes').doc(recipeId).remove();
-    // 2. 从家庭 recipes 字段移除
-    await db.collection('family').doc(familyId).update({
-      recipes: db.command.pull(recipeId)
+    // 软删除：只更新 deleted 字段
+    await db.collection('recipes').doc(recipeId).update({
+      deleted: true
     });
-    return { code: 0, message: '删除成功' };
+    // 不再从家庭 recipes 字段移除
+    return { code: 0, message: '软删除成功' };
   } catch (e) {
     return { code: 2, message: '数据库错误: ' + e.message };
   }

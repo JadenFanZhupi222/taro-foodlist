@@ -1,5 +1,6 @@
 import { View, Image, Text } from '@tarojs/components'
 import { FC } from 'react'
+import { Swipe } from '@nutui/nutui-react-taro'
 import './index.scss'
 
 interface RecipeCardProps {
@@ -11,10 +12,11 @@ interface RecipeCardProps {
   onRemove?: () => void
   showRemove?: boolean
   className?: string
+  swipeToDelete?: boolean
 }
 
-const RecipeCard: FC<RecipeCardProps> = ({ id, name, image, type, onClick, onRemove, showRemove, className }) => {
-  return (
+const RecipeCard: FC<RecipeCardProps> = ({ name, image, type, onClick, onRemove, showRemove, className, swipeToDelete }) => {
+  const cardContent = (
     <View className={`recipe-card ${className || ''}`} onClick={onClick}>
       <Image className='recipe-card__image' src={image} mode='aspectFill' />
       <View className='recipe-card__divider' />
@@ -25,11 +27,34 @@ const RecipeCard: FC<RecipeCardProps> = ({ id, name, image, type, onClick, onRem
           <View className='recipe-card__remove' onClick={(e) => {
             e.stopPropagation()
             onRemove()
-          }}>×</View>
+          }}>x</View>
         )}
       </View>
     </View>
   )
+
+  if (swipeToDelete && onRemove) {
+    return (
+      <Swipe
+        rightAction={
+          <View
+            className='recipe-card__swipe-delete'
+            onClick={(e) => {
+              e.stopPropagation()
+              onRemove()
+            }}
+          >
+            <Text>删</Text>
+            <Text>除</Text>
+          </View>
+        }
+        className='recipe-card__swipe-wrap'
+      >
+        {cardContent}
+      </Swipe>
+    )
+  }
+  return cardContent
 }
 
 export default RecipeCard 

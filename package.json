@@ -43,7 +43,7 @@
   "author": "",
   "dependencies": {
     "@babel/runtime": "^7.24.4",
-    "@nutui/nutui-taro": "^4.3.13",
+    "@nutui/nutui-react-taro": "^3.0.13",
     "@reduxjs/toolkit": "^2.8.2",
     "@tarojs/components": "4.1.1",
     "@tarojs/helper": "4.1.1",
