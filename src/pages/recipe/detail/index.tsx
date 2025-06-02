@@ -1,27 +1,16 @@
 import { View, Image, Text, Button } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
-import { FC, useEffect, useState } from 'react'
+import { FC } from 'react'
 import { useSelector } from 'react-redux'
-import { selectRecipes } from '@/store/recipe/selectors'
+import { selectRecipeById } from '@/store/recipe/selectors'
 import { selectUser } from '@/store/user/selectors'
-import { Recipe } from '../../../store/recipe/types'
 import './index.scss'
 
 const RecipeDetail: FC = () => {
   const router = useRouter()
   const { id } = router.params
-  const [recipe, setRecipe] = useState<Recipe | null>(null)
-  const recipes = useSelector(selectRecipes)
+  const recipe = useSelector(selectRecipeById(id || ''))
   const user = useSelector(selectUser)
-
-  useEffect(() => {
-    if (id) {
-      const foundRecipe = recipes.find(r => r.id === id)
-      if (foundRecipe) {
-        setRecipe(foundRecipe)
-      }
-    }
-  }, [id, recipes])
 
   if (!recipe) {
     return (
@@ -36,7 +25,7 @@ const RecipeDetail: FC = () => {
 
   return (
     <View className='recipe-detail'>
-      <Image className='recipe-detail__image' src={recipe.image} mode='aspectFill' />
+      <Image className='recipe-detail__image' src={recipe.image || ''} mode='aspectFill' />
       
       <View className='recipe-detail__content'>
         <View className='recipe-detail__header'>
@@ -47,7 +36,7 @@ const RecipeDetail: FC = () => {
         <View className='recipe-detail__section'>
           <Text className='recipe-detail__section-title'>食材</Text>
           <View className='recipe-detail__ingredients'>
-            {recipe.ingredients.map((ingredient, index) => (
+            {(recipe.ingredients || []).map((ingredient, index) => (
               <View key={index} className='recipe-detail__ingredient'>
                 <Text className='recipe-detail__ingredient-name'>{ingredient.name}</Text>
                 <Text className='recipe-detail__ingredient-amount'>{ingredient.amount}</Text>
@@ -59,7 +48,7 @@ const RecipeDetail: FC = () => {
         <View className='recipe-detail__section'>
           <Text className='recipe-detail__section-title'>步骤</Text>
           <View className='recipe-detail__steps'>
-            {recipe.steps.map((step, index) => (
+            {(recipe.steps || []).map((step, index) => (
               <View key={index} className='recipe-detail__step'>
                 <Text className='recipe-detail__step-number'>{index + 1}</Text>
                 <Text className='recipe-detail__step-content'>{step}</Text>
@@ -71,7 +60,7 @@ const RecipeDetail: FC = () => {
         {canEdit && (
           <Button className='recipe-detail__edit-btn' onClick={() => {
             Taro.navigateTo({
-              url: `/pages/recipe/edit/index?id=${recipe.id}`
+              url: `/pages/recipe/edit/index?id=${recipe._id}`
             })
           }}>
             编辑食谱

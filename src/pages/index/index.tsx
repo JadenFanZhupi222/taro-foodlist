@@ -6,8 +6,9 @@ import { selectRecipes } from '@/store/recipe/selectors'
 import CategoryNav from '../../components/CategoryNav'
 import RecipeCard from '../../components/RecipeCard'
 import './index.scss'
+import { RECIPE_CATEGORIES } from '@/store/recipe/types'
 
-const CATEGORIES = ['全部', '大荤', '小荤', '炒菜', '汤类', '其他']
+const CATEGORIES = ['全部', ...RECIPE_CATEGORIES]
 
 const Index = () => {
   const recipes = useSelector(selectRecipes)
@@ -71,12 +72,12 @@ const Index = () => {
         <View className='recipe-list'>
           {filteredRecipes.map(recipe => (
             <RecipeCard
-              key={recipe.id}
-              id={recipe.id}
+              key={recipe._id}
+              id={recipe._id}
               name={recipe.name}
-              image={recipe.image}
+              image={recipe.image || ''}
               type={recipe.type}
-              onClick={() => handleRecipeClick(recipe.id)}
+              onClick={() => handleRecipeClick(recipe._id)}
             />
           ))}
         </View>

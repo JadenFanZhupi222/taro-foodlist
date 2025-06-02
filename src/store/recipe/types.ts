@@ -3,10 +3,20 @@ export interface Ingredient {
   amount: string
 }
 
+export type RecipeCategory = '大荤' | '小荤' | '蔬菜' | '汤类' | '其他';
+
+export const RECIPE_CATEGORIES: RecipeCategory[] = [
+  '大荤',
+  '小荤',
+  '蔬菜',
+  '汤类',
+  '其他'
+];
+
 export interface Recipe {
   _id: string
   name: string
-  type: string
+  type: RecipeCategory
   image?: string
   description?: string
   steps?: string[]
