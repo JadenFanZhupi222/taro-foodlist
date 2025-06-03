@@ -110,6 +110,51 @@
       "timeout": 20,
       "memorySize": 256,
       "description": "获取家庭所有菜谱"
+    },
+    {
+      "name": "create-or-update-daily-menu",
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "timeout": 20,
+      "memorySize": 256,
+      "description": "创建或更新每日菜单"
+    },
+    {
+      "name": "delete-daily-menu-if-empty",
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "timeout": 20,
+      "memorySize": 256,
+      "description": "如无菜品则删除每日菜单"
+    },
+    {
+      "name": "clean-expired-daily-menu",
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "timeout": 20,
+      "memorySize": 256,
+      "description": "定时清理过期每日菜单"
+    },
+    {
+      "name": "get-family-daily-menus",
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "timeout": 20,
+      "memorySize": 256,
+      "description": "获取家庭所有每日菜单"
+    },
+    {
+      "name": "get-family-daily-menu-by-date",
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "timeout": 20,
+      "memorySize": 256,
+      "description": "获取家庭某天每日菜单"
     }
   ]
 }

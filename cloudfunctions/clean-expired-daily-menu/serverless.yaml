@@ -1,0 +1,19 @@
+component: scf
+name: clean-expired-daily-menu
+inputs:
+  description: 定时清理过期每日菜单
+  runtime: Nodejs18.15
+  memorySize: 256
+  handler: index.main
+  installDependency: true
+  timeout: 20
+  eip: false
+  publicAccess: true
+  vpcConfig:
+    vpcId: ""
+    subnetId: ""
+  events: []
+  layers: []
+  initTimeout: 65
+  protocolParams: null
+  protocolType: "" 

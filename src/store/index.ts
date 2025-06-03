@@ -2,12 +2,14 @@ import { configureStore } from '@reduxjs/toolkit'
 import { recipeReducer } from './recipe/recipeSlice'
 import { userReducer } from './user/userSlice'
 import { familyReducer } from './family/familySlice'
+import { dailyMenuReducer } from './dailyMenu/dailyMenuSlice'
 
 const store = configureStore({
   reducer: {
     recipe: recipeReducer,
     user: userReducer,
-    family: familyReducer
+    family: familyReducer,
+    dailyMenu: dailyMenuReducer
   }
 })
 

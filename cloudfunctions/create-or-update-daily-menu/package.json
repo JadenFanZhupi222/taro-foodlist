@@ -1,0 +1,14 @@
+{
+  "name": "create-or-update-daily-menu",
+  "version": "1.0.0",
+  "description": "创建或更新每日菜单",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@cloudbase/node-sdk": "^3.7.0"
+  }
+} 
