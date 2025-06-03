@@ -121,15 +121,6 @@
       "description": "创建或更新每日菜单"
     },
     {
-      "name": "delete-daily-menu-if-empty",
-      "runtime": "Nodejs18.15",
-      "handler": "index.main",
-      "installDependency": true,
-      "timeout": 20,
-      "memorySize": 256,
-      "description": "如无菜品则删除每日菜单"
-    },
-    {
       "name": "clean-expired-daily-menu",
       "runtime": "Nodejs18.15",
       "handler": "index.main",
@@ -155,6 +146,15 @@
       "timeout": 20,
       "memorySize": 256,
       "description": "获取家庭某天每日菜单"
+    },
+    {
+      "name": "remove-recipe-from-menu",
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "timeout": 20,
+      "memorySize": 256,
+      "description": "从每日菜单中移除指定菜品"
     }
   ]
 }

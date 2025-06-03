@@ -1,0 +1,10 @@
+component: scf
+name: remove-recipe-from-menu
+inputs:
+  name: remove-recipe-from-menu
+  runtime: Nodejs18.15
+  handler: index.main
+  timeout: 20
+  memorySize: 256
+  installDependency: true
+  description: 从每日菜单中移除指定菜品 

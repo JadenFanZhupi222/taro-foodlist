@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
 import { initialState } from './initialState'
-import { fetchDailyMenus, createDailyMenu, updateDailyMenuById, deleteDailyMenuById } from '@/thunks/dailyMenu/thunks'
+import { fetchDailyMenus, createOrUpdateDailyMenu, removeRecipeFromMenu } from '@/thunks/dailyMenu/thunks'
 
 const dailyMenuSlice = createSlice({
   name: 'dailyMenu',
@@ -21,22 +21,26 @@ const dailyMenuSlice = createSlice({
     },
     clearDailyMenus(state) {
       state.dailyMenus = []
-    }
+    },
+    setSelectedRecipes(state, action) {
+      state.selectedRecipes = action.payload
+    },
+    resetDailyMenu: () => initialState,
+    removeSelectedRecipe(state, action) {
+      state.selectedRecipes = state.selectedRecipes.filter(r => r._id !== action.payload)
+    },
   },
   extraReducers: (builder) => {
     builder
       .addCase(fetchDailyMenus.pending, (state) => { state.fetchLoading = true })
       .addCase(fetchDailyMenus.fulfilled, (state) => { state.fetchLoading = false })
       .addCase(fetchDailyMenus.rejected, (state) => { state.fetchLoading = false })
-      .addCase(createDailyMenu.pending, (state) => { state.createLoading = true })
-      .addCase(createDailyMenu.fulfilled, (state) => { state.createLoading = false })
-      .addCase(createDailyMenu.rejected, (state) => { state.createLoading = false })
-      .addCase(updateDailyMenuById.pending, (state) => { state.updateLoading = true })
-      .addCase(updateDailyMenuById.fulfilled, (state) => { state.updateLoading = false })
-      .addCase(updateDailyMenuById.rejected, (state) => { state.updateLoading = false })
-      .addCase(deleteDailyMenuById.pending, (state) => { state.deleteLoading = true })
-      .addCase(deleteDailyMenuById.fulfilled, (state) => { state.deleteLoading = false })
-      .addCase(deleteDailyMenuById.rejected, (state) => { state.deleteLoading = false })
+      .addCase(createOrUpdateDailyMenu.pending, (state) => { state.createLoading = true })
+      .addCase(createOrUpdateDailyMenu.fulfilled, (state) => { state.createLoading = false })
+      .addCase(createOrUpdateDailyMenu.rejected, (state) => { state.createLoading = false })
+      .addCase(removeRecipeFromMenu.pending, (state) => { state.removeLoading = true })
+      .addCase(removeRecipeFromMenu.fulfilled, (state) => { state.removeLoading = false })
+      .addCase(removeRecipeFromMenu.rejected, (state) => { state.removeLoading = false })
   }
 })
 
@@ -45,6 +49,9 @@ export const {
   addDailyMenu,
   updateDailyMenu,
   deleteDailyMenu,
-  clearDailyMenus
+  clearDailyMenus,
+  setSelectedRecipes,
+  resetDailyMenu,
+  removeSelectedRecipe
 } = dailyMenuSlice.actions
 export const dailyMenuReducer = dailyMenuSlice.reducer 

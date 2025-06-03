@@ -13,9 +13,10 @@ interface RecipeCardProps {
   showRemove?: boolean
   className?: string
   swipeToDelete?: boolean
+  selected?: boolean
 }
 
-const RecipeCard: FC<RecipeCardProps> = ({ name, image, type, onClick, onRemove, showRemove, className, swipeToDelete }) => {
+const RecipeCard: FC<RecipeCardProps> = ({ name, image, type, onClick, onRemove, showRemove, className, swipeToDelete, selected }) => {
   const cardContent = (
     <View className={`recipe-card ${className || ''}`} onClick={onClick}>
       <Image className='recipe-card__image' src={image} mode='aspectFill' />
@@ -30,6 +31,11 @@ const RecipeCard: FC<RecipeCardProps> = ({ name, image, type, onClick, onRemove,
           }}>x</View>
         )}
       </View>
+      {selected && (
+        <View className='recipe-card__selected-mask'>
+          <View className='recipe-card__selected-icon'>✔</View>
+        </View>
+      )}
     </View>
   )
 

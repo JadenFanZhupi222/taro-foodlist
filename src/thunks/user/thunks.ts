@@ -6,6 +6,10 @@ import { toast } from '@/utils/toast'
 import { callCloud } from '@/utils/cloud'
 import type { User } from '@/store/user/types'
 import { setToken, setUser as setUserStorage, clearAuth } from '@/utils/auth'
+import { resetFamily } from '@/store/family/familySlice'
+import { resetRecipes } from '@/store/recipe/recipeSlice'
+import { resetDailyMenu } from '@/store/dailyMenu/dailyMenuSlice'
+import { initApp } from '@/thunks/initApp'
 
 // 微信登录（接收 code 参数，调用云函数）
 export const wechatLogin = createAsyncThunk(
@@ -16,6 +20,7 @@ export const wechatLogin = createAsyncThunk(
     // 持久化 user 和 token
     setUserStorage(cloudResult.data!)
     setToken(cloudResult.data!.token!)
+    await dispatch(initApp())
     toast({ title: '登录成功', icon: 'success' })
   }
 )
@@ -53,6 +58,9 @@ export const logoutUser = createAsyncThunk(
     try {
       await callCloud<null>('logout')
       dispatch(logout())
+      dispatch(resetFamily())
+      dispatch(resetRecipes())
+      dispatch(resetDailyMenu())
       clearAuth()
       toast({ title: '已退出登录', icon: 'success' })
     } catch (error) {

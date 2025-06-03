@@ -1,5 +1,7 @@
+import { Recipe } from "../recipe/types"
+
 export interface DailyMenuRecipeItem {
-  recipeId: string
+  recipe_id: string
   order: number
 }
 
@@ -8,7 +10,7 @@ export interface DailyMenu {
   family_id: string
   date: string
   recipes: DailyMenuRecipeItem[]
-  createdBy: string
+  _openid: string // CreatedBy
   createdAt: number
   updatedAt: number
 }
@@ -18,5 +20,6 @@ export interface DailyMenuState {
   fetchLoading: boolean
   createLoading: boolean
   updateLoading: boolean
-  deleteLoading: boolean
+  removeLoading: boolean
+  selectedRecipes: Recipe[]
 } 

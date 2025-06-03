@@ -33,7 +33,8 @@ const recipeSlice = createSlice({
     clearRecipes(state) {
       state.recipes = []
       state.comments = []
-    }
+    },
+    resetRecipes: () => initialState,
   },
   extraReducers: (builder) => {
     builder
@@ -60,6 +61,7 @@ export const {
   updateRecipeInStore,
   deleteRecipe, 
   addComment, 
-  clearRecipes 
+  clearRecipes,
+  resetRecipes
 } = recipeSlice.actions
 export const recipeReducer = recipeSlice.reducer 

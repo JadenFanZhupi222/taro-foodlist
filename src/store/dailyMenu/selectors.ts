@@ -7,5 +7,6 @@ export const selectDailyMenuLoading = (state: RootState) => ({
   fetchLoading: state.dailyMenu.fetchLoading,
   createLoading: state.dailyMenu.createLoading,
   updateLoading: state.dailyMenu.updateLoading,
-  deleteLoading: state.dailyMenu.deleteLoading
-}) 
+  removeLoading: state.dailyMenu.removeLoading
+})
+export const selectSelectedRecipes = (state: RootState) => state.dailyMenu.selectedRecipes 

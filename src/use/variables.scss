@@ -18,6 +18,7 @@ $color-member-avatar-shadow: #ffe0e0; // 头像外圈
 $color-member-text: #222;
 $color-member-role-member-bg: #f0f0f0;
 $color-member-role-member-text: #888;
+$color-empty: #bdbdbd !default;
 
 // 字体
 $font-family-base: 'PingFang SC', 'Helvetica Neue', Arial, 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif !default;
@@ -27,6 +28,8 @@ $font-size-base: 1rem !default;
 $font-size-small: 0.875rem !default;
 $font-size-large: 1.25rem !default;
 $font-size-title: 1.5rem !default;
+$font-size-empty-icon: 2.8rem !default;
+$font-size-empty-text: 1.1rem !default;
 
 // 圆角
 $radius-base: 0.75rem !default;
@@ -52,3 +55,7 @@ $space-xs: 0.5rem !default;
 $space-sm: 1rem !default;
 $space-md: 2rem !default;
 $space-lg: 3rem !default;
+
+$font-weight-normal: 400 !default;
+$font-weight-medium: 500 !default;
+$font-weight-bold: 700 !default;

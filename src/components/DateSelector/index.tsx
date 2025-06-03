@@ -7,7 +7,7 @@ export interface DateSelectorProps {
   onDateChange: (date: Date) => void
 }
 
-const MIN_DATE = new Date('2025-05-01')
+const MIN_DATE = new Date(new Date().setDate(new Date().getDate() - 30))
 const MAX_DATE = new Date(new Date().setDate(new Date().getDate() + 7))
 
 const DateSelector: React.FC<DateSelectorProps> = ({ selectedDate, onDateChange }) => {

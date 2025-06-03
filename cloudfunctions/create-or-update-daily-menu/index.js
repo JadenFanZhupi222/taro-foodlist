@@ -17,9 +17,18 @@ exports.main = async (event, context) => {
     return { code: 1, message: '参数缺失' }
   }
 
+  // 统一 date 字段为字符串
+  const dateStr = typeof date === 'string' ? date.slice(0, 10) : date.toISOString().slice(0, 10)
+
+  // 判断是否为今天及以后
+  const todayStr = new Date().toISOString().slice(0, 10)
+  if (dateStr < todayStr) {
+    return { code: 2, message: '不能添加历史日期菜单' }
+  }
+
   // 查找当天菜单
   const dailyMenuRes = await db.collection('daily_menu')
-    .where({ family_id: familyId, date })
+    .where({ family_id: familyId, date: dateStr })
     .get()
 
   let dailyMenu = dailyMenuRes.data[0]
@@ -28,9 +37,9 @@ exports.main = async (event, context) => {
     // 没有则新建
     const newMenu = {
       family_id: familyId,
-      date,
+      date: dateStr,
       recipes: [recipe],
-      createdBy: userId,
+      _openid: userId,
       createdAt: new Date(),
       updatedAt: new Date()
     }
@@ -38,7 +47,7 @@ exports.main = async (event, context) => {
     return { code: 0, message: '创建成功', data: { _id: addRes.id, ...newMenu } }
   } else {
     // 已有则追加菜品
-    const exists = dailyMenu.recipes.some(r => r.recipeId === recipe.recipeId)
+    const exists = dailyMenu.recipes.some(r => r.recipe_id === recipe.recipe_id)
     if (!exists) {
       dailyMenu.recipes.push(recipe)
       await db.collection('daily_menu').doc(dailyMenu._id).update({

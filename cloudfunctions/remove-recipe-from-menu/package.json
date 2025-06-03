@@ -1,0 +1,9 @@
+{
+  "name": "remove-recipe-from-menu",
+  "version": "1.0.0",
+  "description": "Remove a recipe from a daily menu",
+  "main": "index.js",
+  "dependencies": {
+    "@cloudbase/node-sdk": "^2.5.2"
+  }
+} 

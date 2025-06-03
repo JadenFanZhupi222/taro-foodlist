@@ -12,6 +12,7 @@ import { deleteRecipeById } from '@/thunks/recipe/thunks'
 import type { AppDispatch } from '@/store'
 import Loading from '@/components/Loading'
 import { selectRecipeLoading } from '@/store/recipe/selectors'
+import SearchBar from '@/components/SearchBar'
 
 const CATEGORIES = ['全部', ...RECIPE_CATEGORIES]
 
@@ -36,7 +37,6 @@ const Index = () => {
 
   // 过滤食谱
   const filteredRecipes = recipes.filter(recipe => {
-    if (recipe.deleted) return false;
     const matchSearch = recipe.name.toLowerCase().includes(searchText.toLowerCase())
     const matchCategory = activeCategory === '全部' || recipe.type === activeCategory
     return matchSearch && matchCategory
@@ -77,19 +77,15 @@ const Index = () => {
   return (
     <View className='index'>
       <Loading visible={createLoading || deleteLoading} />
-      {/* 搜索栏 */}
-      <View className='search-bar'>
-        <Input
-          className='search-input'
-          type='text'
-          placeholder='搜索食谱'
-          value={searchText}
-          onInput={e => handleSearch(e.detail.value)}
-        />
-      </View>
-
       {/* 主要内容区 */}
       <View className='content'>
+        <View className='index-search-bar-wrap'>
+          <SearchBar
+            value={searchText}
+            onChange={handleSearch}
+            placeholder='搜索食谱'
+          />
+        </View>
         {/* 左侧分类栏 */}
         <CategoryNav
           categories={CATEGORIES}

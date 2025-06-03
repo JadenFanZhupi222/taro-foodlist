@@ -4,6 +4,7 @@ export default defineAppConfig({
     'pages/recipe/detail/index', // 食谱详情
     'pages/recipe/edit/index', // 食谱编辑
     'pages/today/index',  // 今日食谱
+    'pages/today/addRecipes/index', // 添加食谱页面
     'pages/profile/index', // 个人中心
     'pages/profile/edit/index', // 个人中心编辑
     'pages/family/index',  // 家庭管理
@@ -13,7 +14,8 @@ export default defineAppConfig({
     backgroundTextStyle: 'light',
     navigationBarBackgroundColor: '#fff',
     navigationBarTitleText: '家庭食谱',
-    navigationBarTextStyle: 'black'
+    navigationBarTextStyle: 'black',
+    backgroundColor: '#f5f5f5'
   },
   tabBar: {
     color: '#999',

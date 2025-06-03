@@ -11,50 +11,32 @@
 .index {
   min-height: 100vh;
   background-color: $color-bg-main;
-  padding: 1.25rem;
-
-  .search-bar {
-    position: fixed;
-    top: 0;
-    left: 7rem;
-    width: calc(100% - 10rem);
-    z-index: 101;
-    padding: 0.625rem 0;
-    background-color: transparent;
-
-    .search-input {
-      width: 100%;
-      height: 2.5rem;
-      background-color: $color-bg-card;
-      border-radius: 1.25rem;
-      padding: 0 1.25rem;
-      font-size: $font-size-small;
-      box-shadow: $shadow-card;
-      font-family: $font-family-base;
-    }
-  }
+  padding: 2vh 2vw 0 2vw;
 
   .content {
     display: flex;
-    margin-top: 4.5rem;
-    gap: 1.25rem;
-    margin-left: 6rem;
+    margin-top: 6vh;
+    gap: 2vw;
+    margin-left: 12vw;
 
     .recipe-list {
+      margin-top: 2vh;
+      margin-left: 12vw;
       display: flex;
       flex-direction: column;
-      gap: 1vh;
+      gap: 2vh;
+      padding-bottom: 10vh;
     }
   }
 
   .add-recipe {
     position: fixed;
-    right: 1.25rem;
-    bottom: calc(1.25rem + env(safe-area-inset-bottom));
-    width: 3.5rem;
-    height: 3.5rem;
+    right: 4vw;
+    bottom: calc(2vh + env(safe-area-inset-bottom));
+    width: 14vw;
+    height: 14vw;
     background-color: $color-primary;
-    border-radius: $radius-btn;
+    border-radius: 3vh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -67,7 +49,7 @@
 
     &__icon {
       color: $color-text-light;
-      font-size: 2rem;
+      font-size: 6vw;
       font-weight: 300;
       line-height: 1;
     }

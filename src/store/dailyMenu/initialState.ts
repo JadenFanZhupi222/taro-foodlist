@@ -5,5 +5,6 @@ export const initialState: DailyMenuState = {
   fetchLoading: false,
   createLoading: false,
   updateLoading: false,
-  deleteLoading: false
+  removeLoading: false,
+  selectedRecipes: []
 } 

@@ -19,7 +19,8 @@ const familySlice = createSlice({
     },
     clearInviteFamily(state) {
       state.inviteFamily = null
-    }
+    },
+    resetFamily: () => initialState,
   },
   extraReducers: (builder) => {
     builder
@@ -38,5 +39,5 @@ const familySlice = createSlice({
   }
 })
 
-export const { setFamily, clearFamily, setInviteFamily, clearInviteFamily } = familySlice.actions
+export const { setFamily, clearFamily, setInviteFamily, clearInviteFamily, resetFamily } = familySlice.actions
 export const familyReducer = familySlice.reducer 

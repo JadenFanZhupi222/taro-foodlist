@@ -1,0 +1,119 @@
+@use '../../../use/variables' as *;
+@use "sass:color";
+
+.add-recipes-page {
+  min-height: 100vh;
+  background-color: $color-bg-main;
+  padding: 2vh 2vw 0 2vw;
+  padding-top: 4vh;
+
+  .add-recipes-header {
+    padding: 2vh 0 1vh 0;
+    background: $color-bg-main;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 2vw;
+  }
+
+  .add-recipes-title {
+    font-size: $font-size-title;
+    font-weight: $font-weight-bold;
+    color: $color-primary;
+    margin-right: 2vw;
+  }
+
+  .add-recipes-stats {
+    font-size: $font-size-base;
+    color: $color-text-secondary;
+    font-weight: $font-weight-medium;
+  }
+
+  .add-recipes-search-bar {
+    margin-bottom: 1vh;
+  }
+
+  .add-recipes-content {
+    display: flex;
+    margin-top: 6vh;
+    gap: 2vw;
+    margin-left: 12vw;
+
+    .add-recipes-category-nav {
+      width: 12vw;
+      min-width: 12vw;
+      max-width: 12vw;
+      flex-shrink: 0;
+    }
+
+    .add-recipes-list {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2vh;
+      padding-bottom: 12vh;
+      position: relative;
+
+      .add-recipes-empty {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 40vh;
+        color: $color-text-secondary;
+        opacity: 0.8;
+      }
+      .add-recipes-empty-icon {
+        font-size: 6vh;
+        margin-bottom: 2vh;
+      }
+      .add-recipes-empty-text {
+        font-size: 2.4vh;
+        color: $color-text-secondary;
+        font-weight: $font-weight-medium;
+      }
+    }
+  }
+
+  .add-recipes-footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2vh 0 3vh 0;
+    background: $color-bg-main;
+    z-index: 100;
+    gap: 2vw;
+
+    .add-recipes-footer-stats {
+      font-size: 2.2vh;
+      color: $color-text-secondary;
+      font-weight: $font-weight-medium;
+      margin-left: 2vw;
+    }
+  }
+
+  .add-recipes-save-btn {
+    min-width: 30vw;
+    height: 6vh;
+    background: $color-primary;
+    color: $color-bg-card;
+    border-radius: 3vh;
+    font-size: $font-size-base;
+    font-weight: $font-weight-bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: $shadow-btn;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    &:active {
+      background: color.scale($color-primary, $lightness: -10%);
+      transform: scale(0.97);
+    }
+  }
+} 
