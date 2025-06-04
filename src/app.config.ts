@@ -9,6 +9,11 @@ export default defineAppConfig({
     'pages/profile/edit/index', // 个人中心编辑
     'pages/family/index',  // 家庭管理
     'pages/family/acceptInvite/index', // 接受家庭邀请
+    'pages/history/index', // 历史食谱
+    'pages/favorites/index', // 我的收藏
+    'pages/settings/notification/index', // 通知设置
+    'pages/settings/privacy/index', // 隐私设置
+    'pages/settings/about/index', // 关于我们
   ],
   window: {
     backgroundTextStyle: 'light',

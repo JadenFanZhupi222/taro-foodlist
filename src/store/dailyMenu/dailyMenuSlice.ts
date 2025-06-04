@@ -1,6 +1,6 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { initialState } from './initialState'
-import { fetchDailyMenus, createOrUpdateDailyMenu, removeRecipeFromMenu } from '@/thunks/dailyMenu/thunks'
+import { fetchDailyMenus, createOrUpdateDailyMenu, removeRecipeFromMenu, fetchDailyMenuByDate } from '@/thunks/dailyMenu/thunks'
 
 const dailyMenuSlice = createSlice({
   name: 'dailyMenu',
@@ -29,12 +29,20 @@ const dailyMenuSlice = createSlice({
     removeSelectedRecipe(state, action) {
       state.selectedRecipes = state.selectedRecipes.filter(r => r._id !== action.payload)
     },
+    addEmptyDate(state, action: PayloadAction<string>) {
+      if (!state.emptyDates.includes(action.payload)) {
+        state.emptyDates.push(action.payload)
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
       .addCase(fetchDailyMenus.pending, (state) => { state.fetchLoading = true })
       .addCase(fetchDailyMenus.fulfilled, (state) => { state.fetchLoading = false })
       .addCase(fetchDailyMenus.rejected, (state) => { state.fetchLoading = false })
+      .addCase(fetchDailyMenuByDate.pending, (state) => { state.fetchDailyLoading = true })
+      .addCase(fetchDailyMenuByDate.fulfilled, (state) => { state.fetchDailyLoading = false })
+      .addCase(fetchDailyMenuByDate.rejected, (state) => { state.fetchDailyLoading = false })
       .addCase(createOrUpdateDailyMenu.pending, (state) => { state.createLoading = true })
       .addCase(createOrUpdateDailyMenu.fulfilled, (state) => { state.createLoading = false })
       .addCase(createOrUpdateDailyMenu.rejected, (state) => { state.createLoading = false })
@@ -52,6 +60,7 @@ export const {
   clearDailyMenus,
   setSelectedRecipes,
   resetDailyMenu,
-  removeSelectedRecipe
+  removeSelectedRecipe,
+  addEmptyDate
 } = dailyMenuSlice.actions
 export const dailyMenuReducer = dailyMenuSlice.reducer 

@@ -1,4 +1,4 @@
-import { View, Input, Text } from '@tarojs/components'
+import { View, Text } from '@tarojs/components'
 import { useState } from 'react'
 import Taro from '@tarojs/taro'
 import { useSelector, useDispatch } from 'react-redux'

@@ -14,7 +14,7 @@ export default function AppContainer({ children }: { children: ReactNode }) {
     const currentPage = pages[pages.length - 1]
     const route = currentPage?.route
     // 只在首页显示 Loading
-    if (route === 'pages/index/index' || route === 'pages/profile/index') {
+    if (route === 'pages/index/index' || route === 'pages/profile/index' || route === 'page/today/index') {
       if (showLoading) {
         Taro.showLoading({ title: '加载中...', mask: true })
       } else {

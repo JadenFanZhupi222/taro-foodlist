@@ -4,7 +4,7 @@ const cloud = require('@cloudbase/node-sdk')
  * event: {
  *   familyId: string,
  *   date: string, // '2024-06-01'
- *   recipe: { recipeId: string, order: number },
+ *   recipe: { recipeId: string }, // 不再需要 order
  *   userId: string // 操作人
  * }
  */
@@ -34,11 +34,11 @@ exports.main = async (event, context) => {
   let dailyMenu = dailyMenuRes.data[0]
 
   if (!dailyMenu) {
-    // 没有则新建
+    // 没有则新建，第一个食谱的 order 为 100
     const newMenu = {
       family_id: familyId,
       date: dateStr,
-      recipes: [recipe],
+      recipes: [{ ...recipe, order: 100 }],
       _openid: userId,
       createdAt: new Date(),
       updatedAt: new Date()
@@ -49,7 +49,11 @@ exports.main = async (event, context) => {
     // 已有则追加菜品
     const exists = dailyMenu.recipes.some(r => r.recipe_id === recipe.recipe_id)
     if (!exists) {
-      dailyMenu.recipes.push(recipe)
+      // 找到当前最大的 order 值
+      const maxOrder = Math.max(...dailyMenu.recipes.map(r => r.order), 0)
+      // 新食谱的 order 为最大 order + 100
+      const newRecipe = { ...recipe, order: maxOrder + 100 }
+      dailyMenu.recipes.push(newRecipe)
       await db.collection('daily_menu').doc(dailyMenu._id).update({
         recipes: dailyMenu.recipes,
         updatedAt: new Date()

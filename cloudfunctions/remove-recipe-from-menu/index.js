@@ -24,7 +24,14 @@ exports.main = async (event, context) => {
     }
     
     // 移除 recipes 中的指定项
-    const newRecipes = (menu.recipes || []).filter(r => r.recipe_id !== recipeId)
+    const newRecipes = (menu.recipes || [])
+      .filter(r => r.recipe_id !== recipeId)
+      // 重新计算 order，确保是连续的
+      .map((recipe, index) => ({
+        ...recipe,
+        order: index + 1
+      }))
+
     await db.collection('daily_menu').doc(menuId).update({
       recipes: newRecipes,
       updatedAt: new Date()

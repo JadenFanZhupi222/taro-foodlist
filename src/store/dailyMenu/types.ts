@@ -18,8 +18,10 @@ export interface DailyMenu {
 export interface DailyMenuState {
   dailyMenus: DailyMenu[]
   fetchLoading: boolean
+  fetchDailyLoading: boolean
   createLoading: boolean
   updateLoading: boolean
   removeLoading: boolean
   selectedRecipes: Recipe[]
+  emptyDates: string[]
 } 

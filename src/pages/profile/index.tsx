@@ -70,22 +70,22 @@ const Profile = () => {
     {
       title: '通知设置',
       icon: notificationIcon,
-      path: '/pages/settings/notification'
+      path: '/pages/settings/notification/index'
     },
     {
       title: '隐私设置',
       icon: privacyIcon,
-      path: '/pages/settings/privacy'
+      path: '/pages/settings/privacy/index'
     },
     {
       title: '关于我们',
       icon: profileIcon,
-      path: '/pages/settings/about'
+      path: '/pages/settings/about/index'
     }
   ]
 
   const handleItemClick = (path: string) => {
-    if (!user && path !== '/pages/settings/about') {
+    if (!user && path !== '/pages/settings/about/index') {
       Taro.showModal({
         title: '提示',
         content: '请先登录',

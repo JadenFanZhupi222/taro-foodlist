@@ -7,7 +7,7 @@ import RecipeCard from '../../components/RecipeCard'
 import Loading from '@/components/Loading'
 import { SwitchTransition, CSSTransition } from 'react-transition-group'
 import { fetchDailyMenus, fetchDailyMenuByDate, createOrUpdateDailyMenu, removeRecipeFromMenu } from '@/thunks/dailyMenu/thunks'
-import { selectDailyMenus, selectDailyMenuLoading, selectSelectedRecipes } from '@/store/dailyMenu/selectors'
+import { selectDailyMenus, selectDailyMenuLoading, selectSelectedRecipes, selectEmptyDates } from '@/store/dailyMenu/selectors'
 import { selectFamily } from '@/store/family/selectors'
 import { selectRecipes } from '@/store/recipe/selectors'
 import { DailyMenuRecipeItem } from '@/store/dailyMenu/types'
@@ -19,6 +19,7 @@ import { Recipe } from '@/store/recipe/types'
 import { selectUser } from '@/store/user/selectors'
 import { removeSelectedRecipe } from '@/store/dailyMenu/dailyMenuSlice'
 import { toast } from '@/utils/toast'
+import { isSameDay } from '@/utils/date'
 
 const getDateKey = (date: Date) => date.toISOString().slice(0, 10)
 
@@ -30,6 +31,7 @@ const Today = () => {
   const allRecipes = useSelector(selectRecipes)
   const selectedRecipes = useSelector(selectSelectedRecipes)
   const user = useSelector(selectUser)
+  const emptyDates = useSelector(selectEmptyDates)
 
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [pendingDate, setPendingDate] = useState<Date | null>(null)
@@ -51,10 +53,7 @@ const Today = () => {
 
   // 当前日期的菜单
   const todayMenu = useMemo(() => 
-    dailyMenus.find(m => 
-      m.date === dateKey || 
-      m.date?.slice?.(0, 10) === dateKey
-    ), [dailyMenus, dateKey])
+    dailyMenus.find(m => isSameDay(m.date, dateKey)), [dailyMenus, dateKey])
   console.log('todayMenu', todayMenu)
   const todayRecipes = useMemo(() => {
     if (!todayMenu) return []
@@ -75,11 +74,14 @@ const Today = () => {
 
   // 进入页面优先拉取今天
   useEffect(() => {
-    if (family?._id && !hasFetchedToday) {
-      setHasFetchedToday(true)
-      dispatch(fetchDailyMenuByDate({ familyId: family._id, date: dateKey }))
+    if (!family?._id) return;
+    // 本地是否已有该日期的 dailyMenu 或已知无数据
+    const hasMenu = dailyMenus.some(m => isSameDay(m.date, dateKey)) || emptyDates.includes(dateKey);
+    if (!hasMenu && !hasFetchedToday) {
+      setHasFetchedToday(true);
+      dispatch(fetchDailyMenuByDate({ familyId: family._id, date: dateKey }));
     }
-  }, [family?._id, dateKey, hasFetchedToday, dispatch])
+  }, [family?._id, dateKey, hasFetchedToday, dailyMenus, emptyDates, dispatch]);
 
   // 后台异步拉取所有
   useEffect(() => {
@@ -128,7 +130,7 @@ const Today = () => {
     dispatch(createOrUpdateDailyMenu({
       familyId: family?._id || '',
       date: dateKey,
-      recipe: { recipe_id: recipe._id, order: todayMenu ? todayMenu.recipes.length + 1 : 1 },
+      recipe: { recipe_id: recipe._id },
       userId: user?._id || ''
     }))
     dispatch(removeSelectedRecipe(recipe._id))
@@ -138,7 +140,15 @@ const Today = () => {
   // 移除菜品
   const handleRemoveRecipe = useCallback((recipe: Recipe) => {
     if (!todayMenu) return
-    dispatch(removeRecipeFromMenu({ menuId: todayMenu._id, recipeId: recipe._id }))
+    Taro.showModal({
+      title: '确认删除',
+      content: '确定要将该菜品移出今日菜单吗？',
+      success: (res) => {
+        if (res.confirm) {
+          dispatch(removeRecipeFromMenu({ menuId: todayMenu._id, recipeId: recipe._id }))
+        }
+      }
+    })
   }, [todayMenu, dispatch])
 
   const handleArrow = (dir: 'prev' | 'next') => {
@@ -154,10 +164,11 @@ const Today = () => {
   const todayStr = new Date().toISOString().slice(0, 10)
   const selectedStr = selectedDate.toISOString().slice(0, 10)
   const isPast = selectedStr < todayStr
+  const isNotToday = !isSameDay(selectedDate, todayStr)
 
   return (
     <View className='today-page'>
-      <Loading visible={loading.fetchLoading || loading.createLoading || loading.updateLoading || loading.removeLoading} />
+      <Loading visible={(loading.fetchLoading && isNotToday) || loading.createLoading || loading.fetchDailyLoading || loading.removeLoading} />
       <SwitchTransition mode='out-in'>
         <CSSTransition
           key={dateKey}
@@ -197,7 +208,7 @@ const Today = () => {
                   className='fade-in-card'
                   onClick={() => handleRecipeClick(recipe._id)}
                   onRemove={() => handleRemoveRecipe(recipe)}
-                  showRemove
+                  showRemove={!isPast}
                 />
               ))
             )}

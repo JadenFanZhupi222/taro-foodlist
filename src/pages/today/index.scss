@@ -300,9 +300,26 @@
 .date-selector-bar-with-arrow {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 1.2rem;
-  margin-bottom: 0.5rem;
+  justify-content: space-between;
+  padding: 0 16rpx;
+
+  .today-arrow {
+    flex: none;
+    width: 64rpx;
+    height: 64rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    // 你的箭头样式
+  }
+
+  .date-selector-bar-center {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    // 让内容居中
+  }
 }
 
 .page-footer {

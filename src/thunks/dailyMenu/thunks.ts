@@ -6,16 +6,44 @@ import {
   addDailyMenu,
   clearDailyMenus,
   updateDailyMenu,
+  addEmptyDate
 } from '@/store/dailyMenu/dailyMenuSlice'
 import { RootState } from '@/store'
+import  { toast } from '@/utils/toast'
+import { isSameDay } from '@/utils/date'
 
 // 获取当前家庭所有 dailyMenus
 export const fetchDailyMenus = createAsyncThunk(
   'dailyMenu/fetchDailyMenus',
-  async ({ familyId }: { familyId: string }, { dispatch }) => {
+  async ({ familyId }: { familyId: string }, { dispatch, getState }) => {
     try {
       const res = await callCloud<DailyMenu[]>('get-family-daily-menus', { familyId })
-      dispatch(setDailyMenus(res.data || []))
+      const state = getState() as RootState
+      const today = new Date().toISOString().slice(0, 10)
+      const localToday = state.dailyMenu.dailyMenus.find(m => isSameDay(m.date, today))
+      const remoteMenus = res.data || []
+      let mergedMenus = remoteMenus
+      if (localToday) {
+        mergedMenus = [
+          ...remoteMenus.filter(m => !isSameDay(m.date, today)),
+          localToday
+        ]
+      }
+      dispatch(setDailyMenus(mergedMenus))
+
+      // emptyDates逻辑
+      const days = []
+      for (let i = -7; i <= 7; i++) {
+        const d = new Date()
+        d.setDate(d.getDate() + i)
+        days.push(d.toISOString().slice(0, 10) as never)
+      }
+      days.forEach(dateKey => {
+        const hasMenu = mergedMenus.some(m => isSameDay(m.date, dateKey))
+        if (!hasMenu) {
+          dispatch(addEmptyDate(dateKey))
+        }
+      })
     } catch (error) {
       dispatch(clearDailyMenus())
       throw error
@@ -39,6 +67,8 @@ export const fetchDailyMenuByDate = createAsyncThunk(
         } else {
           dispatch(addDailyMenu(res.data))
         }
+      } else {
+        dispatch(addEmptyDate(date))
       }
     } catch (error) {
       throw error
@@ -49,7 +79,12 @@ export const fetchDailyMenuByDate = createAsyncThunk(
 export const createOrUpdateDailyMenu = createAsyncThunk(
   'dailyMenu/createOrUpdateDailyMenu',
   async (
-    { familyId, date, recipe, userId }: { familyId: string; date: string; recipe: { recipe_id: string; order: number }; userId: string },
+    { familyId, date, recipe, userId }: { 
+      familyId: string; 
+      date: string; 
+      recipe: { recipe_id: string };
+      userId: string 
+    },
     { dispatch }
   ) => {
     await callCloud('create-or-update-daily-menu', { familyId, date, recipe, userId })
@@ -66,5 +101,6 @@ export const removeRecipeFromMenu = createAsyncThunk(
     if (menu) {
       await dispatch(fetchDailyMenuByDate({ familyId: menu.family_id, date: typeof menu.date === 'string' ? menu.date.slice(0, 10) : menu.date }))
     }
+    toast({ title: '已移除', icon: 'success' })
   }
 ) 

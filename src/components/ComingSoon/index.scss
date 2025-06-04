@@ -1,0 +1,10 @@
+@use '../../use/variables' as *;
+
+.coming-soon {
+  margin: 2.2rem 0 0 0;
+  text-align: center;
+  color: $color-primary;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+} 
