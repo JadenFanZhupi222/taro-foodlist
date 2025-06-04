@@ -6,8 +6,7 @@ import {
   addDailyMenu,
   clearDailyMenus,
   updateDailyMenu,
-  addEmptyDate,
-  deleteDailyMenuByDate
+  addEmptyDate
 } from '@/store/dailyMenu/dailyMenuSlice'
 import { RootState } from '@/store'
 import  { toast } from '@/utils/toast'
