@@ -34,6 +34,9 @@ const dailyMenuSlice = createSlice({
         state.emptyDates.push(action.payload)
       }
     },
+    deleteDailyMenuByDate(state, action: PayloadAction<string>) {
+      state.dailyMenus = state.dailyMenus.filter(m => m.date !== action.payload)
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -61,6 +64,7 @@ export const {
   setSelectedRecipes,
   resetDailyMenu,
   removeSelectedRecipe,
-  addEmptyDate
+  addEmptyDate,
+  deleteDailyMenuByDate
 } = dailyMenuSlice.actions
 export const dailyMenuReducer = dailyMenuSlice.reducer 

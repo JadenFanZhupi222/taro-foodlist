@@ -6,7 +6,8 @@ import {
   addDailyMenu,
   clearDailyMenus,
   updateDailyMenu,
-  addEmptyDate
+  addEmptyDate,
+  deleteDailyMenuByDate
 } from '@/store/dailyMenu/dailyMenuSlice'
 import { RootState } from '@/store'
 import  { toast } from '@/utils/toast'
@@ -62,11 +63,7 @@ export const fetchDailyMenuByDate = createAsyncThunk(
         const exists = state.dailyMenu.dailyMenus.some(
           m => m._id === res.data!._id
         )
-        if (exists) {
-          dispatch(updateDailyMenu(res.data))
-        } else {
-          dispatch(addDailyMenu(res.data))
-        }
+        exists ? dispatch(updateDailyMenu(res.data)) : dispatch(addDailyMenu(res.data))
       } else {
         dispatch(addEmptyDate(date))
       }
@@ -103,4 +100,4 @@ export const removeRecipeFromMenu = createAsyncThunk(
     }
     toast({ title: '已移除', icon: 'success' })
   }
-) 
+)

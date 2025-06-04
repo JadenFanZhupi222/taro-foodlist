@@ -10,7 +10,6 @@ import { getToken } from './auth'
  */
 export async function callCloud<T>(name: string, data: Record<string, any> = {}): Promise<CloudResult<T>> {
   try {
-    console.log('callCloud', name, data, 'token', getToken())
     // 自动带上 token
     const token = getToken()
     if (token) {

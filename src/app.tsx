@@ -36,16 +36,12 @@ function App({ children }: PropsWithChildren<{}>) {
         })
       }
       // 检查登录状态
-      console.log('App mounted, checking login status...')
       if (isLoggedIn()) {
         const user = getUser()
-        console.log('User is logged in:', user)
         if (user) {
           store.dispatch(setUser(user))
           store.dispatch(initApp())
         }
-      } else {
-        console.log('User is not logged in')
       }
     }
     init()

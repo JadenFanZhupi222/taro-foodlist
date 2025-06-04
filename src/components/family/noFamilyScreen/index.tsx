@@ -13,9 +13,7 @@ export default function NoFamilyScreen({ onCreate, loading }: NoFamilyScreenProp
   const [showCreate, setShowCreate] = useState(false)
 
   const handleSubmit = async (e) => {
-    console.log('e', e)
     const value = e.detail.value.familyName
-    console.log('value', value)
     if (!value || !value.trim()) {
       toast({ title: '请输入家庭名称', icon: 'none' })
       return

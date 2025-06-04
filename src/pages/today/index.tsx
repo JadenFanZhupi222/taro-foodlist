@@ -1,7 +1,7 @@
 import { View, Button, Text } from '@tarojs/components'
 import { useState, useLayoutEffect, useEffect, useMemo, useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import Taro from '@tarojs/taro'
+import Taro, { usePullDownRefresh } from '@tarojs/taro'
 import DateSelector from '../../components/DateSelector'
 import RecipeCard from '../../components/RecipeCard'
 import Loading from '@/components/Loading'
@@ -54,7 +54,6 @@ const Today = () => {
   // 当前日期的菜单
   const todayMenu = useMemo(() => 
     dailyMenus.find(m => isSameDay(m.date, dateKey)), [dailyMenus, dateKey])
-  console.log('todayMenu', todayMenu)
   const todayRecipes = useMemo(() => {
     if (!todayMenu) return []
     return todayMenu.recipes
@@ -165,6 +164,17 @@ const Today = () => {
   const selectedStr = selectedDate.toISOString().slice(0, 10)
   const isPast = selectedStr < todayStr
   const isNotToday = !isSameDay(selectedDate, todayStr)
+
+  usePullDownRefresh(() => {
+    if (!family?._id) {
+      Taro.stopPullDownRefresh()
+      return
+    }
+    dispatch(fetchDailyMenuByDate({ familyId: family._id, date: dateKey }))
+      .finally(() => {
+        Taro.stopPullDownRefresh()
+      })
+  })
 
   return (
     <View className='today-page'>
