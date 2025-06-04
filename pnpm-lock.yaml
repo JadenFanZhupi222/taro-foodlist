@@ -80,6 +80,9 @@ importers:
       redux-thunk:
         specifier: ^3.1.0
         version: 3.1.0(redux@5.0.1)
+      reselect:
+        specifier: ^5.1.1
+        version: 5.1.1
       taro-ui:
         specifier: ^3.3.0
         version: 3.3.0(1d68578d3e661332aee286597abbabad)

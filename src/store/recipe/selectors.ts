@@ -1,15 +1,20 @@
-import { RootState } from '../index'
+import { RootState } from '@/store'
+import { createSelector } from 'reselect'
 
-export const selectRecipes = (state: RootState) =>
-  state.recipe.recipes.filter(recipe => !recipe.deleted)
+export const selectRecipes = (state: RootState) => state.recipe.recipes
 export const selectComments = (state: RootState) => state.recipe.comments
 export const selectRecipeById = (id: string) => (state: RootState) =>
   state.recipe.recipes.find(r => r._id === id)
-export const selectRecipesByType = (state: RootState, type: string) =>
-  state.recipe.recipes.filter(recipe => recipe.type === type)
-export const selectRecipeLoading = (state: RootState) => ({
-  fetchLoading: state.recipe.fetchLoading,
-  createLoading: state.recipe.createLoading,
-  updateLoading: state.recipe.updateLoading,
-  deleteLoading: state.recipe.deleteLoading
-}) 
+export const selectRecipesByType = (type: string) => createSelector(
+  (state: RootState) => state.recipe.recipes,
+  (recipes) => recipes.filter(recipe => recipe.type === type)
+)
+export const selectRecipeLoading = createSelector(
+  (state: RootState) => state.recipe,
+  (recipe) => ({
+    fetchLoading: recipe.fetchLoading,
+    createLoading: recipe.createLoading,
+    updateLoading: recipe.updateLoading,
+    deleteLoading: recipe.deleteLoading
+  })
+) 
