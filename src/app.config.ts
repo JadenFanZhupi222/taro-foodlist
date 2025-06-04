@@ -5,15 +5,6 @@ export default defineAppConfig({
     'pages/recipe/edit/index', // 食谱编辑
     'pages/today/index',  // 今日食谱
     'pages/today/addRecipes/index', // 添加食谱页面
-    'pages/profile/index', // 个人中心
-    'pages/profile/edit/index', // 个人中心编辑
-    'pages/family/index',  // 家庭管理
-    'pages/family/acceptInvite/index', // 接受家庭邀请
-    'pages/history/index', // 历史食谱
-    'pages/favorites/index', // 我的收藏
-    'pages/settings/notification/index', // 通知设置
-    'pages/settings/privacy/index', // 隐私设置
-    'pages/settings/about/index', // 关于我们
   ],
   window: {
     backgroundTextStyle: 'light',
@@ -30,21 +21,51 @@ export default defineAppConfig({
       {
         pagePath: 'pages/index/index',
         text: '食谱库',
-        iconPath: 'assets/icons/recipe.png',
-        selectedIconPath: 'assets/icons/recipe-active.png'
+        iconPath: '@cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/recipe.png',
+        selectedIconPath: '@cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/recipe-active.png'
       },
       {
         pagePath: 'pages/today/index',
         text: '今日食谱',
-        iconPath: 'assets/icons/today.png',
-        selectedIconPath: 'assets/icons/today-active.png'
+        iconPath: '@cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/today.png',
+        selectedIconPath: '@cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/today-active.png'
       },
       {
         pagePath: 'pages/profile/index',
         text: '我的',
-        iconPath: 'assets/icons/profile.png',
-        selectedIconPath: 'assets/icons/profile-active.png'
+        iconPath: '@cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/profile.png',
+        selectedIconPath: '@cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/profile-active.png'
       }
     ]
-  }
+  },
+  subPackages: [
+    {
+      root: 'pages/profile',
+      pages: ['index', 'edit']
+    },
+    {
+      root: 'pages/family',
+      pages: ['index', 'acceptInvite']
+    },
+    {
+      root: 'pages/history',
+      pages: ['index']
+    },
+    {
+      root: 'pages/favorites',
+      pages: ['index']
+    },
+    {
+      root: 'pages/settings/notification',
+      pages: ['index']
+    },
+    {
+      root: 'pages/settings/privacy',
+      pages: ['index']
+    },
+    {
+      root: 'pages/settings/about',
+      pages: ['index']
+    }
+  ]
 })

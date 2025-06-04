@@ -7,14 +7,14 @@ import './index.scss'
 import Loading from '@/components/Loading'
 import UserCard from '@/components/profile/userCard'
 
-// 导入图标
-import historyIcon from '@/assets/icons/history.png'
-import favoriteIcon from '@/assets/icons/favorite.png'
-import familyIcon from '@/assets/icons/family.png'
-import notificationIcon from '@/assets/icons/notification.png'
-import privacyIcon from '@/assets/icons/privacy.png'
-import arrowIcon from '@/assets/icons/arrow-right.png'
-import profileIcon from '@/assets/icons/profile.png'
+// 云存储fileID路径
+const historyIcon = '@cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/history.png'
+const favoriteIcon = '@cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/favorite.png'
+const familyIcon = '@cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/family.png'
+const notificationIcon = '@cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/notification.png'
+const privacyIcon = '@cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/privacy.png'
+const arrowIcon = '@cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/arrow-right.png'
+const profileIcon = '@cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/profile.png'
 
 const defaultAvatarUrl = 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0'
 
