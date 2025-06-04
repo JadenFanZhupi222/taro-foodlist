@@ -1,6 +1,6 @@
 import { View, Text } from '@tarojs/components'
 import { useState } from 'react'
-import Taro from '@tarojs/taro'
+import Taro, { usePullDownRefresh } from '@tarojs/taro'
 import { useSelector, useDispatch } from 'react-redux'
 import { selectRecipes } from '@/store/recipe/selectors'
 import { selectUser } from '@/store/user/selectors'
@@ -8,7 +8,7 @@ import CategoryNav from '../../components/CategoryNav'
 import RecipeCard from '../../components/RecipeCard'
 import './index.scss'
 import { RECIPE_CATEGORIES } from '@/store/recipe/types'
-import { deleteRecipeById } from '@/thunks/recipe/thunks'
+import { deleteRecipeById, fetchRecipes } from '@/thunks/recipe/thunks'
 import type { AppDispatch } from '@/store'
 import Loading from '@/components/Loading'
 import { selectRecipeLoading } from '@/store/recipe/selectors'
@@ -23,7 +23,19 @@ const Index = () => {
   const [searchText, setSearchText] = useState('')
   const [activeCategory, setActiveCategory] = useState('全部')
   const dispatch = useDispatch<AppDispatch>()
-  const { createLoading, deleteLoading } = useSelector(selectRecipeLoading)
+  const { createLoading, deleteLoading, fetchLoading } = useSelector(selectRecipeLoading)
+
+  // 处理下拉刷新
+  usePullDownRefresh(async () => {
+    if (!familyId) {
+      Taro.stopPullDownRefresh()
+      return
+    }
+    dispatch(fetchRecipes(familyId))
+      .finally(() => {
+        Taro.stopPullDownRefresh()
+      })
+  })
 
   // 处理搜索
   const handleSearch = (value: string) => {
@@ -76,7 +88,7 @@ const Index = () => {
 
   return (
     <View className='index'>
-      <Loading visible={createLoading || deleteLoading} />
+      <Loading visible={createLoading || deleteLoading || fetchLoading} />
       {/* 主要内容区 */}
       <View className='content'>
         <View className='index-search-bar-wrap'>

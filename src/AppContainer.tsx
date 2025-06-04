@@ -2,12 +2,10 @@ import { ReactNode, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import Taro from '@tarojs/taro'
 import { selectFamilyLoading } from './store/family/selectors'
-import { selectRecipeLoading } from './store/recipe/selectors'
 
 export default function AppContainer({ children }: { children: ReactNode }) {
   const familyLoading = useSelector(selectFamilyLoading)
-  const recipeLoadingObj = useSelector(selectRecipeLoading)
-  const showLoading = familyLoading || recipeLoadingObj.fetchLoading
+  const showLoading = familyLoading
 
   useEffect(() => {
     const pages = Taro.getCurrentPages()

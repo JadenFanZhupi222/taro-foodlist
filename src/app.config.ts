@@ -5,7 +5,7 @@ export default defineAppConfig({
     'pages/profile/index',
   ],
   window: {
-    backgroundTextStyle: 'light',
+    backgroundTextStyle: 'dark',
     navigationBarBackgroundColor: '#fff',
     navigationBarTitleText: '家庭食谱',
     navigationBarTextStyle: 'black',
