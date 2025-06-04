@@ -1,10 +1,8 @@
 export default defineAppConfig({
   pages: [
     'pages/index/index',  // 食谱库
-    'pages/recipe/detail/index', // 食谱详情
-    'pages/recipe/edit/index', // 食谱编辑
     'pages/today/index',  // 今日食谱
-    'pages/today/addRecipes/index', // 添加食谱页面
+    'pages/profile/index',
   ],
   window: {
     backgroundTextStyle: 'light',
@@ -40,12 +38,24 @@ export default defineAppConfig({
   },
   subPackages: [
     {
-      root: 'pages/profile',
-      pages: ['index', 'edit']
+      root: 'pages/today/addRecipes',
+      pages: ['index']
+    },
+    {
+      root: 'pages/recipe/detail',
+      pages: ['index']
+    },
+    {
+      root: 'pages/recipe/edit',
+      pages: ['index']
+    },
+    {
+      root: 'pages/profile/edit',
+      pages: ['index']
     },
     {
       root: 'pages/family',
-      pages: ['index', 'acceptInvite']
+      pages: ['index', 'acceptInvite/index']
     },
     {
       root: 'pages/history',
@@ -67,5 +77,6 @@ export default defineAppConfig({
       root: 'pages/settings/about',
       pages: ['index']
     }
-  ]
+  ],
+  lazyCodeLoading: 'requiredComponents'
 })
