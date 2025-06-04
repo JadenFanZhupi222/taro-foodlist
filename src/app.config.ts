@@ -21,20 +21,20 @@ export default defineAppConfig({
       {
         pagePath: 'pages/index/index',
         text: '食谱库',
-        iconPath: '@cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/recipe.png',
-        selectedIconPath: '@cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/recipe-active.png'
+        iconPath: 'assets/icons/recipe.png',
+        selectedIconPath: 'assets/icons/recipe-active.png'
       },
       {
         pagePath: 'pages/today/index',
         text: '今日食谱',
-        iconPath: '@cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/today.png',
-        selectedIconPath: '@cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/today-active.png'
+        iconPath: 'assets/icons/today.png',
+        selectedIconPath: 'assets/icons/today-active.png'
       },
       {
         pagePath: 'pages/profile/index',
         text: '我的',
-        iconPath: '@cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/profile.png',
-        selectedIconPath: '@cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/profile-active.png'
+        iconPath: 'assets/icons/profile.png',
+        selectedIconPath: 'assets/icons/profile-active.png'
       }
     ]
   },
