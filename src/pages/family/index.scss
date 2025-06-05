@@ -45,7 +45,7 @@
       font-size: 1.2rem;
       border-radius: $radius-lg;
       background: $color-primary;
-      color: #fff;
+      color: $color-text-light;
       font-weight: 500;
       padding: 0.8rem 0;
       box-shadow: 0 2px 8px rgba(0,0,0,0.04);
@@ -89,7 +89,7 @@
         font-size: 1.1rem;
         border-radius: $radius-md;
         background: $color-primary;
-        color: #fff;
+        color: $color-text-light;
         font-weight: 500;
         transition: background 0.2s, transform 0.2s;
         &:active {
@@ -104,7 +104,7 @@
       font-size: 1.2rem;
       border-radius: $radius-lg;
       background: $color-primary;
-      color: #fff;
+      color: $color-text-light;
       font-weight: 500;
       padding: 0.8rem 0;
       transition: background 0.2s, transform 0.2s;
@@ -126,7 +126,7 @@
   align-items: center;
   justify-content: center;
   .loading-content {
-    background: #fff;
+    background: $color-bg-card;
     border-radius: $radius-lg;
     padding: 2rem 2.5rem;
     box-shadow: 0 2px 12px rgba(0,0,0,0.08);
@@ -152,4 +152,32 @@
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+.family-leave-btn-wrap {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.family-leave-btn {
+  background: $color-bg-card;
+  color: $color-primary;
+  border: 1.5px solid $color-primary;
+  border-radius: $radius-btn;
+  text-align: center;
+  font-weight: 500;
+  font-size: 1rem;
+  padding: 0.4rem 1.2rem;
+  max-width: 20rem;
+  margin-left: 1rem;
+  width: 100%;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  box-sizing: border-box;
+  &:active {
+    background: color.scale($color-primary, $lightness: 45%);
+    color: $color-text-light;
+    border-color: $color-primary;
+  }
 } 

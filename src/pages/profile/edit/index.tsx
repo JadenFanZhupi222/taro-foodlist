@@ -7,7 +7,7 @@ import Taro from '@tarojs/taro'
 import { RootState } from '@/store'
 import type { AppDispatch } from '@/store'
 import './index.scss'
-import { useAvatarUpload } from '@/hooks/useAvatarUpload'
+import { useCloudUpload } from '@/hooks/useCloudImageUpload'
 import Loading from '@/components/Loading'
 import { toast } from '@/utils/toast'
 
@@ -26,7 +26,7 @@ const ProfileEdit = () => {
     const { avatarUrl } = e.detail
     if (avatarUrl) {
       setAvatar(avatarUrl)
-      const fileID = await useAvatarUpload(avatarUrl, user!.openId)
+      const fileID = await useCloudUpload(avatarUrl, 'avatar', user!.openId)
       setAvatarFileId(fileID)
       toast({ title: '头像已选择', icon: 'success' })
     }
@@ -37,7 +37,7 @@ const ProfileEdit = () => {
     if (!user) return
     let fileID = avatarFileId
     if (!avatarFileId) {
-      fileID = await useAvatarUpload(avatar, user!.openId)
+      fileID = await useCloudUpload(avatar, 'avatar', user!.openId)
       setAvatarFileId(fileID)
     }
     try {

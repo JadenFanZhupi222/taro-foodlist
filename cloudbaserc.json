@@ -155,6 +155,15 @@
       "timeout": 20,
       "memorySize": 256,
       "description": "从每日菜单中移除指定菜品"
+    },
+    {
+      "name": "leave-family",
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "timeout": 20,
+      "memorySize": 256,
+      "description": "退出家庭"
     }
   ]
 }

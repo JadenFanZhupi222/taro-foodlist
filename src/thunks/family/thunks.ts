@@ -5,6 +5,8 @@ import { setFamily, clearFamily, setInviteFamily } from '@/store/family/familySl
 import { toast } from '@/utils/toast'
 import Taro from '@tarojs/taro'
 import type { User } from '@/store/user/types'
+import { resetRecipes } from '@/store/recipe/recipeSlice'
+import { resetDailyMenu } from '@/store/dailyMenu/dailyMenuSlice'
 
 // 获取家庭信息
 export const fetchFamily = createAsyncThunk(
@@ -67,6 +69,8 @@ export const leaveFamily = createAsyncThunk(
     try {
       await callCloud<null>('leave-family')
       dispatch(clearFamily())
+      dispatch(resetRecipes())
+      dispatch(resetDailyMenu())
       toast({ title: '已退出家庭', icon: 'success' })
     } catch (error) {
       console.error('退出家庭失败:', error)

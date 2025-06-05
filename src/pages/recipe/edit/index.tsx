@@ -12,7 +12,7 @@ import { User as GlobalUser } from '@/types/store'
 import { AppDispatch } from '@/store'
 import { RecipeCategory, RECIPE_CATEGORIES } from '@/store/recipe/types'
 import { updateRecipeInStore } from '@/store/recipe/recipeSlice'
-import { useAvatarUpload } from '@/hooks/useAvatarUpload'
+import { useCloudUpload } from '@/hooks/useCloudImageUpload'
 import Loading from '@/components/Loading'
 
 // 用于生成唯一id，兼容小程序
@@ -70,7 +70,7 @@ const RecipeEdit: FC = () => {
     }
     let imageUrl = imageLocal
     if (imageLocal) {
-      imageUrl = await useAvatarUpload(imageLocal, user._id)
+      imageUrl = await useCloudUpload(imageLocal, 'recipes', user._id)
     }
     const recipe = {
       name: name.trim(),
@@ -193,7 +193,7 @@ const RecipeEdit: FC = () => {
             <Button className='form-add-btn' onClick={handleAddStep}>添加步骤</Button>
           </View>
           <View className='form-actions'>
-            <Button className='form-save-btn' onClick={handleSave}>保存</Button>
+            <Button className='form-save-btn' onClick={handleSave} disabled={createLoading || updateLoading}>保存</Button>
           </View>
         </View>
       </ScrollView>

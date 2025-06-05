@@ -1,0 +1,9 @@
+{
+  "name": "leave-family",
+  "version": "1.0.0",
+  "description": "退出家庭",
+  "main": "index.js",
+  "dependencies": {
+    "@cloudbase/node-sdk": "^3.7.0"
+  }
+} 

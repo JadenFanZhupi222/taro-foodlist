@@ -3,13 +3,15 @@ export interface Ingredient {
   amount: string
 }
 
-export type RecipeCategory = '大荤' | '小荤' | '蔬菜' | '汤类' | '其他';
+export type RecipeCategory = '大荤' | '小荤' | '蔬菜' | '汤类' | '甜品' | '主食' | '其他';
 
 export const RECIPE_CATEGORIES: RecipeCategory[] = [
   '大荤',
   '小荤',
   '蔬菜',
   '汤类',
+  '甜品',
+  '主食',
   '其他'
 ];
 
