@@ -127,7 +127,14 @@
       "installDependency": true,
       "timeout": 20,
       "memorySize": 256,
-      "description": "定时清理过期每日菜单"
+      "description": "定时清理过期每日菜单",
+      "triggers": [
+        {
+          "name": "cleanExpiredDailyMenuTimer",
+          "type": "timer",
+          "config": "0 0 * * * *"
+        }
+      ]  
     },
     {
       "name": "get-family-daily-menus",
