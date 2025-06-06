@@ -131,7 +131,13 @@ const RecipeEdit: FC = () => {
     return (
       <View className={`form-step-row${deletingStepIds.includes(step.id) ? ' fade-out' : ' fade-in'}`} key={step.id}>
         <Text className='form-step-number'>{idx + 1}</Text>
-        <Textarea className='form-textarea' value={step.text} onInput={e => handleStepChange(step.id, e.detail.value)} placeholder='请输入步骤' />
+        <Textarea 
+          className='form-textarea' 
+          value={step.text} 
+          onInput={e => handleStepChange(step.id, e.detail.value)} 
+          placeholder='请输入步骤'
+          adjustPosition
+        />
         <Button className='form-remove-btn' onClick={() => handleRemoveStep(step.id)}>删除</Button>
       </View>
     )
@@ -156,7 +162,13 @@ const RecipeEdit: FC = () => {
   return (
     <View className='recipe-edit-page'>
       <Loading visible={createLoading || updateLoading} />
-      <ScrollView className='recipe-edit-scroll' scrollY>
+      <ScrollView 
+        className='recipe-edit-scroll' 
+        scrollY 
+        scrollWithAnimation
+        enhanced
+        showScrollbar={false}
+      >
         <View className='form-card'>
           <Text className='form-title'>家庭食谱</Text>
           <View className='form-section'>
@@ -180,7 +192,13 @@ const RecipeEdit: FC = () => {
           {renderImageSection()}
           <View className='form-section'>
             <Text className='form-label'>描述</Text>
-            <Textarea className='form-textarea' value={description} onInput={e => setDescription(e.detail.value)} placeholder='请输入描述' />
+            <Textarea 
+              className='form-textarea' 
+              value={description} 
+              onInput={e => setDescription(e.detail.value)} 
+              placeholder='请输入描述'
+              adjustPosition
+            />
           </View>
           <View className='form-section'>
             <Text className='form-label'>食材</Text>

@@ -4,7 +4,7 @@ import Taro from '@tarojs/taro'
 import { Provider } from 'react-redux'
 import store from './store'
 import { getUser, isLoggedIn } from './utils/auth'
-import { setUser } from './store/user/userSlice'
+import { setUser, setLoginChecked } from './store/user/userSlice'
 import { initApp } from './thunks/initApp'
 import AppContainer from './AppContainer'
 
@@ -43,6 +43,7 @@ function App({ children }: PropsWithChildren<{}>) {
           store.dispatch(initApp())
         }
       }
+      store.dispatch(setLoginChecked(true))
     }
     init()
   }, [])

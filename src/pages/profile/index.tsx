@@ -1,11 +1,14 @@
 import { View, Image, Text } from '@tarojs/components'
-import { useSelector } from 'react-redux'
-import { selectUser, selectLoginLoading } from '@/store/user/selectors'
-import Taro from '@tarojs/taro'
+import { useSelector, useDispatch } from 'react-redux'
+import { selectUser, selectLoginLoading, selectGuideLogin } from '@/store/user/selectors'
+import { setGuideLogin } from '@/store/user/userSlice'
+import Taro, { getCurrentInstance } from '@tarojs/taro'
 import LoginButton from '@/components/LoginButton'
 import './index.scss'
 import Loading from '@/components/Loading'
 import UserCard from '@/components/profile/userCard'
+import LoginGuideMask from '@/components/profile/LoginGuideMask'
+import { useEffect, useState } from 'react'
 
 // 云存储fileID路径
 const historyIcon = 'cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/history.png'
@@ -21,6 +24,20 @@ const defaultAvatarUrl = 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia0
 const Profile = () => {
   const user = useSelector(selectUser)
   const loginLoading = useSelector(selectLoginLoading)
+  const guideLogin = useSelector(selectGuideLogin)
+  const [showLoginGuide, setShowLoginGuide] = useState(false)
+  const dispatch = useDispatch()
+
+  useEffect(() => {
+    if (user && showLoginGuide) setShowLoginGuide(false)
+  }, [user])
+
+  useEffect(() => {
+    if (guideLogin) {
+      setShowLoginGuide(true)
+      dispatch(setGuideLogin(false))
+    }
+  }, [guideLogin, dispatch])
 
   // 生成"微信用户xxxxx"
   const getDefaultNickname = () => {
@@ -110,9 +127,10 @@ const Profile = () => {
         onEdit={handleEdit}
         user={user}
       >
-        <LoginButton className='edit-btn' />
+        <LoginButton className={`edit-btn${showLoginGuide ? ' guide-highlight' : ''}`} />
       </UserCard>
-
+      {/* 遮罩层 */}
+      {showLoginGuide && <LoginGuideMask onClose={() => setShowLoginGuide(false)} />}
       {/* 功能列表 */}
       <View className='menu-section'>
         <Text className='section-title'>功能</Text>

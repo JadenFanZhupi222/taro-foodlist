@@ -8,6 +8,7 @@ import { useEffect } from 'react'
 import Taro from '@tarojs/taro'
 import Loading from '@/components/Loading'
 import { toast } from '@/utils/toast'
+import { setGuideLogin } from '@/store/user/userSlice'
 
 interface LoginButtonProps {
   className?: string
@@ -25,9 +26,9 @@ const LoginButton = ({ className = '' }: LoginButtonProps) => {
     }
   }, [code, dispatch])
 
-  // 用户点击登录按钮时，先弹窗说明用途
   const handleLoginClick = () => {
     dispatch(login())
+    dispatch(setGuideLogin(false))
   }
 
   // 处理退出登录

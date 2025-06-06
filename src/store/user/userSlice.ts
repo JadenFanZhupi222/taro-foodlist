@@ -7,6 +7,8 @@ const initialState = {
   loginLoading: false,
   profileLoading: false,
   logoutLoading: false,
+  guideLogin: false,
+  loginChecked: false,
 }
 
 const userSlice = createSlice({
@@ -24,7 +26,13 @@ const userSlice = createSlice({
     },
     setCode(state, action) {
       state.code = action.payload
-    }
+    },
+    setGuideLogin(state, action) {
+      state.guideLogin = action.payload
+    },
+    setLoginChecked(state, action) {
+      state.loginChecked = action.payload
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -46,5 +54,5 @@ const userSlice = createSlice({
   }
 })
 
-export const { setUser, logout, setCode } = userSlice.actions
+export const { setUser, logout, setCode, setGuideLogin, setLoginChecked } = userSlice.actions
 export const userReducer = userSlice.reducer 

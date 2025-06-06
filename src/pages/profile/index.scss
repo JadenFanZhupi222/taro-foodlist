@@ -38,7 +38,7 @@
         border-bottom: none;
       }
       &:active {
-        background: #f8f8f8;
+        background: $color-bg-main;
       }
       .menu-icon {
         width: 1.1rem;
@@ -58,4 +58,16 @@
       }
     }
   }
+}
+
+.guide-highlight {
+  box-shadow: 0 0 0 1vw rgba($color-primary, 0.18), 0 0 4vw 1vw $color-primary;
+  animation: guide-glow 1.2s infinite alternate;
+  position: relative;
+  z-index: 10000;
+}
+
+@keyframes guide-glow {
+  0% { box-shadow: 0 0 0 1vw rgba($color-primary, 0.18), 0 0 4vw 1vw $color-primary; }
+  100% { box-shadow: 0 0 0 2vw rgba($color-primary, 0.28), 0 0 8vw 2vw $color-primary; }
 }

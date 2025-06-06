@@ -1,0 +1,36 @@
+@use '../../../use/variables' as *;
+
+.login-guide-mask {
+  position: fixed;
+  left: 0; top: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 9999;
+}
+
+.login-guide-tip-abs {
+  position: absolute;
+  top: 17vh;
+  left: 78vw;
+  width: 27vw;
+  transform: translateX(-50%);
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: 2vh 6vw 1.5vh 6vw;
+  box-shadow: 0 0 2vw 0.5vw $color-primary;
+  text-align: center;
+  color: $color-primary;
+  font-weight: 600;
+  font-size: 2.8vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.login-guide-arrow-up {
+  width: 0;
+  height: 0;
+  border-left: 3vw solid transparent;
+  border-right: 3vw solid transparent;
+  border-bottom: 3vw solid $color-primary;
+  margin-bottom: 1vh;
+}
