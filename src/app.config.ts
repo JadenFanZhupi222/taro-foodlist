@@ -1,4 +1,5 @@
 export default defineAppConfig({
+  __usePrivacyCheck__: true,  // 开启隐私合规检查
   pages: [
     'pages/index/index',  // 食谱库
     'pages/today/index',  // 今日食谱
