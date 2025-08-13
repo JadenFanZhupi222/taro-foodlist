@@ -10,12 +10,24 @@ exports.main = async (event, context) => {
   const db = app.database();
 
   try {
-    // 软删除：只更新 deleted 字段
+    // 1. 软删除菜谱
     await db.collection('recipes').doc(recipeId).update({
-      deleted: true
+      deleted: true,
+      updatedAt: new Date()
     });
-    // 不再从家庭 recipes 字段移除
-    return { code: 0, message: '软删除成功' };
+
+    // 2. 标记关联记录为删除
+    await db.collection('family_recipes')
+      .where({
+        family_id: familyId,
+        recipe_id: recipeId
+      })
+      .update({
+        deleted: true,
+        updatedAt: new Date()
+      });
+
+    return { code: 0, message: '删除成功' };
   } catch (e) {
     return { code: 2, message: '数据库错误: ' + e.message };
   }

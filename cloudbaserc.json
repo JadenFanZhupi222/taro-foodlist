@@ -171,6 +171,15 @@
       "timeout": 20,
       "memorySize": 256,
       "description": "退出家庭"
+    },
+    {
+      "name": "migrate-recipes-once",
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "timeout": 60,
+      "memorySize": 512,
+      "description": "一次性迁移 family.recipes 到 family_recipes 表"
     }
   ]
 }
