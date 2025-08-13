@@ -7,6 +7,10 @@ import Taro from '@tarojs/taro'
 import type { User } from '@/store/user/types'
 import { resetRecipes } from '@/store/recipe/recipeSlice'
 import { resetDailyMenu } from '@/store/dailyMenu/dailyMenuSlice'
+import { setUser } from '@/store/user/userSlice'
+import { setUser as setUserStorage } from '@/utils/auth'
+import { selectUser } from '@/store/user/selectors'
+import type { RootState } from '@/store'
 
 // 获取家庭信息
 export const fetchFamily = createAsyncThunk(
@@ -65,12 +69,28 @@ export const joinFamily = createAsyncThunk(
 
 export const leaveFamily = createAsyncThunk(
   'family/leaveFamily',
-  async (_, { dispatch }) => {
+  async (_, { dispatch, getState }) => {
     try {
       await callCloud<null>('leave-family')
+      
+      // 清空家庭相关状态
       dispatch(clearFamily())
       dispatch(resetRecipes())
       dispatch(resetDailyMenu())
+      
+      const state = getState() as RootState
+      const currentUser = selectUser(state)
+      if (currentUser) {
+        const updatedUser = {
+          ...currentUser,
+          family_id: '',
+          role: ''
+        }
+        dispatch(setUser(updatedUser))
+        // 同时更新本地存储
+        setUserStorage(updatedUser)
+      }
+      
       toast({ title: '已退出家庭', icon: 'success' })
     } catch (error) {
       console.error('退出家庭失败:', error)
