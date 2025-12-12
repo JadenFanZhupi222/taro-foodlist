@@ -5,7 +5,7 @@ import prodConfig from './prod'
 import path from 'path'
 
 // https://taro-docs.jd.com/docs/next/config#defineconfig-辅助函数
-export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
+export default defineConfig<'webpack5'>(async (merge) => {
   const baseConfig: UserConfigExport<'webpack5'> = {
     projectName: 'ymscp-recipe',
     date: '2025-5-29',
@@ -57,6 +57,9 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
       },
       webpackChain(chain) {
         chain.resolve.plugin('tsconfig-paths').use(TsconfigPathsPlugin)
+        // 修复 comp.json 循环引用问题
+        const FixCompJsonPlugin = require('../scripts/fix-comp-webpack-plugin')
+        chain.plugin('fix-comp-json').use(FixCompJsonPlugin)
       }
     },
     h5: {
