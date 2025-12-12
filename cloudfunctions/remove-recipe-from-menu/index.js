@@ -1,5 +1,14 @@
 const cloud = require('@cloudbase/node-sdk')
 
+const getShanghaiDateKey = (date = new Date()) => {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(date)
+}
+
 exports.main = async (event, context) => {
   const app = cloud.init({ env: cloud.SYMBOL_CURRENT_ENV })
   const db = app.database()
@@ -18,7 +27,7 @@ exports.main = async (event, context) => {
     }
 
     // 判断是否为今天及以后
-    const todayStr = new Date().toISOString().slice(0, 10)
+    const todayStr = getShanghaiDateKey()
     if (menu.date < todayStr) {
       return { code: 2, message: '不能删除历史日期菜单' }
     }

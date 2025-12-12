@@ -10,7 +10,7 @@ import {
 } from '@/store/dailyMenu/dailyMenuSlice'
 import { RootState } from '@/store'
 import  { toast } from '@/utils/toast'
-import { isSameDay } from '@/utils/date'
+import { isSameDay, toDateKey } from '@/utils/date'
 
 // 获取当前家庭所有 dailyMenus
 export const fetchDailyMenus = createAsyncThunk(
@@ -19,7 +19,7 @@ export const fetchDailyMenus = createAsyncThunk(
     try {
       const res = await callCloud<DailyMenu[]>('get-family-daily-menus', { familyId })
       const state = getState() as RootState
-      const today = new Date().toISOString().slice(0, 10)
+      const today = toDateKey(new Date())
       const localToday = state.dailyMenu.dailyMenus.find(m => isSameDay(m.date, today))
       const remoteMenus = res.data || []
       let mergedMenus = remoteMenus
@@ -30,20 +30,6 @@ export const fetchDailyMenus = createAsyncThunk(
         ]
       }
       dispatch(setDailyMenus(mergedMenus))
-
-      // emptyDates逻辑
-      const days = []
-      for (let i = -7; i <= 7; i++) {
-        const d = new Date()
-        d.setDate(d.getDate() + i)
-        days.push(d.toISOString().slice(0, 10) as never)
-      }
-      days.forEach(dateKey => {
-        const hasMenu = mergedMenus.some(m => isSameDay(m.date, dateKey))
-        if (!hasMenu) {
-          dispatch(addEmptyDate(dateKey))
-        }
-      })
     } catch (error) {
       dispatch(clearDailyMenus())
       throw error

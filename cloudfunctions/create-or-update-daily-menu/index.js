@@ -1,5 +1,15 @@
 const cloud = require('@cloudbase/node-sdk')
 
+const getShanghaiDateKey = (date = new Date()) => {
+  // en-CA 格式为 YYYY-MM-DD；指定上海时区，避免云端 UTC 导致日期错一天
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(date)
+}
+
 /**
  * event: {
  *   familyId: string,
@@ -18,10 +28,10 @@ exports.main = async (event, context) => {
   }
 
   // 统一 date 字段为字符串
-  const dateStr = typeof date === 'string' ? date.slice(0, 10) : date.toISOString().slice(0, 10)
+  const dateStr = typeof date === 'string' ? date.slice(0, 10) : getShanghaiDateKey(date)
 
   // 判断是否为今天及以后
-  const todayStr = new Date().toISOString().slice(0, 10)
+  const todayStr = getShanghaiDateKey()
   if (dateStr < todayStr) {
     return { code: 2, message: '不能添加历史日期菜单' }
   }

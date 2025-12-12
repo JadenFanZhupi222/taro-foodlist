@@ -2,8 +2,8 @@ import { View, Button, Text } from '@tarojs/components'
 import { useState, useLayoutEffect, useEffect, useMemo, useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import Taro, { usePullDownRefresh } from '@tarojs/taro'
-import DateSelector from '../../components/DateSelector'
-import RecipeCard from '../../components/RecipeCard'
+import DateSelector from '@/components/DateSelector'
+import RecipeCard from '@/components/RecipeCard'
 import Loading from '@/components/Loading'
 import { SwitchTransition, CSSTransition } from 'react-transition-group'
 import { fetchDailyMenus, fetchDailyMenuByDate, createOrUpdateDailyMenu, removeRecipeFromMenu } from '@/thunks/dailyMenu/thunks'
@@ -19,9 +19,9 @@ import { Recipe } from '@/store/recipe/types'
 import { selectUser } from '@/store/user/selectors'
 import { removeSelectedRecipe } from '@/store/dailyMenu/dailyMenuSlice'
 import { toast } from '@/utils/toast'
-import { isSameDay } from '@/utils/date'
+import { isSameDay, toDateKey } from '@/utils/date'
 
-const getDateKey = (date: Date) => date.toISOString().slice(0, 10)
+const getDateKey = (date: Date) => toDateKey(date)
 
 const Today = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -74,8 +74,8 @@ const Today = () => {
   // 进入页面优先拉取今天
   useEffect(() => {
     if (!family?._id) return;
-    // 本地是否已有该日期的 dailyMenu 或已知无数据
-    const hasMenu = dailyMenus.some(m => isSameDay(m.date, dateKey)) || emptyDates.includes(dateKey);
+    // 只要 store 内没有该日期的 dailyMenu，就按日拉取（避免 emptyDates/批量数据不全导致误判）
+    const hasMenu = dailyMenus.some(m => isSameDay(m.date, dateKey));
     if (!hasMenu && !hasFetchedToday) {
       setHasFetchedToday(true);
       dispatch(fetchDailyMenuByDate({ familyId: family._id, date: dateKey }));
@@ -160,8 +160,8 @@ const Today = () => {
   }
 
   // 判断是否为今天以前
-  const todayStr = new Date().toISOString().slice(0, 10)
-  const selectedStr = selectedDate.toISOString().slice(0, 10)
+  const todayStr = toDateKey(new Date())
+  const selectedStr = toDateKey(selectedDate)
   const isPast = selectedStr < todayStr
   const isNotToday = !isSameDay(selectedDate, todayStr)
 
