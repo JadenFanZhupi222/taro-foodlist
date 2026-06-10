@@ -1,5 +1,5 @@
 import { Picker, View, Text } from '@tarojs/components'
-import { format, isSameDay, startOfDay } from 'date-fns'
+import { toDateKey } from '@/utils/date'
 import './index.scss'
 
 export interface DateSelectorProps {
@@ -7,24 +7,32 @@ export interface DateSelectorProps {
   onDateChange: (date: Date) => void
 }
 
-const MIN_DATE = new Date(new Date().setDate(new Date().getDate() - 30))
-const MAX_DATE = new Date(new Date().setDate(new Date().getDate() + 7))
+const addDays = (base: Date, days: number) => {
+  const d = new Date(base)
+  d.setDate(d.getDate() + days)
+  return d
+}
+
+const MIN_DATE = addDays(new Date(), -30)
+const MAX_DATE = addDays(new Date(), 7)
+const WEEKDAYS_ZH = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 
 const DateSelector: React.FC<DateSelectorProps> = ({ selectedDate, onDateChange }) => {
-  const today = startOfDay(new Date())
-  const isToday = isSameDay(selectedDate, today)
+  const isToday = toDateKey(selectedDate) === toDateKey(new Date())
+  // 'yyyy-MM-dd' -> 'MM/dd'
+  const mmdd = toDateKey(selectedDate).slice(5).replace('-', '/')
 
   return (
     <View className='date-selector-bar flat'>
       {isToday && <Text className='date-selector__today-tag'>今天</Text>}
-      <Text className='date-selector__day'>{format(selectedDate, 'EE')}</Text>
-      <Text className='date-selector__date'>{format(selectedDate, 'MM/dd')}</Text>
+      <Text className='date-selector__day'>{WEEKDAYS_ZH[selectedDate.getDay()]}</Text>
+      <Text className='date-selector__date'>{mmdd}</Text>
       <Picker
         mode='date'
-        value={format(selectedDate, 'yyyy-MM-dd')}
-        start={format(MIN_DATE, 'yyyy-MM-dd')}
-        end={format(MAX_DATE, 'yyyy-MM-dd')}
-        onChange={e => onDateChange(new Date(e.detail.value))}
+        value={toDateKey(selectedDate)}
+        start={toDateKey(MIN_DATE)}
+        end={toDateKey(MAX_DATE)}
+        onChange={e => onDateChange(new Date(e.detail.value + 'T00:00:00'))}
       >
         <View className='date-selector__picker-icon'>📅</View>
       </Picker>
@@ -32,4 +40,4 @@ const DateSelector: React.FC<DateSelectorProps> = ({ selectedDate, onDateChange 
   )
 }
 
-export default DateSelector 
+export default DateSelector
