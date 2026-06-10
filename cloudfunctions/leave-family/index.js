@@ -22,14 +22,14 @@ exports.main = async (event, context) => {
   const newMembers = members.filter(m => m !== openId)
   await db.collection('family').doc(familyId).update({
     members: _.pull(openId),
-    updatedAt: new Date()
+    updatedAt: db.serverDate()
   })
 
   // 清空用户的 family_id 和 role
   await db.collection('user').where({ openId }).update({
     family_id: '',
     role: '',
-    updatedAt: Date.now()
+    updatedAt: db.serverDate()
   })
 
   // 如果没有其他成员则直接删除家庭
@@ -47,7 +47,7 @@ exports.main = async (event, context) => {
     // 更新新 owner 的 user.role 字段
     await db.collection('user').where({ openId: newOwner }).update({
       role: 'owner',
-      updatedAt: Date.now()
+      updatedAt: db.serverDate()
     })
   }
 

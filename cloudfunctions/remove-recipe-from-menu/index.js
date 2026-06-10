@@ -56,7 +56,7 @@ exports.main = async (event, context) => {
 
     await db.collection('daily_menu').doc(menuId).update({
       recipes: newRecipes,
-      updatedAt: new Date()
+      updatedAt: db.serverDate()
     })
     return { code: 0, message: '删除成功', data: { ...menu, recipes: newRecipes } }
   } catch (error) {

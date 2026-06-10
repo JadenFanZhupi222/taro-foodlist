@@ -59,7 +59,13 @@ const Today = () => {
     return todayMenu.recipes
       .map((r: DailyMenuRecipeItem) => {
         const recipe = allRecipes.find(item => item._id === r.recipe_id)
-        if (!recipe) return null
+        if (!recipe) {
+          // 菜谱已被删除：回退到下单时的快照，保住历史记录
+          if (r.name) {
+            return { _id: r.recipe_id, name: r.name, type: r.type || '其他', image: '', order: r.order }
+          }
+          return null
+        }
         // 保证 id、order、image 字段存在
         return {
           ...recipe,

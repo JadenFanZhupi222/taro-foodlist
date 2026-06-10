@@ -47,6 +47,16 @@ exports.main = async (event, context) => {
     return { code: 2, message: '不能添加历史日期菜单' }
   }
 
+  // 快照菜名/类型，避免菜谱被删除或改名后历史菜单丢失
+  let recipeSnapshot = { recipe_id: recipe.recipe_id }
+  if (recipe.recipe_id) {
+    const recipeDoc = await db.collection('recipes').doc(recipe.recipe_id).get()
+    const r0 = recipeDoc.data && recipeDoc.data[0]
+    if (r0) {
+      recipeSnapshot = { recipe_id: recipe.recipe_id, name: r0.name, type: r0.type }
+    }
+  }
+
   // 查找当天菜单
   const dailyMenuRes = await db.collection('daily_menu')
     .where({ family_id: familyId, date: dateStr })
@@ -59,10 +69,10 @@ exports.main = async (event, context) => {
     const newMenu = {
       family_id: familyId,
       date: dateStr,
-      recipes: [{ ...recipe, order: 100 }],
+      recipes: [{ ...recipeSnapshot, order: 100 }],
       _openid: userId,
-      createdAt: new Date(),
-      updatedAt: new Date()
+      createdAt: db.serverDate(),
+      updatedAt: db.serverDate()
     }
     const addRes = await db.collection('daily_menu').add(newMenu)
     return { code: 0, message: '创建成功', data: { _id: addRes.id, ...newMenu } }
@@ -73,11 +83,11 @@ exports.main = async (event, context) => {
       // 找到当前最大的 order 值
       const maxOrder = Math.max(...dailyMenu.recipes.map(r => r.order), 0)
       // 新食谱的 order 为最大 order + 100
-      const newRecipe = { ...recipe, order: maxOrder + 100 }
+      const newRecipe = { ...recipeSnapshot, order: maxOrder + 100 }
       // 使用原子 push 追加，避免并发时整数组覆盖导致丢菜
       await db.collection('daily_menu').doc(dailyMenu._id).update({
         recipes: _.push([newRecipe]),
-        updatedAt: new Date()
+        updatedAt: db.serverDate()
       })
       dailyMenu.recipes.push(newRecipe)
     }

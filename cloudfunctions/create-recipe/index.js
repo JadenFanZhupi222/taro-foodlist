@@ -31,8 +31,8 @@ exports.main = async (event, context) => {
       family_id: familyId,
       recipe_id: recipeId,
       order: Date.now(), // 使用时间戳作为排序，新菜谱排在最后
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: db.serverDate(),
+      updatedAt: db.serverDate(),
       createdby: openId,
       owner: openId,
       deleted: false

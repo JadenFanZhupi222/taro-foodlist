@@ -27,13 +27,7 @@ exports.main = async (event, context) => {
       return { code: 3, message: '无权删除该菜谱' };
     }
 
-    // 1. 软删除菜谱
-    await db.collection('recipes').doc(recipeId).update({
-      deleted: true,
-      updatedAt: new Date()
-    });
-
-    // 2. 标记关联记录为删除
+    // 仅软删除本家庭的关联记录；菜谱本体可被其他家庭共享，故不动 recipes.deleted
     await db.collection('family_recipes')
       .where({
         family_id: familyId,
@@ -41,7 +35,7 @@ exports.main = async (event, context) => {
       })
       .update({
         deleted: true,
-        updatedAt: new Date()
+        updatedAt: db.serverDate()
       });
 
     return { code: 0, message: '删除成功' };

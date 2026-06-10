@@ -55,14 +55,14 @@ exports.main = async (event, context) => {
     if (needUpdateFamily) {
       await familyColl.doc(familyId).update({
         members: _.push([openId]),
-        updatedAt: new Date()
+        updatedAt: db.serverDate()
       })
     }
     // 3. 更新用户表
     await userColl.where({ openId }).update({
       family_id: familyId,
       role: 'member',
-      updatedAt: Date.now()
+      updatedAt: db.serverDate()
     })
     // 4. 获取最新家庭信息
     const newFamilyRes = await familyColl.doc(familyId).get()
