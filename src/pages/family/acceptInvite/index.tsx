@@ -54,7 +54,7 @@ export default function AcceptInvite() {
       <View className='family-members'>
         <MemberCardList members={(inviteFamily?.membersInfo || []).map(m => ({
           ...m,
-          role: m.role === 'owner' ? 'owner' : 'member',
+          role: m.openId === inviteFamily?.family_owner ? 'owner' : 'member',
         }))} />
       </View>
       <Button className='accept-btn' onClick={handleAccept} disabled={joined || !familyId}>

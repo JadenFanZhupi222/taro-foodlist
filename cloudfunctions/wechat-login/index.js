@@ -80,7 +80,7 @@ exports.main = async (event, context) => {
       const token = jwt.sign({
         openId: openId,
         userId: newUser.id,
-        familyId: '',
+        family_id: '',
         role: ''
       }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 

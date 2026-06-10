@@ -83,7 +83,7 @@ export default function Family() {
                 })
                 .map(m => ({
                   ...m,
-                  role: m.role === 'owner' ? 'owner' : 'member',
+                  role: m.openId === family.family_owner ? 'owner' : 'member',
                 }))
             } currentUserId={user?.openId} />
           </View>
