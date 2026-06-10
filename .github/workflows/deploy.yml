@@ -1,0 +1,84 @@
+name: Deploy
+
+# 触发：push 到 master 自动部署；也可在 Actions 页面手动触发
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+# 同一分支新推送时取消进行中的旧部署
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CLOUDBASE_ENV_ID: dev-4gs517j09b896e44
+  WX_APPID: wxc09ef68c8f4467ea
+
+jobs:
+  # ---------- 云函数：部署到 CloudBase ----------
+  cloudfunctions:
+    name: Deploy cloud functions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install CloudBase CLI
+        run: npm install -g @cloudbase/cli
+
+      - name: Deploy all functions
+        # @cloudbase/cli 通过这两个环境变量做非交互鉴权（腾讯云 API 密钥，访问管理 CAM 里创建）
+        env:
+          TENCENTCLOUD_SECRETID: ${{ secrets.TENCENT_SECRET_ID }}
+          TENCENTCLOUD_SECRETKEY: ${{ secrets.TENCENT_SECRET_KEY }}
+        run: |
+          set -e
+          for dir in cloudfunctions/*/; do
+            name="$(basename "$dir")"
+            echo "::group::deploy $name"
+            tcb fn deploy "$name" -e "$CLOUDBASE_ENV_ID" --force
+            echo "::endgroup::"
+          done
+
+  # ---------- 小程序：构建并上传体验版 ----------
+  miniprogram:
+    name: Build & upload miniprogram
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Build weapp
+        run: pnpm build:weapp
+
+      - name: Write WeChat upload key
+        env:
+          WX_PRIVATE_KEY: ${{ secrets.WX_PRIVATE_KEY }}
+        run: printf '%s' "$WX_PRIVATE_KEY" > "$RUNNER_TEMP/wx_private.key"
+
+      - name: Upload trial version
+        # 用 miniprogram-ci 的 CLI 上传体验版（robot 1）。版本号用 run_number 递增。
+        run: |
+          npx --yes miniprogram-ci@latest upload \
+            --pp "$GITHUB_WORKSPACE" \
+            --pkp "$RUNNER_TEMP/wx_private.key" \
+            --appid "$WX_APPID" \
+            --uv "1.0.${{ github.run_number }}" \
+            --ud "CI ${GITHUB_SHA::7} by ${{ github.actor }}" \
+            -r 1 \
+            --enable-es6 true
