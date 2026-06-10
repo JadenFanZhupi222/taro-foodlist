@@ -20,7 +20,7 @@ export default function AppContainer({ children }: { children: ReactNode }) {
     const currentPage = pages[pages.length - 1]
     const route = currentPage?.route
     // 登录引导
-    if (loginChecked && !isLoggedIn && !modalShown.current && route !== 'pages/family/acceptIvite/index') {
+    if (loginChecked && !isLoggedIn && !modalShown.current && route !== 'pages/family/acceptInvite/index') {
       modalShown.current = true
       Taro.showModal({
         title: '未登录',

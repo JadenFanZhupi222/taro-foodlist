@@ -8,13 +8,20 @@ const db = app.database();
 const userCollection = db.collection('user');
 
 exports.main = async (event, context) => {
-  const { openId, avatarFileId, nickname } = event;
-  if (!openId || !avatarFileId || !nickname) {
+  const { avatarFileId, nickname } = event;
+  if (!avatarFileId || !nickname) {
     return {
       code: 1,
       message: '头像和昵称不能为空',
       data: null
     };
+  }
+
+  // 鉴权：只能修改自己的资料，openId 从可信上下文取
+  const wxContext = app.auth().getUserInfo();
+  const openId = wxContext.openId || wxContext.OPENID;
+  if (!openId) {
+    return { code: 401, message: '未登录', data: null };
   }
 
   try {

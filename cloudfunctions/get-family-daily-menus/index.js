@@ -3,10 +3,14 @@ const cloud = require('@cloudbase/node-sdk')
 exports.main = async (event, context) => {
   const app = cloud.init({ env: cloud.SYMBOL_CURRENT_ENV })
   const db = app.database()
-  const { familyId } = event
-  if (!familyId) {
-    return { code: 1, message: 'familyId不能为空', data: [] }
-  }
+  // 鉴权
+  const wxContext = app.auth().getUserInfo()
+  const openId = wxContext.openId || wxContext.OPENID
+  if (!openId) return { code: 401, message: '未登录', data: [] }
+  const myFamilyRes = await db.collection('family').where({ members: openId }).get()
+  const myFamily = myFamilyRes.data[0]
+  if (!myFamily) return { code: 403, message: '未加入家庭', data: [] }
+  const familyId = myFamily._id
   try {
     const pageSize = 100
     let offset = 0

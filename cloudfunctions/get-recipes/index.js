@@ -1,13 +1,17 @@
 const cloud = require('@cloudbase/node-sdk');
 
 exports.main = async (event, context) => {
-  const { familyId } = event;
-  if (!familyId) {
-    return { code: 1, message: '参数缺失' };
-  }
-
   const app = cloud.init({ env: cloud.SYMBOL_CURRENT_ENV });
   const db = app.database();
+
+  // 鉴权：从可信上下文取 openId，按家庭成员关系授权（忽略客户端传入的 familyId）
+  const wxContext = app.auth().getUserInfo();
+  const openId = wxContext.openId || wxContext.OPENID;
+  if (!openId) return { code: 401, message: '未登录', data: [] };
+  const myFamilyRes = await db.collection('family').where({ members: openId }).get();
+  const myFamily = myFamilyRes.data[0];
+  if (!myFamily) return { code: 403, message: '未加入家庭', data: [] };
+  const familyId = myFamily._id;
 
   try {
     // 1. 从 family_recipes 关联表获取菜谱ID（增加 limit 避免默认限制）

@@ -16,6 +16,12 @@ exports.main = async (event, context) => {
       message: 'familyId不能为空'
     };
   }
+  // 鉴权：仅需登录（受邀者尚未加入该家庭，故允许按 id 查看基本信息）
+  const wxContext = app.auth().getUserInfo();
+  const openId = wxContext.openId || wxContext.OPENID;
+  if (!openId) {
+    return { code: 401, data: null, message: '未登录' };
+  }
   try {
     // 查找家庭
     const familyResult = await db.collection('family').doc(familyId).get();

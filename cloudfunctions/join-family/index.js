@@ -11,7 +11,7 @@ async function getMembersInfo(openIdList) {
   // 调用 get-user-info 云函数，返回 membersInfo
   const res = await tcb.callFunction({
     name: 'get-user-info',
-    data: { openIdList }
+    data: { openIds: openIdList }
   })
   if (res.result && res.result.code === 0) {
     return res.result.data
@@ -21,7 +21,10 @@ async function getMembersInfo(openIdList) {
 
 // 主入口
 exports.main = async (event, context) => {
-  const { familyId, openId } = event
+  const { familyId } = event
+  // openId 从可信上下文取，避免冒名加入
+  const wxContext = tcb.auth().getUserInfo()
+  const openId = wxContext.openId || wxContext.OPENID
   if (!familyId || !openId) {
     return { code: 1, message: '参数缺失' }
   }
@@ -30,7 +33,7 @@ exports.main = async (event, context) => {
   try {
     // 1. 查找家庭
     const familyRes = await familyColl.doc(familyId).get()
-    if (!familyRes.data) {
+    if (!familyRes.data || familyRes.data.length === 0) {
       return { code: 2, message: '家庭不存在' }
     }
     const family = familyRes.data[0]
@@ -63,7 +66,7 @@ exports.main = async (event, context) => {
     })
     // 4. 获取最新家庭信息
     const newFamilyRes = await familyColl.doc(familyId).get()
-    const newFamily = newFamilyRes.data
+    const newFamily = newFamilyRes.data[0]
     // 5. 获取成员详细信息
     const membersInfo = await getMembersInfo(newFamily.members || [])
     // 6. 返回结构

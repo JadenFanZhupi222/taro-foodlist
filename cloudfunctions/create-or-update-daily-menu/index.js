@@ -21,11 +21,22 @@ const getShanghaiDateKey = (date = new Date()) => {
 exports.main = async (event, context) => {
   const app = cloud.init({ env: cloud.SYMBOL_CURRENT_ENV })
   const db = app.database()
-  const { familyId, date, recipe, userId } = event
+  const _ = db.command
+  const { date, recipe } = event
 
-  if (!familyId || !date || !recipe || !userId) {
+  if (!date || !recipe) {
     return { code: 1, message: '参数缺失' }
   }
+
+  // 鉴权：从可信上下文取身份，忽略客户端传入的 familyId/userId
+  const wxContext = app.auth().getUserInfo()
+  const openId = wxContext.openId || wxContext.OPENID
+  if (!openId) return { code: 401, message: '未登录' }
+  const myFamilyRes = await db.collection('family').where({ members: openId }).get()
+  const myFamily = myFamilyRes.data[0]
+  if (!myFamily) return { code: 403, message: '未加入家庭' }
+  const familyId = myFamily._id
+  const userId = openId
 
   // 统一 date 字段为字符串
   const dateStr = typeof date === 'string' ? date.slice(0, 10) : getShanghaiDateKey(date)
@@ -63,11 +74,12 @@ exports.main = async (event, context) => {
       const maxOrder = Math.max(...dailyMenu.recipes.map(r => r.order), 0)
       // 新食谱的 order 为最大 order + 100
       const newRecipe = { ...recipe, order: maxOrder + 100 }
-      dailyMenu.recipes.push(newRecipe)
+      // 使用原子 push 追加，避免并发时整数组覆盖导致丢菜
       await db.collection('daily_menu').doc(dailyMenu._id).update({
-        recipes: dailyMenu.recipes,
+        recipes: _.push([newRecipe]),
         updatedAt: new Date()
       })
+      dailyMenu.recipes.push(newRecipe)
     }
     return { code: 0, message: '已更新', data: dailyMenu }
   }
