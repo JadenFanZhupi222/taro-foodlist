@@ -8,19 +8,13 @@ exports.main = async (event, context) => {
   const wxContext = app.auth().getUserInfo()
   const openId = wxContext.openId || wxContext.OPENID
 
-  // 查找用户当前家庭
-  const userRes = await db.collection('user').where({ openId }).get()
-  if (!userRes.data || !userRes.data[0] || !userRes.data[0].family_id) {
+  // 以 family.members 为唯一真相查找用户当前家庭（不再依赖 user.family_id）
+  const familyRes = await db.collection('family').where({ members: openId }).get()
+  if (!familyRes.data || !familyRes.data[0]) {
     return { code: 1, message: '用户未加入任何家庭' }
   }
-  const familyId = userRes.data[0].family_id
-
-  // 获取当前家庭信息
-  const familyRes = await db.collection('family').doc(familyId).get()
-  if (!familyRes.data || !familyRes.data[0]) {
-    return { code: 2, message: '家庭不存在' }
-  }
   const family = familyRes.data[0]
+  const familyId = family._id
   const members = family.members || []
   const isOwner = family.family_owner === openId
 

@@ -14,7 +14,7 @@ export const selectFamilyMembers = createSelector(
 export const selectIsFamilyOwner = createSelector(
   (state: RootState) => state.family.currentFamily,
   (state: RootState) => state.user.current,
-  (currentFamily, currentUser) => currentFamily?.owner === currentUser?.openId
+  (currentFamily, currentUser) => currentFamily?.family_owner === currentUser?.openId
 )
 export const selectInviteFamily = (state: RootState) => state.family.inviteFamily
 export const selectInviteFamilyLoading = (state: RootState) => state.family.inviteFamilyLoading

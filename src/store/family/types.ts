@@ -9,7 +9,7 @@ export interface FamilyMember {
 export interface Family {
   _id: string
   name: string
-  owner: string
+  family_owner: string
   members: string[]
   membersInfo?: User[]
   createdAt: Date

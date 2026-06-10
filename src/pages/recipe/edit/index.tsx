@@ -5,6 +5,7 @@ import { FC, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { selectUser } from '@/store/user/selectors'
 import { selectRecipes, selectRecipeLoading } from '@/store/recipe/selectors'
+import { selectCurrentFamily } from '@/store/family/selectors'
 import { createRecipe, updateRecipeById } from '@/thunks/recipe/thunks'
 import './index.scss'
 import { toast } from '@/utils/toast'
@@ -25,6 +26,7 @@ const RecipeEdit: FC = () => {
   const { id } = router.params
   const user = useSelector(selectUser) as GlobalUser | null
   const recipes = useSelector(selectRecipes)
+  const currentFamily = useSelector(selectCurrentFamily)
   const { createLoading, updateLoading } = useSelector(selectRecipeLoading)
   const dispatch = useDispatch<AppDispatch>()
 
@@ -55,7 +57,8 @@ const RecipeEdit: FC = () => {
       toast({ title: '请先登录', icon: 'none' })
       return
     }
-    const familyId = user.family_id
+    // 家庭归属以服务端加载的当前家庭为准，回退到本地缓存
+    const familyId = currentFamily?._id || user.family_id
     if (!familyId) {
       toast({ title: '请先加入家庭', icon: 'none' })
       return

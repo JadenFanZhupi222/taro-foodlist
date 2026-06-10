@@ -43,9 +43,9 @@ exports.main = async (event, context) => {
         message: '获取家庭信息成功'
       };
     } else {
-      // 用户没有家庭
+      // 用户没有家庭（正常状态，返回 code 0 + null，避免前端误报为错误）
       return {
-        code: 1,
+        code: 0,
         data: null,
         message: '用户未加入任何家庭'
       };

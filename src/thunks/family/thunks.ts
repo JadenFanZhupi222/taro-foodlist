@@ -18,11 +18,15 @@ export const fetchFamily = createAsyncThunk(
   async (_, { dispatch }) => {
     try {
       const r = await callCloud<Family>('get-family-info')
-      dispatch(setFamily(r.data!))
+      // data 为 null 表示用户未加入家庭，属于正常状态
+      if (r.data) {
+        dispatch(setFamily(r.data))
+      } else {
+        dispatch(clearFamily())
+      }
     } catch (error) {
       console.error('获取家庭信息失败:', error)
       dispatch(clearFamily())
-      toast({ title: '获取家庭信息失败', icon: 'error' })
       throw error
     }
   }
