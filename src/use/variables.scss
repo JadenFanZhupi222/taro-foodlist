@@ -11,7 +11,7 @@ $color-success-light: #e6f9e6 !default;
 $color-danger: #ff4d4f !default;
 $color-error-light: #fff0f0 !default;
 $color-warning: #faad14 !default;
-$color-primary-rgb: 255, 87, 87;
+$color-primary-rgb: 255, 107, 107; // 与 $color-primary (#ff6b6b) 保持一致，供 rgba() 使用
 $color-member-bg: #fdf6f7; // 主色淡化背景
 $color-member-border: #ffe0e0; // 主色淡化边框
 $color-member-avatar-shadow: #ffe0e0; // 头像外圈

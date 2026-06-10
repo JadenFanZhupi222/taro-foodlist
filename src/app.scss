@@ -1,3 +1,16 @@
+@use './use/variables' as *;
+
+// 全局基础：统一字体、抗锯齿、去除点击灰色高亮、背景用设计 token
+// 仅设置继承类属性，不动盒模型/尺寸，避免影响既有布局
+page {
+  font-family: $font-family-base;
+  color: $color-text-main;
+  background: $color-bg-main;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
-  background: #f5f5f5;
+  background: $color-bg-main;
 }
