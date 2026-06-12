@@ -23,7 +23,7 @@ const Index = () => {
   const [searchText, setSearchText] = useState('')
   const [activeCategory, setActiveCategory] = useState('全部')
   const dispatch = useDispatch<AppDispatch>()
-  const { createLoading, deleteLoading, fetchLoading } = useSelector(selectRecipeLoading)
+  const { fetchLoading } = useSelector(selectRecipeLoading)
 
   // 处理下拉刷新
   usePullDownRefresh(async () => {
@@ -88,7 +88,8 @@ const Index = () => {
 
   return (
     <View className='index'>
-      <Loading visible={createLoading || deleteLoading || fetchLoading} />
+      {/* 仅首屏冷启动（无任何食谱时）用全屏遮罩；增删走 toast 反馈，不再全屏挡屏 */}
+      <Loading visible={fetchLoading && recipes.length === 0} />
       {/* 主要内容区 */}
       <View className='content'>
         <View className='index-search-bar-wrap'>

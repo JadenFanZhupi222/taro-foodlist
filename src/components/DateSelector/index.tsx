@@ -1,5 +1,6 @@
 import { Picker, View, Text } from '@tarojs/components'
 import { format, isSameDay, startOfDay } from 'date-fns'
+import { zhCN } from 'date-fns/locale'
 import './index.scss'
 
 export interface DateSelectorProps {
@@ -17,8 +18,8 @@ const DateSelector: React.FC<DateSelectorProps> = ({ selectedDate, onDateChange 
   return (
     <View className='date-selector-bar flat'>
       {isToday && <Text className='date-selector__today-tag'>今天</Text>}
-      <Text className='date-selector__day'>{format(selectedDate, 'EE')}</Text>
-      <Text className='date-selector__date'>{format(selectedDate, 'MM/dd')}</Text>
+      <Text className='date-selector__day'>{format(selectedDate, 'EEE', { locale: zhCN })}</Text>
+      <Text className='date-selector__date'>{format(selectedDate, 'MM月dd日', { locale: zhCN })}</Text>
       <Picker
         mode='date'
         value={format(selectedDate, 'yyyy-MM-dd')}

@@ -3,10 +3,12 @@ import { DailyMenu } from '@/store/dailyMenu/types'
 import { callCloud } from '@/utils/cloud'
 import {
   setDailyMenus,
-  addDailyMenu,
   clearDailyMenus,
-  updateDailyMenu,
-  addEmptyDate
+  addEmptyDate,
+  deleteDailyMenuByDate,
+  upsertDailyMenuByDate,
+  optimisticAddRecipe,
+  optimisticRemoveRecipe
 } from '@/store/dailyMenu/dailyMenuSlice'
 import { RootState } from '@/store'
 import  { toast } from '@/utils/toast'
@@ -37,23 +39,17 @@ export const fetchDailyMenus = createAsyncThunk(
   }
 )
 
-// 获取当前家庭某天的 dailyMenu
+// 获取当前家庭某天的 dailyMenu（以服务端为权威，校正本地乐观状态）
 export const fetchDailyMenuByDate = createAsyncThunk(
   'dailyMenu/fetchDailyMenuByDate',
-  async ({ familyId, date }: { familyId: string, date: string }, { dispatch, getState }) => {
-    try {
-      const res = await callCloud<DailyMenu>('get-family-daily-menu-by-date', { familyId, date })
-      if (res.data) {
-        const state = getState() as RootState
-        const exists = state.dailyMenu.dailyMenus.some(
-          m => m._id === res.data!._id
-        )
-        exists ? dispatch(updateDailyMenu(res.data)) : dispatch(addDailyMenu(res.data))
-      } else {
-        dispatch(addEmptyDate(date))
-      }
-    } catch (error) {
-      throw error
+  async ({ familyId, date }: { familyId: string, date: string }, { dispatch }) => {
+    const res = await callCloud<DailyMenu>('get-family-daily-menu-by-date', { familyId, date })
+    if (res.data) {
+      dispatch(upsertDailyMenuByDate(res.data))
+    } else {
+      // 服务端确认该日期无菜单：清掉可能存在的临时菜单并标记为空
+      dispatch(deleteDailyMenuByDate(date))
+      dispatch(addEmptyDate(date))
     }
   }
 )
@@ -61,28 +57,54 @@ export const fetchDailyMenuByDate = createAsyncThunk(
 export const createOrUpdateDailyMenu = createAsyncThunk(
   'dailyMenu/createOrUpdateDailyMenu',
   async (
-    { familyId, date, recipe, userId }: { 
-      familyId: string; 
-      date: string; 
+    { familyId, date, recipe, userId }: {
+      familyId: string;
+      date: string;
       recipe: { recipe_id: string };
-      userId: string 
+      userId: string
     },
     { dispatch }
   ) => {
-    await callCloud('create-or-update-daily-menu', { familyId, date, recipe, userId })
-    await dispatch(fetchDailyMenuByDate({ familyId, date }))
+    // 1. 乐观添加：本地立即可见（纯 UI，不写服务端）
+    dispatch(optimisticAddRecipe({
+      familyId,
+      date,
+      item: { recipe_id: recipe.recipe_id, order: Date.now() }
+    }))
+    try {
+      // 2. 写服务端
+      await callCloud('create-or-update-daily-menu', { familyId, date, recipe, userId })
+      // 3. 用权威数据校正本地（拿到真实 _id / order）
+      await dispatch(fetchDailyMenuByDate({ familyId, date }))
+    } catch (error) {
+      // 4. 失败回滚：拉取真实状态恢复（撤销刚才的乐观添加），并提示
+      await dispatch(fetchDailyMenuByDate({ familyId, date }))
+      toast({ title: '添加失败，请重试', icon: 'none' })
+      throw error
+    }
   }
 )
 
 export const removeRecipeFromMenu = createAsyncThunk(
   'dailyMenu/removeRecipeFromMenu',
   async ({ menuId, recipeId }: { menuId: string, recipeId: string }, { dispatch, getState }) => {
-    await callCloud('remove-recipe-from-menu', { menuId, recipeId })
-    // 刷新当天menu
     const menu = (getState() as RootState).dailyMenu.dailyMenus.find(m => m._id === menuId)
-    if (menu) {
-      await dispatch(fetchDailyMenuByDate({ familyId: menu.family_id, date: typeof menu.date === 'string' ? menu.date.slice(0, 10) : menu.date }))
+    const familyId = menu?.family_id || ''
+    const date = menu ? (typeof menu.date === 'string' ? menu.date.slice(0, 10) : menu.date) : ''
+
+    // 1. 乐观移除：本地立即移除（纯 UI，不写服务端）
+    if (date) dispatch(optimisticRemoveRecipe({ date, recipeId }))
+    try {
+      // 2. 写服务端
+      await callCloud('remove-recipe-from-menu', { menuId, recipeId })
+      // 3. 校正本地
+      if (date && familyId) await dispatch(fetchDailyMenuByDate({ familyId, date }))
+      toast({ title: '已移除', icon: 'success' })
+    } catch (error) {
+      // 4. 失败回滚：拉取真实状态恢复（被误移除的菜品会回来），并提示
+      if (date && familyId) await dispatch(fetchDailyMenuByDate({ familyId, date }))
+      toast({ title: '移除失败，请重试', icon: 'none' })
+      throw error
     }
-    toast({ title: '已移除', icon: 'success' })
   }
 )
