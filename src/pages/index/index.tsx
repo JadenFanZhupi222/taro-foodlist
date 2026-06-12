@@ -114,7 +114,8 @@ const Index = () => {
               id={recipe._id}
               name={recipe.name}
               image={recipe.image || ''}
-              type={recipe.type}
+              // 已按分类筛选时，卡片上的分类标签是冗余的，仅在「全部」视图展示
+              type={activeCategory === '全部' ? recipe.type : ''}
               onClick={() => handleRecipeClick(recipe._id)}
               swipeToDelete
               onRemove={() => handleDeleteRecipe(recipe._id)}

@@ -14,14 +14,27 @@
   z-index: 100;
 
   &__item {
+    position: relative;
     padding: 0.75rem 1rem;
     cursor: pointer;
     transition: all 0.3s ease;
 
+    // 选中态：淡粉底 + 左侧高亮条 + 粗体主色字（替代整块实心粉，层级更清晰）
     &.active {
-      background-color: $color-primary;
+      background-color: rgba($color-primary, 0.1);
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0.4rem;
+        bottom: 0.4rem;
+        width: 6rpx;
+        background: $color-primary;
+        border-radius: 0 6rpx 6rpx 0;
+      }
       .category-nav__text {
-        color: $color-text-light;
+        color: $color-primary;
+        font-weight: bold;
       }
     }
   }
