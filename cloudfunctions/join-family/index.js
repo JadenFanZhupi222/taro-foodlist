@@ -6,17 +6,13 @@ const tcb = cloud.init({
 const db = tcb.database()
 const _ = db.command
 
-// 获取成员详细信息
+// 获取成员详细信息（直接查 user 表，省掉一次跨云函数调用）
 async function getMembersInfo(openIdList) {
-  // 调用 get-user-info 云函数，返回 membersInfo
-  const res = await tcb.callFunction({
-    name: 'get-user-info',
-    data: { openIds: openIdList }
-  })
-  if (res.result && res.result.code === 0) {
-    return res.result.data
-  }
-  return []
+  if (!openIdList || openIdList.length === 0) return []
+  const res = await db.collection('user')
+    .where({ openId: _.in(openIdList) })
+    .get()
+  return res.data || []
 }
 
 // 主入口
@@ -58,10 +54,9 @@ exports.main = async (event, context) => {
         updatedAt: db.serverDate()
       })
     }
-    // 3. 更新用户表
+    // 3. 更新用户表（role 不再写入，统一由 family_owner 推导）
     await userColl.where({ openId }).update({
       family_id: familyId,
-      role: 'member',
       updatedAt: db.serverDate()
     })
     // 4. 获取最新家庭信息

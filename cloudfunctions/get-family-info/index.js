@@ -22,17 +22,15 @@ exports.main = async (event, context) => {
 
     if (familyResult.data.length > 0) {
       const family = familyResult.data[0];
-      // 用members里的openId去get-user-info云函数查找详细信息
+      // 用 members 里的 openId 查成员详细信息
       const membersOpenIds = family.members || [];
       let membersInfo = [];
       if (membersOpenIds.length > 0) {
-        const userInfoRes = await app.callFunction({
-          name: 'get-user-info',
-          data: { openIds: membersOpenIds }
-        });
-        if (userInfoRes.result && userInfoRes.result.code === 0) {
-          membersInfo = userInfoRes.result.data;
-        }
+        // 直接查 user 表，省掉一次跨云函数调用
+        const membersRes = await db.collection('user')
+          .where({ openId: db.command.in(membersOpenIds) })
+          .get();
+        membersInfo = membersRes.data || [];
       }
       return {
         code: 0,

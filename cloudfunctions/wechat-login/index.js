@@ -46,18 +46,25 @@ exports.main = async (event, context) => {
     }).get();
 
     if (user.data.length > 0) {
-      // 用户已存在，返回用户信息
+      // 用户已存在。以 family 为单一真相推导 role / family_id（user.role 已不再维护，user.family_id 仅作缓存）
+      const u = user.data[0];
+      const famRes = await db.collection('family').where({ members: u.openId }).get();
+      const fam = famRes.data[0];
+      const family_id = fam ? fam._id : '';
+      const role = fam ? (fam.family_owner === u.openId ? 'owner' : 'member') : '';
       const token = jwt.sign({
-        openId: user.data[0].openId,
-        userId: user.data[0]._id,
-        family_id: user.data[0].family_id,
-        role: user.data[0].role
+        openId: u.openId,
+        userId: u._id,
+        family_id,
+        role
       }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
       return {
         code: 0,
         message: '登录成功',
         data: {
-          ...user.data[0],
+          ...u,
+          family_id,
+          role,
           token
         }
       };

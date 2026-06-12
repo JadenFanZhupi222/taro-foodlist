@@ -41,9 +41,8 @@ exports.main = async (event, context) => {
       ...familyData
     });
 
-    // 更新user表role为owner和family_id
+    // 更新 user 表 family_id（role 不再写入，统一由 family_owner 推导）
     await db.collection('user').where({ openId }).update({
-      role: 'owner',
       family_id: result.id || result._id
     });
 

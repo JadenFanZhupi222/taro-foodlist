@@ -25,10 +25,9 @@ exports.main = async (event, context) => {
     updatedAt: db.serverDate()
   })
 
-  // 清空用户的 family_id 和 role
+  // 清空用户的 family_id（role 不再写入，统一由 family_owner 推导）
   await db.collection('user').where({ openId }).update({
     family_id: '',
-    role: '',
     updatedAt: db.serverDate()
   })
 
@@ -38,16 +37,11 @@ exports.main = async (event, context) => {
     return { code: 0, message: '已退出家庭，家庭已解散' }
   }
 
-  // 如果当前用户是 owner，转移 owner 给排序第二的成员
+  // 如果当前用户是 owner，转移 owner 给排序第二的成员（family_owner 即唯一真相，无需再写 user.role）
   if (isOwner) {
     const newOwner = newMembers[0] // 排序第二的成员（原 members[1]）
     await db.collection('family').doc(familyId).update({
       family_owner: newOwner
-    })
-    // 更新新 owner 的 user.role 字段
-    await db.collection('user').where({ openId: newOwner }).update({
-      role: 'owner',
-      updatedAt: db.serverDate()
     })
   }
 
