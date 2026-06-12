@@ -1,19 +1,19 @@
 import { ReactNode, useEffect, useRef } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import { useSelector } from 'react-redux'
 import Taro from '@tarojs/taro'
 import { selectFamilyLoading } from './store/family/selectors'
 import { selectIsLoggedIn } from './store/user/selectors'
 import { selectLoginChecked } from './store/user/selectors'
-import { AppDispatch } from './store'
-import { setGuideLogin } from '@/store/user/userSlice'
+import { selectLoginLoading } from './store/user/selectors'
 
 export default function AppContainer({ children }: { children: ReactNode }) {
-  const dispatch = useDispatch<AppDispatch>()
   const familyLoading = useSelector(selectFamilyLoading)
   const isLoggedIn = useSelector(selectIsLoggedIn)
   const loginChecked = useSelector(selectLoginChecked)
+  const loginLoading = useSelector(selectLoginLoading)
   const modalShown = useRef(false)
-  const showLoading = familyLoading
+  // 登录中由 profile 页自身的 Loading 接管，避免与原生 loading 叠加
+  const showLoading = familyLoading && !loginLoading
 
   useEffect(() => {
     const pages = Taro.getCurrentPages()
@@ -30,7 +30,6 @@ export default function AppContainer({ children }: { children: ReactNode }) {
         success: (res) => {
           if (res.confirm) {
             Taro.switchTab({ url: '/pages/profile/index' })
-            dispatch(setGuideLogin(true))
           }
         }
       })

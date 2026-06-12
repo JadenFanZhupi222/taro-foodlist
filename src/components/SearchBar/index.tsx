@@ -12,6 +12,7 @@ interface SearchBarProps {
 const SearchBar: FC<SearchBarProps> = ({ value, onChange, placeholder = '搜索食谱', className = '' }) => {
   return (
     <View className={`search-bar ${className}`}>
+      <View className='search-icon' />
       <Input
         className='search-input'
         type='text'

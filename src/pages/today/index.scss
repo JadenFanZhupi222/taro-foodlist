@@ -11,6 +11,9 @@
 .recipe-display {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
+  // 行贴顶排列，行间只留正常 gap（容器被 flex:1 撑高时不再把两行拉开分布）
+  align-content: flex-start;
+  grid-auto-rows: max-content;
   gap: 2vw;
   padding: 0.6rem 0.4rem 1rem 0.4rem;
   overflow-y: auto;
@@ -46,32 +49,51 @@
 .today-arrow {
   position: static;
   transform: none;
-  font-size: 2.2rem;
-  color: #fff;
-  background: $color-primary;
+  width: 64rpx;
+  height: 64rpx;
   border-radius: 50%;
-  width: 2.8rem;
-  height: 2.8rem;
+  background: $color-bg-card;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.08);
   cursor: pointer;
   user-select: none;
-  transition: color 0.2s, background 0.2s;
-  &--left {
-    left: 0.5rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+
+  // 细 chevron：用边框画，比文本箭头清晰、跨端一致
+  &__chevron {
+    width: 18rpx;
+    height: 18rpx;
+    border-style: solid;
+    border-width: 5rpx 5rpx 0 0;
+    border-color: $color-primary;
+    transition: border-color 0.15s ease;
+    &--left {
+      transform: rotate(-135deg);
+      margin-left: 6rpx;
+    }
+    &--right {
+      transform: rotate(45deg);
+      margin-right: 6rpx;
+    }
   }
-  &--right {
-    right: 0.5rem;
+
+  &:active {
+    transform: scale(0.9);
+    box-shadow: 0 1rpx 6rpx rgba(0, 0, 0, 0.1);
   }
-  &:hover {
-    background: color.scale($color-primary, $lightness: -10%);
-  }
+
   &.disabled {
-    color: $color-border;
-    background: #f7f7f7;
+    box-shadow: none;
+    opacity: 0.5;
     cursor: not-allowed;
+    .today-arrow__chevron {
+      border-color: $color-border;
+    }
+    &:active {
+      transform: none;
+    }
   }
 }
 
@@ -155,10 +177,6 @@
   .available-recipe {
     width: 100% !important;
     margin-bottom: 0;
-    &.add-anim {
-      transform: scale(1.1);
-      opacity: 0.2;
-    }
   }
 }
 
@@ -205,14 +223,18 @@
   }
 }
 
+// 切换日期：轻量方向性滑动 + 淡入淡出（小位移更快、不抢眼）
+$slide-shift: 8%;
+$slide-ease: cubic-bezier(.33, 1, .68, 1);
+
 .slide-left-enter {
   opacity: 0;
-  transform: translateX(100%);
+  transform: translateX($slide-shift);
 }
 .slide-left-enter-active {
   opacity: 1;
   transform: translateX(0);
-  transition: all 0.3s;
+  transition: opacity 0.22s $slide-ease, transform 0.22s $slide-ease;
 }
 .slide-left-exit {
   opacity: 1;
@@ -220,18 +242,18 @@
 }
 .slide-left-exit-active {
   opacity: 0;
-  transform: translateX(-100%);
-  transition: all 0.3s;
+  transform: translateX(-$slide-shift);
+  transition: opacity 0.22s $slide-ease, transform 0.22s $slide-ease;
 }
 
 .slide-right-enter {
   opacity: 0;
-  transform: translateX(-100%);
+  transform: translateX(-$slide-shift);
 }
 .slide-right-enter-active {
   opacity: 1;
   transform: translateX(0);
-  transition: all 0.3s;
+  transition: opacity 0.22s $slide-ease, transform 0.22s $slide-ease;
 }
 .slide-right-exit {
   opacity: 1;
@@ -239,8 +261,8 @@
 }
 .slide-right-exit-active {
   opacity: 0;
-  transform: translateX(100%);
-  transition: all 0.3s;
+  transform: translateX($slide-shift);
+  transition: opacity 0.22s $slide-ease, transform 0.22s $slide-ease;
 }
 
 .fade-in-card {
@@ -305,20 +327,30 @@
 
   .today-arrow {
     flex: none;
-    width: 64rpx;
-    height: 64rpx;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    // 你的箭头样式
   }
 
-  .date-selector-bar-center {
+  // 中间日期区：固定宽度居中，overflow 隐藏让滑动文字不溢出箭头
+  .date-bar-center {
     flex: 1;
+    min-width: 0;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    // 让内容居中
+  }
+}
+
+// 内容滑动区：占满剩余空间，内部 recipe-display 负责滚动
+.recipe-swipe-area {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  .recipe-display {
+    flex: 1;
+    min-height: 0;
   }
 }
 

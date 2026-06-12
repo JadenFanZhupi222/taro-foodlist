@@ -8,12 +8,11 @@ interface AddRecipesProps {
   isOpen: boolean
   onClose: () => void
   availableRecipes: Recipe[]
-  addAnimId: string | null
   onAddRecipe: (recipe: Recipe) => void
   onAddPlaceholderClick: () => void
 }
 
-const AddRecipes = ({ isOpen, onClose, availableRecipes, addAnimId, onAddRecipe, onAddPlaceholderClick }: AddRecipesProps) => {
+const AddRecipes = ({ isOpen, onClose, availableRecipes, onAddRecipe, onAddPlaceholderClick }: AddRecipesProps) => {
   const AddPlaceholder = (
     <View className='available-recipe add-placeholder' onClick={onAddPlaceholderClick}>
       <View className='placeholder-inner'>
@@ -45,7 +44,7 @@ const AddRecipes = ({ isOpen, onClose, availableRecipes, addAnimId, onAddRecipe,
                 name={recipe.name}
                 image={recipe.image || ''}
                 type={recipe.type}
-                className={`available-recipe${addAnimId === recipe._id ? ' add-anim' : ''}`}
+                className='available-recipe available-recipe--tappable'
                 onClick={() => onAddRecipe(recipe)}
               />
             ))}

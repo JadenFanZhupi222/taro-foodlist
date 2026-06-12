@@ -29,10 +29,20 @@ exports.main = async (event, context) => {
 
         console.log(`迁移家庭 ${family._id}，共 ${recipeIds.length} 个菜谱`)
 
-        // 3. 为每个菜谱创建关联记录
+        // 3. 幂等：查出该家庭已存在的关联，避免重跑产生重复记录
+        const existingRes = await db.collection('family_recipes')
+          .where({ family_id: family._id })
+          .get()
+        const existingRecipeIds = new Set((existingRes.data || []).map(fr => fr.recipe_id))
+
+        // 4. 仅为尚未关联的菜谱创建记录（保持原有顺序）
+        let migratedForFamily = 0
         for (let i = 0; i < recipeIds.length; i++) {
           const recipeId = recipeIds[i]
-          
+          if (existingRecipeIds.has(recipeId)) {
+            continue // 已迁移，跳过
+          }
+
           await db.collection('family_recipes').add({
             family_id: family._id,
             recipe_id: recipeId,
@@ -43,10 +53,11 @@ exports.main = async (event, context) => {
             owner: family.family_owner || '',
             deleted: false
           })
+          migratedForFamily++
         }
 
-        totalMigrated += recipeIds.length
-        console.log(`家庭 ${family._id} 迁移完成`)
+        totalMigrated += migratedForFamily
+        console.log(`家庭 ${family._id} 迁移完成，新增 ${migratedForFamily} 条（跳过 ${recipeIds.length - migratedForFamily} 条已存在）`)
 
       } catch (error) {
         console.error(`家庭 ${family._id} 迁移失败:`, error)

@@ -47,9 +47,11 @@
     max-width: 44vw;
     min-width: 44vw;
     margin-bottom: 0;
-    &.add-anim {
-      transform: scale(1.1);
-      opacity: 0.2;
+    transition: transform 0.12s ease, opacity 0.12s ease;
+    // 点击即添加：按下时给一个轻微缩放反馈
+    &--tappable:active {
+      transform: scale(0.94);
+      opacity: 0.85;
     }
     &.add-placeholder {
       grid-column: 1 / span 2;

@@ -60,14 +60,52 @@
   }
 }
 
-.guide-highlight {
-  box-shadow: 0 0 0 1vw rgba($color-primary, 0.18), 0 0 4vw 1vw $color-primary;
-  animation: guide-glow 1.2s infinite alternate;
-  position: relative;
-  z-index: 10000;
-}
+// 未登录引导 CTA 卡片
+.login-cta {
+  background-color: $color-bg-card;
+  border-radius: $radius-base;
+  margin: 0 1rem 1.25rem 1rem;
+  padding: 2rem 1.5rem;
+  box-shadow: $shadow-card;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 
-@keyframes guide-glow {
-  0% { box-shadow: 0 0 0 1vw rgba($color-primary, 0.18), 0 0 4vw 1vw $color-primary; }
-  100% { box-shadow: 0 0 0 2vw rgba($color-primary, 0.28), 0 0 8vw 2vw $color-primary; }
+  &__avatar {
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 50%;
+    border: 0.12rem solid $color-primary;
+    background: #fff;
+    margin-bottom: 0.9rem;
+  }
+  &__title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: $color-text-main;
+    margin-bottom: 0.4rem;
+  }
+  &__subtitle {
+    font-size: 0.85rem;
+    color: $color-text-secondary;
+    text-align: center;
+    line-height: 1.5;
+    margin-bottom: 1.4rem;
+  }
+
+  // 醒目主色填充按钮（覆盖 LoginButton 默认描边样式）
+  .login-btn.login {
+    width: 80%;
+    color: #fff;
+    background: $color-primary;
+    border: none;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 0.7rem 0;
+    border-radius: $radius-btn;
+    box-shadow: 0 0.2rem 0.6rem rgba($color-primary, 0.25);
+    &:active {
+      opacity: 0.88;
+    }
+  }
 }

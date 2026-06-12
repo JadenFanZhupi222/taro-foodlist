@@ -1,0 +1,9 @@
+{
+  "name": "reorder-daily-menu",
+  "version": "1.0.0",
+  "description": "Reorder recipes within a daily menu",
+  "main": "index.js",
+  "dependencies": {
+    "@cloudbase/node-sdk": "^2.5.2"
+  }
+}

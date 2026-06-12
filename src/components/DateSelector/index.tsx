@@ -19,8 +19,9 @@ const WEEKDAYS_ZH = ['周日', '周一', '周二', '周三', '周四', '周五',
 
 const DateSelector: React.FC<DateSelectorProps> = ({ selectedDate, onDateChange }) => {
   const isToday = toDateKey(selectedDate) === toDateKey(new Date())
-  // 'yyyy-MM-dd' -> 'MM/dd'
-  const mmdd = toDateKey(selectedDate).slice(5).replace('-', '/')
+  // 'yyyy-MM-dd' -> 'MM月dd日'
+  const key = toDateKey(selectedDate)
+  const mmdd = `${key.slice(5, 7)}月${key.slice(8, 10)}日`
 
   return (
     <View className='date-selector-bar flat'>

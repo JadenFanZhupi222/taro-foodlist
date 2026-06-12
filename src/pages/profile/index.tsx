@@ -1,14 +1,13 @@
 import { View, Image, Text } from '@tarojs/components'
 import { useSelector, useDispatch } from 'react-redux'
-import { selectUser, selectLoginLoading, selectGuideLogin } from '@/store/user/selectors'
-import { setGuideLogin } from '@/store/user/userSlice'
-import Taro, { getCurrentInstance } from '@tarojs/taro'
+import { selectUser, selectLoginLoading } from '@/store/user/selectors'
+import Taro from '@tarojs/taro'
 import LoginButton from '@/components/LoginButton'
 import './index.scss'
 import Loading from '@/components/Loading'
 import UserCard from '@/components/profile/userCard'
-import LoginGuideMask from '@/components/profile/LoginGuideMask'
-import { useEffect, useState } from 'react'
+import { login } from '@/thunks/user/thunks'
+import type { AppDispatch } from '@/store'
 
 // 云存储fileID路径
 const historyIcon = 'cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/history.png'
@@ -24,28 +23,10 @@ const defaultAvatarUrl = 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia0
 const Profile = () => {
   const user = useSelector(selectUser)
   const loginLoading = useSelector(selectLoginLoading)
-  const guideLogin = useSelector(selectGuideLogin)
-  const [showLoginGuide, setShowLoginGuide] = useState(false)
-  const dispatch = useDispatch()
+  const dispatch = useDispatch<AppDispatch>()
 
-  useEffect(() => {
-    if (user && showLoginGuide) setShowLoginGuide(false)
-  }, [user])
-
-  useEffect(() => {
-    if (guideLogin) {
-      setShowLoginGuide(true)
-      dispatch(setGuideLogin(false))
-    }
-  }, [guideLogin, dispatch])
-
-  // 生成"微信用户xxxxx"
-  const getDefaultNickname = () => {
-    if (user?._id) {
-      return '微信用户' + user._id.slice(-5)
-    }
-    return '微信用户' + Math.floor(Math.random() * 100000)
-  }
+  // 生成稳定的"微信用户xxxxx"（避免 Math.random 每次渲染变化）
+  const getDefaultNickname = () => (user?._id ? '微信用户' + user._id.slice(-5) : '微信用户')
 
   // 判断显示头像和昵称
   const displayAvatar = !user ? defaultAvatarUrl : user.avatar
@@ -55,6 +36,9 @@ const Profile = () => {
     : user.nickname && user.nickname.trim() !== ''
       ? user.nickname
       : getDefaultNickname()
+
+  // 已登录但昵称为空 → 提示完善资料
+  const isDefaultProfile = !!user && (!user.nickname || user.nickname.trim() === '')
 
   // 点击头像或昵称跳转到编辑页
   const handleEdit = () => {
@@ -104,12 +88,12 @@ const Profile = () => {
   const handleItemClick = (path: string) => {
     if (!user && path !== '/pages/settings/about/index') {
       Taro.showModal({
-        title: '提示',
-        content: '请先登录',
+        title: '未登录',
+        content: '登录后即可使用，是否立即登录？',
+        confirmText: '去登录',
+        cancelText: '暂不',
         success: (res) => {
-          if (res.confirm) {
-            // 登录按钮会通过 dispatch 触发登录逻辑
-          }
+          if (res.confirm) dispatch(login())
         }
       })
       return
@@ -120,17 +104,26 @@ const Profile = () => {
   return (
     <View className='profile'>
       <Loading visible={loginLoading} mask={true} />
-      {/* 用户信息卡片 */}
-      <UserCard
-        avatar={displayAvatar}
-        nickname={displayNickname}
-        onEdit={handleEdit}
-        user={user}
-      >
-        <LoginButton className={`edit-btn${showLoginGuide ? ' guide-highlight' : ''}`} />
-      </UserCard>
-      {/* 遮罩层 */}
-      {showLoginGuide && <LoginGuideMask onClose={() => setShowLoginGuide(false)} />}
+      {!user ? (
+        /* 未登录：醒目的登录 CTA，替代角落小按钮 + 引导遮罩 */
+        <View className='login-cta'>
+          <Image className='login-cta__avatar' src={defaultAvatarUrl} />
+          <Text className='login-cta__title'>登录享受完整功能</Text>
+          <Text className='login-cta__subtitle'>登录后可创建家庭、收藏与同步每日菜单</Text>
+          <LoginButton className='login-cta__btn' />
+        </View>
+      ) : (
+        /* 已登录：用户信息卡片 */
+        <UserCard
+          avatar={displayAvatar}
+          nickname={displayNickname}
+          subtitle={isDefaultProfile ? '点头像完善昵称与头像 >' : undefined}
+          onEdit={handleEdit}
+          user={user}
+        >
+          <LoginButton className='edit-btn' />
+        </UserCard>
+      )}
       {/* 功能列表 */}
       <View className='menu-section'>
         <Text className='section-title'>功能</Text>

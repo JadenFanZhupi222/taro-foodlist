@@ -23,7 +23,7 @@ const RecipeCard: FC<RecipeCardProps> = ({ name, image, type, onClick, onRemove,
       <View className='recipe-card__divider' />
       <View className='recipe-card__content'>
         <Text className='recipe-card__name'>{name}</Text>
-        <Text className='recipe-card__type'>{type}</Text>
+        {type ? <Text className='recipe-card__type'>{type}</Text> : null}
         {showRemove && onRemove && (
           <View className='recipe-card__remove' onClick={(e) => {
             e.stopPropagation()
