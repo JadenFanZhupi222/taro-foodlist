@@ -28,7 +28,8 @@ jobs:
           node-version: 22
 
       - name: Install CloudBase CLI
-        run: npm install -g @cloudbase/cli
+        # 锁 2.x：3.x 改了鉴权方式，不再读 TENCENTCLOUD_SECRETID/KEY 环境变量
+        run: npm install -g @cloudbase/cli@2
 
       - name: Deploy all functions
         # @cloudbase/cli 通过这两个环境变量做非交互鉴权（腾讯云 API 密钥，访问管理 CAM 里创建）
