@@ -80,16 +80,6 @@ const dailyMenuSlice = createSlice({
         menu.recipes = menu.recipes.filter(r => r.recipe_id !== action.payload.recipeId)
       }
     },
-    // 乐观重排某日期菜品顺序：纯 UI 状态，不写服务端
-    optimisticReorderRecipes(
-      state,
-      action: PayloadAction<{ date: string; recipes: DailyMenuRecipeItem[] }>
-    ) {
-      const menu = state.dailyMenus.find(m => isSameDay(m.date, action.payload.date))
-      if (menu) {
-        menu.recipes = action.payload.recipes
-      }
-    },
   },
   extraReducers: (builder) => {
     builder
@@ -121,7 +111,6 @@ export const {
   deleteDailyMenuByDate,
   upsertDailyMenuByDate,
   optimisticAddRecipe,
-  optimisticRemoveRecipe,
-  optimisticReorderRecipes
+  optimisticRemoveRecipe
 } = dailyMenuSlice.actions
 export const dailyMenuReducer = dailyMenuSlice.reducer 
