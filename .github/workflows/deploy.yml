@@ -40,12 +40,25 @@ jobs:
           set -e
           # 显式非交互登录（--apiKeyId=SecretId，--apiKey=SecretKey），否则会退回交互式扫码卡住
           cloudbase login --apiKeyId "$TC_SECRET_ID" --apiKey "$TC_SECRET_KEY"
+          # 每个函数重试 3 次：CloudBase 触发器创建偶发 BatchCreateTrigger 瞬时失败（官方提示"请稍后重试"）
+          # 单个函数失败不中止整批，最后统一汇总失败项
+          failed=""
           for dir in cloudfunctions/*/; do
             name="$(basename "$dir")"
             echo "::group::deploy $name"
-            tcb fn deploy "$name" -e "$CLOUDBASE_ENV_ID" --force
+            ok=""
+            for attempt in 1 2 3; do
+              if tcb fn deploy "$name" -e "$CLOUDBASE_ENV_ID" --force; then ok=1; break; fi
+              echo "deploy $name 第 $attempt 次失败，10s 后重试…"
+              sleep 10
+            done
+            [ -z "$ok" ] && failed="$failed $name"
             echo "::endgroup::"
           done
+          if [ -n "$failed" ]; then
+            echo "::error::以下函数最终部署失败:$failed"
+            exit 1
+          fi
 
   # ---------- 小程序：构建并上传体验版 ----------
   miniprogram:
