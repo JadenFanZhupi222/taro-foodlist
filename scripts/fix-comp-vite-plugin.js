@@ -7,20 +7,24 @@
  * 做三件事：
  *  1. 修复 comp.json 的循环引用（usingComponents.comp === './comp'）
  *  2. 确保 comp.wxss 存在
- *  3. 给每个页面（dist 下每个 .wxml）补齐同名空 .wxss
+ *  3. 给每个注册页面补齐同名空 .wxss（按 app.json 的权威页面清单，不靠目录约定）
  *     —— webpack-runner 会为每页生成空 wxss 兜底；Vite 对“空样式页”不生成，
  *        补上以与 webpack 产物对齐，避免微信端缺文件困惑。
  */
 const fs = require('fs')
 const path = require('path')
 
-function walkWxml(dir, acc) {
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const full = path.join(dir, entry.name)
-    if (entry.isDirectory()) walkWxml(full, acc)
-    else if (entry.isFile() && entry.name.endsWith('.wxml')) acc.push(full)
+/** 从 app.json 解析出所有注册页面路径（主包 pages + 分包 root/pages，不依赖目录约定） */
+function readRegisteredPages(outputPath) {
+  const appJsonPath = path.join(outputPath, 'app.json')
+  if (!fs.existsSync(appJsonPath)) return []
+  const app = JSON.parse(fs.readFileSync(appJsonPath, 'utf8'))
+  const pages = [...(app.pages || [])]
+  for (const sub of (app.subPackages || app.subpackages || [])) {
+    const root = String(sub.root || '').replace(/\/$/, '')
+    for (const p of (sub.pages || [])) pages.push(root ? `${root}/${p}` : p)
   }
-  return acc
+  return pages
 }
 
 function fixCompJsonVitePlugin(outputRoot = 'dist') {
@@ -59,23 +63,22 @@ function fixCompJsonVitePlugin(outputRoot = 'dist') {
         }
       }
 
-      // 3. 给每个页面补齐同名空 .wxss（空样式页在 Vite 下不会生成 wxss）
-      //    只扫 dist/pages/ 下的真实页面，不碰根目录的 base.wxml 等模板（与 webpack 产物对齐）
-      const pagesDir = path.join(outputPath, 'pages')
-      if (fs.existsSync(pagesDir)) {
-        try {
-          let created = 0
-          for (const wxml of walkWxml(pagesDir, [])) {
-            const wxss = wxml.replace(/\.wxml$/, '.wxss')
-            if (!fs.existsSync(wxss)) {
-              fs.writeFileSync(wxss, '/* Taro 自动生成的空样式文件 */\n', 'utf8')
-              created++
-            }
+      // 3. 给每个注册页面补齐同名空 .wxss（空样式页在 Vite 下不会生成 wxss）
+      //    按 app.json 的页面清单定位，覆盖任意分包 root（不再假设页面都在 pages/ 下）
+      try {
+        let created = 0
+        for (const page of readRegisteredPages(outputPath)) {
+          const wxmlPath = path.join(outputPath, `${page}.wxml`)
+          const wxssPath = path.join(outputPath, `${page}.wxss`)
+          // 仅当该页确有 wxml 产物却缺 wxss 时补，避免给不存在的页凭空造文件
+          if (fs.existsSync(wxmlPath) && !fs.existsSync(wxssPath)) {
+            fs.writeFileSync(wxssPath, '/* Taro 自动生成的空样式文件 */\n', 'utf8')
+            created++
           }
-          if (created > 0) console.log(`✅ Backfilled ${created} missing page .wxss file(s)`)
-        } catch (error) {
-          console.error('❌ Error backfilling page .wxss:', error.message)
         }
+        if (created > 0) console.log(`✅ Backfilled ${created} missing page .wxss file(s)`)
+      } catch (error) {
+        console.error('❌ Error backfilling page .wxss:', error.message)
       }
     }
   }

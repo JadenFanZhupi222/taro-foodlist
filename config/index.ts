@@ -9,6 +9,8 @@ const reduxChunkVitePlugin = require('../scripts/redux-chunk-vite-plugin')
 
 // https://taro-docs.jd.com/docs/next/config#defineconfig-辅助函数
 export default defineConfig<'vite'>(async (merge) => {
+  // 产物目录：单一来源，同时供 Taro 的 outputRoot 与 fix-comp 插件使用，避免两处写死不同步
+  const OUTPUT_ROOT = 'dist'
   const baseConfig: UserConfigExport<'vite'> = {
     projectName: 'ymscp-recipe',
     date: '2025-5-29',
@@ -20,7 +22,7 @@ export default defineConfig<'vite'>(async (merge) => {
       828: 1.81 / 2
     },
     sourceRoot: 'src',
-    outputRoot: 'dist',
+    outputRoot: OUTPUT_ROOT,
     plugins: [],
     defineConstants: {
     },
@@ -33,13 +35,10 @@ export default defineConfig<'vite'>(async (merge) => {
     framework: 'react',
     compiler: {
       type: 'vite',
-      prebundle: {
-        // 关闭 Taro 依赖预打包，保持与原 webpack 配置一致的行为
-        enable: false
-      },
+      // 注：原 webpack 配置里的 prebundle/cache 是 webpack 专属，vite-runner 不消费，已移除
       // comp.json 循环引用 / comp.wxss 缺失修复（产物后处理，原 webpackChain 里挂的插件迁移到此）
       // + redux/react 同 chunk 修复（消除 react-redux↔react 跨 chunk 循环导致的运行时崩溃）
-      vitePlugins: [fixCompJsonVitePlugin('dist'), reduxChunkVitePlugin()]
+      vitePlugins: [fixCompJsonVitePlugin(OUTPUT_ROOT), reduxChunkVitePlugin()]
     },
     mini: {
       postcss: {

@@ -15,6 +15,22 @@
  */
 const { REG_TARO_SCOPED_PACKAGE, REG_NODE_MODULES_DIR } = require('@tarojs/helper')
 
+// 本插件的 manualChunks 逐条复刻自该版本 vite-runner 的 getManualChunks。
+// Taro 升级若改了分块逻辑，这份复刻会静默漂移——版本不符时给出告警，把"哑雷"变"明示"。
+const VERIFIED_VITE_RUNNER_VERSION = '4.1.1'
+try {
+  const actual = require('@tarojs/vite-runner/package.json').version
+  if (actual !== VERIFIED_VITE_RUNNER_VERSION) {
+    console.warn(
+      `[redux-chunk-vite-plugin] 本插件的 manualChunks 复刻自 @tarojs/vite-runner@${VERIFIED_VITE_RUNNER_VERSION}，` +
+      `当前为 ${actual}。若升级后产物分块异常或 react-redux 运行时再现 useSyncExternalStore 崩溃，` +
+      `请核对 @tarojs/vite-runner/dist/mini/config.js 的 getManualChunks 是否变更并同步本插件。`
+    )
+  }
+} catch (e) {
+  // 取不到版本不影响功能，忽略
+}
+
 function reduxChunkVitePlugin() {
   return {
     name: 'fix-redux-react-chunk-cycle',
@@ -35,15 +51,23 @@ function reduxChunkVitePlugin() {
                   //   与 React 同 chunk，使 vendors 完全不再跨 chunk 引用 React → 彻底断开
                   //   taro↔vendors 因 React 产生的循环（含 react-redux 顶层 useSyncExternalStore、
                   //   nutui 顶层 forwardRef 等"模块顶层即时访问 React"的崩溃点）。
+                  //   清单覆盖项目里所有会 import React 的库——宁可宽，漏一个就会静默复发崩溃。
                   /node_modules[\\/]react-redux[\\/]/,
                   /node_modules[\\/]@reduxjs[\\/]toolkit[\\/]/,
                   /node_modules[\\/]redux[\\/]/,
                   /node_modules[\\/]redux-thunk[\\/]/,
                   /node_modules[\\/]reselect[\\/]/,
                   /node_modules[\\/]use-sync-external-store[\\/]/,
-                  /node_modules[\\/]@nutui[\\/]nutui-react-taro[\\/]/,
+                  /node_modules[\\/]react-transition-group[\\/]/,
                   /node_modules[\\/]taro-ui[\\/]/,
-                  /node_modules[\\/]react-transition-group[\\/]/
+                  // 整个 @nutui scope（nutui-react-taro 及其传递的 React 消费依赖
+                  // @nutui/icons-react-taro 等，目前虽被 tree-shaking 摇掉、但一旦用到图标即入包）
+                  /node_modules[\\/]@nutui[\\/]/,
+                  // nutui 传递依赖中会 import React 的库（动画/手势）
+                  /node_modules[\\/]lottie-react[\\/]/,
+                  /node_modules[\\/]@react-spring[\\/]/,
+                  /node_modules[\\/]@use-gesture[\\/]/,
+                  /node_modules[\\/]react-fast-compare[\\/]/
                 ]
                 const taroViteRunnerDeps = /node_modules[\\/]@tarojs[\\/]vite-runner/
                 const tslibDeps = /node_modules[\\/]tslib[\\/]/
