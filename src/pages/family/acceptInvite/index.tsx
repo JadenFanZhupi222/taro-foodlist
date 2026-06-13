@@ -39,7 +39,8 @@ export default function AcceptInvite() {
       }, 1200)
       toast({ title: '加入成功', icon: 'success' })
     } catch (e) {
-      toast({ title: '加入失败', icon: 'error' })
+      // 显示云函数返回的具体原因（如"你已加入其他家庭，请先退出当前家庭再加入"），icon:none 容纳长文案
+      toast({ title: (e && e.message) || '加入失败', icon: 'none' })
     } finally {
       setLoading(false)
     }

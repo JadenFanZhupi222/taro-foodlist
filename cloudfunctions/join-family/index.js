@@ -33,7 +33,15 @@ exports.main = async (event, context) => {
       return { code: 2, message: '家庭不存在' }
     }
     const family = familyRes.data[0]
-    const members = family.members
+    // 防串档：一人一家庭。若已在【别的】家庭则拒绝（与 create-family 行为对齐）。
+    // 漏掉这条校验会让 openId 同时出现在多个 family.members 里，
+    // 导致各处 family.where({members:openId}).data[0] 取到任意家庭 → 串档。
+    const myFamilyRes = await familyColl.where({ members: openId }).get()
+    const myFamily = myFamilyRes.data && myFamilyRes.data[0]
+    if (myFamily && myFamily._id !== familyId) {
+      return { code: 4, message: '你已加入其他家庭，请先退出当前家庭再加入' }
+    }
+    const members = family.members || []
     // 2. 幂等性：如已是成员则跳过，否则加入
     let needUpdateFamily = !members.includes(openId)
     if (!needUpdateFamily) {

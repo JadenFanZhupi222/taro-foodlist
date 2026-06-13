@@ -40,15 +40,6 @@
       "description": "微信登录"
     },
     {
-      "name": "get-user-info",
-      "runtime": "Nodejs18.15",
-      "handler": "index.main",
-      "installDependency": true,
-      "timeout": 20,
-      "memorySize": 256,
-      "description": "用openId数组获取用户信息"
-    },
-    {
       "name": "update-user-info",
       "runtime": "Nodejs18.15",
       "handler": "index.main",
@@ -180,15 +171,6 @@
       "timeout": 60,
       "memorySize": 512,
       "description": "一次性迁移 family.recipes 到 family_recipes 表"
-    },
-    {
-      "name": "reorder-daily-menu",
-      "runtime": "Nodejs18.15",
-      "handler": "index.main",
-      "installDependency": true,
-      "timeout": 20,
-      "memorySize": 256,
-      "description": "重排某日菜单内菜品顺序"
     }
   ]
 }
