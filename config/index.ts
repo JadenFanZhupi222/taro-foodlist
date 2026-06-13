@@ -1,12 +1,13 @@
 import { defineConfig, type UserConfigExport } from '@tarojs/cli'
-import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin'
 import devConfig from './dev'
 import prodConfig from './prod'
 import path from 'path'
+// comp.json 循环引用修复：Vite 版插件（替代原 webpack 的 fix-comp-webpack-plugin）
+const fixCompJsonVitePlugin = require('../scripts/fix-comp-vite-plugin')
 
 // https://taro-docs.jd.com/docs/next/config#defineconfig-辅助函数
-export default defineConfig<'webpack5'>(async (merge) => {
-  const baseConfig: UserConfigExport<'webpack5'> = {
+export default defineConfig<'vite'>(async (merge) => {
+  const baseConfig: UserConfigExport<'vite'> = {
     projectName: 'ymscp-recipe',
     date: '2025-5-29',
     designWidth: 750,
@@ -29,15 +30,13 @@ export default defineConfig<'webpack5'>(async (merge) => {
     },
     framework: 'react',
     compiler: {
-      type: 'webpack5',
+      type: 'vite',
       prebundle: {
-        exclude: ["@nutui/nutui-react-taro"], // 你用 nutui/react-taro 也可以写 ["@nutui/nutui-react-taro"]
-        enable: false,
-        force: true
+        // 关闭 Taro 依赖预打包，保持与原 webpack 配置一致的行为
+        enable: false
       },
-    },
-    cache: {
-      enable: true // Webpack 持久化缓存配置，建议开启。默认配置请参考：https://docs.taro.zone/docs/config-detail#cache
+      // comp.json 循环引用 / comp.wxss 缺失修复（产物后处理，原 webpackChain 里挂的插件迁移到此）
+      vitePlugins: [fixCompJsonVitePlugin('dist')]
     },
     mini: {
       postcss: {
@@ -54,13 +53,8 @@ export default defineConfig<'webpack5'>(async (merge) => {
             generateScopedName: '[name]__[local]___[hash:base64:5]'
           }
         }
-      },
-      webpackChain(chain) {
-        chain.resolve.plugin('tsconfig-paths').use(TsconfigPathsPlugin)
-        // 修复 comp.json 循环引用问题
-        const FixCompJsonPlugin = require('../scripts/fix-comp-webpack-plugin')
-        chain.plugin('fix-comp-json').use(FixCompJsonPlugin)
       }
+      // 路径别名 @/ 由下方顶层 alias 处理，Vite 直接读取，无需 tsconfig-paths 插件
     },
     h5: {
       publicPath: '/',
@@ -86,9 +80,6 @@ export default defineConfig<'webpack5'>(async (merge) => {
             generateScopedName: '[name]__[local]___[hash:base64:5]'
           }
         }
-      },
-      webpackChain(chain) {
-        chain.resolve.plugin('tsconfig-paths').use(TsconfigPathsPlugin)
       }
     },
     rn: {
