@@ -4,6 +4,8 @@ import prodConfig from './prod'
 import path from 'path'
 // comp.json 循环引用修复：Vite 版插件（替代原 webpack 的 fix-comp-webpack-plugin）
 const fixCompJsonVitePlugin = require('../scripts/fix-comp-vite-plugin')
+// 修复 react-redux 与 React 跨 chunk 循环依赖（运行时 useSyncExternalStore of undefined）
+const reduxChunkVitePlugin = require('../scripts/redux-chunk-vite-plugin')
 
 // https://taro-docs.jd.com/docs/next/config#defineconfig-辅助函数
 export default defineConfig<'vite'>(async (merge) => {
@@ -36,7 +38,8 @@ export default defineConfig<'vite'>(async (merge) => {
         enable: false
       },
       // comp.json 循环引用 / comp.wxss 缺失修复（产物后处理，原 webpackChain 里挂的插件迁移到此）
-      vitePlugins: [fixCompJsonVitePlugin('dist')]
+      // + redux/react 同 chunk 修复（消除 react-redux↔react 跨 chunk 循环导致的运行时崩溃）
+      vitePlugins: [fixCompJsonVitePlugin('dist'), reduxChunkVitePlugin()]
     },
     mini: {
       postcss: {
