@@ -22,6 +22,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # 增量部署要按 commit 范围 diff，需完整历史（浅克隆拿不到基准提交）
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -31,20 +34,50 @@ jobs:
         # 锁 2.6.16：3.x 改了鉴权方式；2.x 需显式 login，不会自动读环境变量
         run: npm install -g @cloudbase/cli@2.6.16
 
-      - name: Deploy all functions
+      - name: Deploy changed functions
         env:
           # CAM API 密钥（SecretId / SecretKey），在 GitHub Secrets 配置
           TC_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
           TC_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
         run: |
           set -e
           # 显式非交互登录（--apiKeyId=SecretId，--apiKey=SecretKey），否则会退回交互式扫码卡住
           cloudbase login --apiKeyId "$TC_SECRET_ID" --apiKey "$TC_SECRET_KEY"
-          # 每个函数重试 3 次：CloudBase 触发器创建偶发 BatchCreateTrigger 瞬时失败（官方提示"请稍后重试"）
-          # 单个函数失败不中止整批，最后统一汇总失败项
+
+          # ---- 决定部署哪些函数：默认增量，任何不确定的情况一律退回全量（宁可慢不可漏）----
+          all_funcs() { for d in cloudfunctions/*/; do basename "$d"; done; }
+          targets=""; reason=""
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            targets="$(all_funcs)"; reason="手动触发 → 全量（强制全量入口）"
+          elif [ -z "$BEFORE_SHA" ] || echo "$BEFORE_SHA" | grep -qE '^0+$'; then
+            targets="$(all_funcs)"; reason="无基准提交（分支新建/首推）→ 全量"
+          elif ! git cat-file -e "${BEFORE_SHA}^{commit}" 2>/dev/null; then
+            targets="$(all_funcs)"; reason="基准提交不可达（force-push?）→ 全量"
+          else
+            diff="$(git diff --name-only "$BEFORE_SHA" "$AFTER_SHA")"
+            if echo "$diff" | grep -qx 'cloudbaserc.json'; then
+              # 函数配置（触发器/超时/内存…）变更影响面无法逐函数精确归属，保守全量
+              targets="$(all_funcs)"; reason="cloudbaserc.json 变更（函数配置/触发器）→ 全量"
+            else
+              targets="$(echo "$diff" | grep -E '^cloudfunctions/[^/]+/' | cut -d/ -f2 | sort -u)"
+              reason="增量：仅部署本次改动的函数"
+            fi
+          fi
+
+          echo "::notice::部署策略：$reason"
+          if [ -z "$targets" ]; then
+            echo "本次无云函数改动，跳过部署。"
+            exit 0
+          fi
+          echo "待部署函数："; echo "$targets" | sed 's/^/  - /'
+
+          # ---- 逐个部署，每个重试 3 次；单个失败不中止整批，最后统一汇总 ----
+          # 重试是为缓解 CloudBase 偶发瞬时失败（如 BatchCreateTrigger "请稍后重试"）
           failed=""
-          for dir in cloudfunctions/*/; do
-            name="$(basename "$dir")"
+          for name in $targets; do
             echo "::group::deploy $name"
             ok=""
             for attempt in 1 2 3; do
