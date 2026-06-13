@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "description": "",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
   "templateInfo": {
     "name": "default",
     "typescript": true,
@@ -71,26 +76,23 @@
   },
   "devDependencies": {
     "@babel/core": "^7.24.4",
+    "@babel/plugin-proposal-decorators": "^7.24.1",
     "@babel/plugin-transform-class-properties": "7.25.9",
     "@babel/preset-react": "^7.24.1",
-    "@pmmmwh/react-refresh-webpack-plugin": "^0.5.5",
     "@tarojs/cli": "4.1.1",
-    "@tarojs/taro-loader": "4.1.1",
-    "@tarojs/webpack5-runner": "4.1.1",
+    "@tarojs/vite-runner": "4.1.1",
     "@types/node": "^18",
     "@types/react": "^18.0.0",
-    "@types/webpack-env": "^1.13.6",
+    "@vitejs/plugin-react": "^4.3.0",
     "babel-preset-taro": "4.1.1",
     "eslint": "^8.57.0",
     "eslint-config-taro": "4.1.1",
     "eslint-plugin-react": "^7.34.1",
     "eslint-plugin-react-hooks": "^4.4.0",
     "postcss": "^8.4.38",
-    "react-refresh": "^0.14.0",
     "sass": "^1.75.0",
     "stylelint": "^16.4.0",
-    "tsconfig-paths-webpack-plugin": "^4.1.0",
     "typescript": "^5.4.5",
-    "webpack": "5.91.0"
+    "vite": "^4.2.0"
   }
 }
