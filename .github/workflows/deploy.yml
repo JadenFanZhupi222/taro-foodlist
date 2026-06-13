@@ -88,13 +88,14 @@ jobs:
         run: printf '%s' "$WX_PRIVATE_KEY" > "$RUNNER_TEMP/wx_private.key"
 
       - name: Upload trial version
-        # 用 miniprogram-ci 的 CLI 上传体验版（robot 1）。版本号用 run_number 递增。
+        # 用 miniprogram-ci 的 CLI 上传体验版（robot 1）。版本号 1.1.<run_number>：
+        # 用 1.1.x 而非 1.0.x，是为了恒高于历史手动包（最高到 1.0.6），避免重号、保证单调递增。
         run: |
           npx --yes miniprogram-ci@latest upload \
             --pp "$GITHUB_WORKSPACE" \
             --pkp "$RUNNER_TEMP/wx_private.key" \
             --appid "$WX_APPID" \
-            --uv "1.0.${{ github.run_number }}" \
+            --uv "1.1.${{ github.run_number }}" \
             --ud "CI ${GITHUB_SHA::7} by ${{ github.actor }}" \
             -r 1 \
             --enable-es6 true
