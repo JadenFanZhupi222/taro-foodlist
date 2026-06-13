@@ -37,7 +37,8 @@ export default defineConfig<'vite'>(async (merge) => {
       type: 'vite',
       // 注：原 webpack 配置里的 prebundle/cache 是 webpack 专属，vite-runner 不消费，已移除
       // comp.json 循环引用 / comp.wxss 缺失修复（产物后处理，原 webpackChain 里挂的插件迁移到此）
-      // + redux/react 同 chunk 修复（消除 react-redux↔react 跨 chunk 循环导致的运行时崩溃）
+      // + chunk 合并修复（把所有第三方依赖并入单一 taro chunk，消除 taro↔vendors 跨 chunk
+      //   循环导致的运行时崩溃：useSyncExternalStore / getDefaultExportFromCjs is not a function）
       vitePlugins: [fixCompJsonVitePlugin(OUTPUT_ROOT), reduxChunkVitePlugin()]
     },
     mini: {
