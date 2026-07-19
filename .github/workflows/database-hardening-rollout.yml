@@ -101,7 +101,7 @@ jobs:
             echo "::error::Deployment failed; restoring all affected functions from verified release $ROLLBACK_SHA"
             rollback_failed=""
             for name in $functions; do
-              (cd "$rollback_dir" && "$TCB" fn deploy "$name" -e "$CLOUDBASE_ENV_ID" --force --yes) || rollback_failed="$rollback_failed $name"
+              (cd "$rollback_dir" && "$TCB" fn deploy "$name" -e "$CLOUDBASE_ENV_ID" --force) || rollback_failed="$rollback_failed $name"
             done
             if [ -n "$rollback_failed" ]; then
               echo "::error::Rollback incomplete; failed functions:$rollback_failed"
@@ -111,6 +111,6 @@ jobs:
           }
           trap rollback ERR
           for name in $functions; do
-            "$TCB" fn deploy "$name" -e "$CLOUDBASE_ENV_ID" --force --yes
+            "$TCB" fn deploy "$name" -e "$CLOUDBASE_ENV_ID" --force
           done
           trap - ERR
