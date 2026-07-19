@@ -19,8 +19,13 @@ interface RecipeCardProps {
 const RecipeCard: FC<RecipeCardProps> = ({ name, image, type, onClick, onRemove, showRemove, className, swipeToDelete, selected }) => {
   const cardContent = (
     <View className={`recipe-card ${className || ''}`} onClick={onClick}>
-      <Image className='recipe-card__image' src={image} mode='aspectFill' />
-      <View className='recipe-card__divider' />
+      <View className='recipe-card__media'>
+        {image ? <Image className='recipe-card__image' src={image} mode='aspectFill' /> : (
+          <View className='recipe-card__placeholder'>
+            <View className='recipe-card__placeholder-plate' />
+          </View>
+        )}
+      </View>
       <View className='recipe-card__content'>
         <Text className='recipe-card__name'>{name}</Text>
         {type ? <Text className='recipe-card__type'>{type}</Text> : null}
@@ -28,7 +33,7 @@ const RecipeCard: FC<RecipeCardProps> = ({ name, image, type, onClick, onRemove,
           <View className='recipe-card__remove' onClick={(e) => {
             e.stopPropagation()
             onRemove()
-          }}>x</View>
+          }}>移除</View>
         )}
       </View>
       {selected && (
@@ -63,4 +68,4 @@ const RecipeCard: FC<RecipeCardProps> = ({ name, image, type, onClick, onRemove,
   return cardContent
 }
 
-export default RecipeCard 
+export default RecipeCard

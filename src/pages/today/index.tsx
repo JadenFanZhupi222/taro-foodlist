@@ -1,7 +1,7 @@
 import { View, Button, Text } from '@tarojs/components'
 import { useState, useLayoutEffect, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import Taro, { usePullDownRefresh } from '@tarojs/taro'
+import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import DateSelector from '@/components/DateSelector'
 import RecipeCard from '@/components/RecipeCard'
 import Loading from '@/components/Loading'
@@ -52,6 +52,11 @@ const Today = () => {
   const [isPlannerOpen, setIsPlannerOpen] = useState(false)
   const [hasFetchedToday, setHasFetchedToday] = useState(false)
   const [hasFetchedAll, setHasFetchedAll] = useState(false)
+
+  useDidShow(() => {
+    const page = Taro.getCurrentInstance().page
+    ;(page as any)?.getTabBar?.()?.setData({ selected: 1 })
+  })
 
   const addDays = (date: Date, n: number) => {
     const d = new Date(date)
@@ -206,7 +211,7 @@ const Today = () => {
   const isPast = selectedStr < todayStr
 
   // 该日期已确认为空（命中 emptyDates，或菜单存在但无菜品）
-  const isCurrentDateEmpty = emptyDates.includes(dateKey) || (!!todayMenu && todayRecipes.length === 0)
+  const isCurrentDateEmpty = !family?._id || emptyDates.includes(dateKey) || (!!todayMenu && todayRecipes.length === 0)
   // 既无数据也未确认为空 → 仍在拉取，显示占位而非"空"，消除切换时的空状态闪烁
   const isResolvingDate = todayRecipes.length === 0 && !isCurrentDateEmpty
 
@@ -225,6 +230,10 @@ const Today = () => {
     <View className='today-page'>
       {/* 首屏冷启动（完全无数据时）才用全屏遮罩；切日期/增删均走局部 spinner 与乐观更新 */}
       <Loading visible={loading.fetchLoading && dailyMenus.length === 0} />
+      <View className='today-header'>
+        <Text className='today-header__eyebrow'>一家人的菜单</Text>
+        <Text className='today-header__title'>今天吃什么</Text>
+      </View>
       {/* 箭头固定不参与滑动，只有中间日期文字随切换滑动 */}
       <View className='date-selector-bar-with-arrow'>
         <View
@@ -254,6 +263,15 @@ const Today = () => {
           <View className='today-arrow__chevron today-arrow__chevron--right' />
         </View>
       </View>
+      <View className='menu-summary'>
+        <View>
+          <Text className='menu-summary__label'>{isPast ? '历史菜单' : '今日菜单'}</Text>
+          <Text className='menu-summary__title'>
+            {todayRecipes.length > 0 ? `已经安排 ${todayRecipes.length} 道菜` : '还没有安排菜品'}
+          </Text>
+        </View>
+        <View className='menu-summary__count'>{todayRecipes.length}</View>
+      </View>
       <View
         className='recipe-swipe-area'
         onTouchStart={handleTouchStart}
@@ -278,7 +296,12 @@ const Today = () => {
                   <Text>当天菜单暂时为空</Text>
                 </View>
               ) : (
-                (todayRecipes as NonNullable<typeof todayRecipes[number]>[]).map(recipe => (
+                <>
+                  <View className='menu-list-heading'>
+                    <Text>这一天的菜单</Text>
+                    {!isPast && <Text className='menu-list-heading__hint'>轻触菜品查看详情</Text>}
+                  </View>
+                  {(todayRecipes as NonNullable<typeof todayRecipes[number]>[]).map(recipe => (
                   <RecipeCard
                     key={recipe._id}
                     id={recipe._id}
@@ -290,7 +313,8 @@ const Today = () => {
                     onRemove={() => handleRemoveRecipe(recipe)}
                     showRemove={!isPast}
                   />
-                ))
+                  ))}
+                </>
               )}
             </View>
           </CSSTransition>
@@ -302,7 +326,7 @@ const Today = () => {
             className='planner-toggle'
             onClick={() => setIsPlannerOpen(true)}
           >
-            添加食谱
+            ＋ 添加一道菜
           </Button>
           <AddRecipes
             isOpen={isPlannerOpen}

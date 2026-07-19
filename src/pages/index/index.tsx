@@ -1,6 +1,6 @@
 import { View, Text } from '@tarojs/components'
 import { useState } from 'react'
-import Taro, { usePullDownRefresh } from '@tarojs/taro'
+import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import { useSelector, useDispatch } from 'react-redux'
 import { selectRecipes } from '@/store/recipe/selectors'
 import { selectUser } from '@/store/user/selectors'
@@ -24,6 +24,11 @@ const Index = () => {
   const [activeCategory, setActiveCategory] = useState('全部')
   const dispatch = useDispatch<AppDispatch>()
   const { fetchLoading } = useSelector(selectRecipeLoading)
+
+  useDidShow(() => {
+    const page = Taro.getCurrentInstance().page
+    ;(page as any)?.getTabBar?.()?.setData({ selected: 0 })
+  })
 
   // 处理下拉刷新
   usePullDownRefresh(async () => {
@@ -90,7 +95,16 @@ const Index = () => {
     <View className='index'>
       {/* 仅首屏冷启动（无任何食谱时）用全屏遮罩；增删走 toast 反馈，不再全屏挡屏 */}
       <Loading visible={fetchLoading && recipes.length === 0} />
-      {/* 主要内容区 */}
+      <View className='index-header'>
+        <View>
+          <Text className='index-eyebrow'>{recipes.length} 道家庭食谱</Text>
+          <Text className='index-title'>家的食谱</Text>
+        </View>
+        <View className='index-create' onClick={handleAddRecipe}>
+          <Text className='index-create__plus'>＋</Text>
+          <Text>新建</Text>
+        </View>
+      </View>
       <View className='content'>
         <View className='index-search-bar-wrap'>
           <SearchBar
@@ -108,7 +122,14 @@ const Index = () => {
 
         {/* 右侧食谱列表 */}
         <View className='recipe-list'>
-          {filteredRecipes.map(recipe => (
+          {filteredRecipes.length === 0 ? (
+            <View className='index-empty'>
+              <View className='index-empty__plate' />
+              <Text className='index-empty__title'>{recipes.length === 0 ? '还没有家庭食谱' : '没有找到相关食谱'}</Text>
+              <Text className='index-empty__hint'>{recipes.length === 0 ? '先记下家里最常做的一道菜' : '试试其他关键词或分类'}</Text>
+              {recipes.length === 0 && <View className='index-empty__action' onClick={handleAddRecipe}>新建第一道食谱</View>}
+            </View>
+          ) : filteredRecipes.map(recipe => (
             <RecipeCard
               key={recipe._id}
               id={recipe._id}
@@ -124,10 +145,6 @@ const Index = () => {
         </View>
       </View>
 
-      {/* 新建食谱按钮 */}
-      <View className='add-recipe' onClick={handleAddRecipe}>
-        <Text className='add-recipe__icon'>+</Text>
-      </View>
     </View>
   )
 }

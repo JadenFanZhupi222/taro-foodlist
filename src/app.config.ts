@@ -13,9 +13,10 @@ export default defineAppConfig({
     backgroundColor: '#f5f5f5'
   },
   tabBar: {
-    color: '#999',
-    selectedColor: '#ff6b6b',
-    backgroundColor: '#fff',
+    custom: true,
+    color: '#62685f',
+    selectedColor: '#c9573a',
+    backgroundColor: '#ffffff',
     list: [
       {
         pagePath: 'pages/index/index',

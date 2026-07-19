@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-20T00:00:00+08:00",
+  "title": "Design System: 家庭食谱",
+  "extensions": {
+    "colorMeta": {
+      "primary": {"role":"primary","displayName":"餐桌陶土红","canonical":"#C9573A","tonalRamp":["#3D1710","#642519","#8B3523","#C9573A","#DA7961","#E9A493","#F4CEC4","#FBEEE9"]},
+      "ink": {"role":"neutral","displayName":"深橄榄墨色","canonical":"#20241F","tonalRamp":["#121411","#20241F","#3E443C","#62685F","#8A9087","#B4B8B1","#DEE1DA","#F5F6F3"]}
+    },
+    "typographyMeta": {
+      "headline":{"displayName":"页面标题","purpose":"每个页面只使用一次。"},
+      "body":{"displayName":"正文","purpose":"菜单、说明和列表内容。"}
+    },
+    "shadows": [
+      {"name":"floating-nav","value":"0 6px 18px rgba(32,36,31,.12)","purpose":"仅用于底部自定义导航。"},
+      {"name":"interaction-lift","value":"0 3px 8px rgba(32,36,31,.10)","purpose":"仅用于活动或拖动状态。"}
+    ],
+    "motion": [
+      {"name":"state","value":"180ms cubic-bezier(.22,1,.36,1)","purpose":"按钮、筛选和导航状态。"},
+      {"name":"content","value":"240ms cubic-bezier(.22,1,.36,1)","purpose":"日期与列表内容切换。"}
+    ],
+    "breakpoints": [{"name":"compact","value":"375px"},{"name":"wide-phone","value":"430px"}]
+  },
+  "components": [
+    {"name":"Primary Button","kind":"button","refersTo":"button-primary","description":"页面唯一主行动。","html":"<button class=\"ds-btn-primary\">添加一道菜</button>","css":".ds-btn-primary{height:48px;padding:0 20px;border:0;border-radius:12px;background:#C9573A;color:#fff;font:600 15px system-ui;transition:transform 180ms cubic-bezier(.22,1,.36,1),background 180ms}.ds-btn-primary:hover{background:#B94A31}.ds-btn-primary:active{transform:scale(.98)}.ds-btn-primary:focus-visible{outline:3px solid #E9A493;outline-offset:2px}"},
+    {"name":"Search Field","kind":"input","refersTo":"search-field","description":"搜索菜名与分类。","html":"<input class=\"ds-search\" placeholder=\"搜索菜名或食材\">","css":".ds-search{height:44px;padding:0 14px;border:0;border-radius:12px;background:#ECEEE9;color:#20241F;font:400 15px system-ui}.ds-search:focus{background:#fff;outline:2px solid #C9573A;outline-offset:1px}"},
+    {"name":"Filter Chip","kind":"chip","description":"食谱分类筛选。","html":"<button class=\"ds-chip\">常做</button>","css":".ds-chip{padding:8px 12px;border:0;border-radius:8px;background:#ECEEE9;color:#62685F;font:500 13px system-ui}.ds-chip:hover,.ds-chip:focus-visible{background:#DEE1DA;color:#20241F}.ds-chip:active{transform:scale(.98)}"},
+    {"name":"Recipe Card","kind":"card","refersTo":"recipe-card","description":"图片主导的家庭食谱入口。","html":"<article class=\"ds-card\"><div class=\"ds-photo\"></div><strong>番茄炖牛腩</strong><span>荤菜</span></article>","css":".ds-card{width:180px;border-radius:16px;background:#fff;overflow:hidden;color:#20241F}.ds-photo{height:132px;background:#DEE1DA}.ds-card strong{display:block;padding:12px 12px 3px;font:600 16px system-ui}.ds-card span{display:block;padding:0 12px 12px;color:#62685F;font:500 12px system-ui}"},
+    {"name":"Floating Navigation","kind":"nav","description":"包含 iPhone 安全区的三项导航。","html":"<nav class=\"ds-nav\"><b>食谱</b><span>今日</span><span>我的</span></nav>","css":".ds-nav{height:64px;padding:0 18px;border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:space-around;box-shadow:0 6px 18px rgba(32,36,31,.12);font:500 12px system-ui;color:#62685F}.ds-nav b{color:#C9573A;font-weight:700}"}
+  ],
+  "narrative": {
+    "northStar":"一张正在使用的家庭餐桌",
+    "overview":"界面像一张每天都有人使用的家庭餐桌：清楚、耐看、略有生活痕迹，但绝不凌乱。真实菜品图片承担温度，系统字体与克制的中性表面保证全家都能读懂和快速操作。",
+    "keyCharacteristics":["中性浅底而非奶油色滤镜","单一陶土红只用于行动与选中","真实图片主导，控件克制","iPhone 安全区优先","动效表达状态"],
+    "rules":[{"name":"The One Accent Rule","body":"一个屏幕只有陶土红可以作为高强调色。","section":"colors"},{"name":"The Flat-by-Default Rule","body":"静止内容不靠阴影证明自己是卡片。","section":"elevation"}],
+    "dos":["Do 让真实菜品图片承担情绪表达。","Do 让选中状态同时包含颜色、字重或形状变化。"],
+    "donts":["Don't 制造外卖平台感。","Don't 制造儿童卡通感。","Don't 堆叠模板化奶油色卡片。"]
+  }
+}
