@@ -81,6 +81,13 @@ async function main() {
   console.log(JSON.stringify({
     totals: report.totals,
     blockingConflicts: blocking,
+    conflictBreakdown: {
+      multiFamilyUsers: report.families.multiFamilyUsers.length,
+      duplicateRelations: report.recipeRelations.duplicateRelations.length,
+      orphanRelations: report.recipeRelations.orphanRelations.length,
+      duplicateMenus: report.menus.duplicateMenus.length,
+      orphanMenus: report.menus.orphanMenus.length
+    },
     nonBlockingUserCacheWarnings: report.users.count
   }, null, 2))
   if (blocking > 0) throw new Error(`Database audit found ${blocking} blocking conflict group(s)`)
