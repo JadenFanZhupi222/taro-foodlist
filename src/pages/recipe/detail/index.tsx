@@ -25,13 +25,19 @@ const RecipeDetail: FC = () => {
 
   return (
     <View className='recipe-detail'>
-      <Image className='recipe-detail__image' src={recipe.image || ''} mode='aspectFill' />
+      {recipe.image ? (
+        <Image className='recipe-detail__image' src={recipe.image} mode='aspectFill' />
+      ) : (
+        <View className='recipe-detail__image-placeholder'><View className='recipe-detail__plate' /></View>
+      )}
       
       <View className='recipe-detail__content'>
         <View className='recipe-detail__header'>
           <Text className='recipe-detail__name'>{recipe.name}</Text>
           <Text className='recipe-detail__type'>{recipe.type}</Text>
         </View>
+
+        {recipe.description && <Text className='recipe-detail__description'>{recipe.description}</Text>}
 
         <View className='recipe-detail__section'>
           <Text className='recipe-detail__section-title'>食材</Text>
