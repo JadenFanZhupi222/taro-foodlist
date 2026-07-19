@@ -38,6 +38,17 @@ test('components using useState import it from React', () => {
   }
 })
 
-test('global styles keep full motion without an unsupported reduced-motion block', () => {
-  assert.doesNotMatch(read('src/app.scss'), /prefers-reduced-motion/)
+test('WeChat styles keep full motion without unsupported reduced-motion blocks', () => {
+  const styles = []
+  const walk = directory => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const absolute = path.join(directory, entry.name)
+      if (entry.isDirectory()) walk(absolute)
+      else if (/\.scss$/.test(entry.name)) styles.push(absolute)
+    }
+  }
+  walk(path.join(root, 'src'))
+  for (const file of styles) {
+    assert.doesNotMatch(fs.readFileSync(file, 'utf8'), /prefers-reduced-motion/, path.relative(root, file))
+  }
 })
