@@ -1,0 +1,43 @@
+const fs = require('node:fs')
+const path = require('node:path')
+const test = require('node:test')
+const assert = require('node:assert/strict')
+
+const root = path.resolve(__dirname, '..')
+const read = file => fs.readFileSync(path.join(root, file), 'utf8')
+
+const informationalPages = [
+  'src/pages/favorites/index.tsx',
+  'src/pages/history/index.tsx',
+  'src/pages/settings/notification/index.tsx',
+  'src/pages/settings/privacy/index.tsx',
+  'src/pages/settings/about/index.tsx'
+]
+
+test('informational pages no longer use the generic ComingSoon component', () => {
+  for (const file of informationalPages) {
+    assert.doesNotMatch(read(file), /ComingSoon/, file)
+  }
+})
+
+test('components using useState import it from React', () => {
+  const files = []
+  const walk = directory => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const absolute = path.join(directory, entry.name)
+      if (entry.isDirectory()) walk(absolute)
+      else if (/\.tsx$/.test(entry.name)) files.push(absolute)
+    }
+  }
+  walk(path.join(root, 'src'))
+  for (const file of files) {
+    const source = fs.readFileSync(file, 'utf8')
+    if (!/\buseState\s*\(/.test(source)) continue
+    assert.match(source, /from ['"]react['"]/, path.relative(root, file))
+    assert.doesNotMatch(source, /import[^\n]*\buseState\b[^\n]*from ['"]@tarojs\/taro['"]/, path.relative(root, file))
+  }
+})
+
+test('global styles keep full motion without an unsupported reduced-motion block', () => {
+  assert.doesNotMatch(read('src/app.scss'), /prefers-reduced-motion/)
+})
