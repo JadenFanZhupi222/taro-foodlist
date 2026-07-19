@@ -3,7 +3,8 @@ const cloudbase = require('@cloudbase/node-sdk')
 const PAGE_SIZE = 100
 
 function first(result) {
-  return result && Array.isArray(result.data) ? result.data[0] : null
+  if (!result) return null
+  return Array.isArray(result.data) ? result.data[0] : result.data
 }
 
 async function readAll(db, name) {
