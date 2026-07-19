@@ -33,6 +33,7 @@ exports.main = async () => {
       await transaction.collection('family_members').doc(memberKey(openId)).delete()
       await transaction.collection('user').doc(user._id).update({ family_id: '', updatedAt: db.serverDate() })
       await transaction.commit()
+      transaction = null
       return { code: 0, message: '已清理失效的家庭归属' }
     }
 
@@ -55,6 +56,7 @@ exports.main = async () => {
     await transaction.collection('family_members').doc(memberKey(openId)).delete()
     await transaction.collection('user').doc(user._id).update({ family_id: '', updatedAt: db.serverDate() })
     await transaction.commit()
+    transaction = null
     return { code: 0, message: newMembers.length ? '已退出家庭' : '已退出家庭，家庭已解散' }
   } catch (error) {
     if (transaction) await transaction.rollback().catch(() => {})

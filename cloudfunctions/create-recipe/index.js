@@ -44,8 +44,12 @@ exports.main = async event => {
       deleted: false
     })
     await transaction.commit()
-    const created = first(await db.collection('recipes').doc(recipeId).get())
-    return { code: 0, message: '创建成功', data: created }
+    transaction = null
+    return {
+      code: 0,
+      message: '创建成功',
+      data: { _id: recipeId, ...safeRecipe, created_by: openId }
+    }
   } catch (error) {
     if (transaction) await transaction.rollback().catch(() => {})
     return { code: 2, message: '数据库错误: ' + error.message }

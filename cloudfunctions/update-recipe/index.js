@@ -22,13 +22,15 @@ exports.main = async event => {
     transaction = await db.startTransaction()
     const family = first(await transaction.collection('family').doc(familyId).get())
     const relation = first(await transaction.collection('family_recipes').doc(relationResult.data[0]._id).get())
-    if (!family || !(family.members || []).includes(openId) || !relation || relation.deleted) {
+    if (!family || !(family.members || []).includes(openId) || !relation || relation.deleted ||
+      relation.family_id !== familyId || relation.recipe_id !== recipeId) {
       throw new Error('授权状态已变化')
     }
     const { _id, created_by, createdAt, updatedAt, ...safeRecipe } = recipe
     await transaction.collection('recipes').doc(recipeId).update({ ...safeRecipe, updatedAt: db.serverDate() })
     await transaction.commit()
-    return { code: 0, message: '更新成功', data: first(await db.collection('recipes').doc(recipeId).get()) }
+    transaction = null
+    return { code: 0, message: '更新成功', data: { _id: recipeId, ...safeRecipe } }
   } catch (error) {
     if (transaction) await transaction.rollback().catch(() => {})
     return { code: 2, message: '数据库错误: ' + error.message }

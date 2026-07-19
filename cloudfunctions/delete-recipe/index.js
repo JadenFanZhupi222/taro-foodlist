@@ -23,7 +23,8 @@ exports.main = async event => {
     const family = first(await transaction.collection('family').doc(familyId).get())
     const relationId = relationResult.data[0]._id
     const relation = first(await transaction.collection('family_recipes').doc(relationId).get())
-    if (!family || !(family.members || []).includes(openId) || !relation || relation.deleted) {
+    if (!family || !(family.members || []).includes(openId) || !relation || relation.deleted ||
+      relation.family_id !== familyId || relation.recipe_id !== recipeId) {
       throw new Error('授权状态已变化')
     }
     await transaction.collection('family_recipes').doc(relationId).update({
@@ -31,6 +32,7 @@ exports.main = async event => {
       updatedAt: db.serverDate()
     })
     await transaction.commit()
+    transaction = null
     return { code: 0, message: '删除成功' }
   } catch (error) {
     if (transaction) await transaction.rollback().catch(() => {})

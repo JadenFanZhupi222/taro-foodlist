@@ -44,13 +44,11 @@ exports.main = async event => {
   const db = app.database()
 
   try {
-    const [users, families, recipes, relations, menus] = await Promise.all([
-      readAll(db, 'user'),
-      readAll(db, 'family'),
-      readAll(db, 'recipes'),
-      readAll(db, 'family_recipes'),
-      readAll(db, 'daily_menu')
-    ])
+    const users = await readAll(db, 'user')
+    const families = await readAll(db, 'family')
+    const recipes = await readAll(db, 'recipes')
+    const relations = await readAll(db, 'family_recipes')
+    const menus = await readAll(db, 'daily_menu')
 
     return {
       code: 0,

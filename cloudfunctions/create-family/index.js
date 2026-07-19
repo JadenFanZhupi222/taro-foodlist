@@ -54,6 +54,7 @@ exports.main = async event => {
       updatedAt: db.serverDate()
     })
     await transaction.commit()
+    transaction = null
 
     return { code: 0, data: { ...familyData, _id: familyId }, message: '创建家庭成功' }
   } catch (error) {

@@ -63,13 +63,18 @@ exports.main = async event => {
       updatedAt: db.serverDate()
     })
     await transaction.commit()
-
-    const latest = first(await db.collection('family').doc(familyId).get())
-    const membersInfo = await getMembersInfo(latest.members || [])
+    transaction = null
+    const latestMembers = members.includes(openId) ? members : [...members, openId]
+    let membersInfo = []
+    try {
+      membersInfo = await getMembersInfo(latestMembers)
+    } catch (error) {
+      console.warn('加入家庭已提交，但成员详情回读失败', error)
+    }
     return {
       code: members.includes(openId) ? 3 : 0,
       message: members.includes(openId) ? '已加入该家庭' : '加入家庭成功',
-      data: { ...latest, membersInfo }
+      data: { ...family, members: latestMembers, membersInfo }
     }
   } catch (error) {
     if (transaction) await transaction.rollback().catch(() => {})

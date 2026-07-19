@@ -36,6 +36,7 @@ exports.main = async event => {
       .map((item, index) => ({ ...item, order: (index + 1) * 100 }))
     await transaction.collection('daily_menu').doc(menuId).update({ recipes, updatedAt: db.serverDate() })
     await transaction.commit()
+    transaction = null
     return { code: 0, message: '删除成功', data: { ...menu, recipes } }
   } catch (error) {
     if (transaction) await transaction.rollback().catch(() => {})

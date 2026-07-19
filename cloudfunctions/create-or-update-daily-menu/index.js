@@ -81,6 +81,7 @@ exports.main = async event => {
       await transaction.collection('daily_menu').doc(menu._id).update({ recipes, updatedAt: db.serverDate() })
     }
     await transaction.commit()
+    transaction = null
     return { code: 0, message: '已更新', data: { ...menu, recipes } }
   } catch (error) {
     if (transaction) await transaction.rollback().catch(() => {})
