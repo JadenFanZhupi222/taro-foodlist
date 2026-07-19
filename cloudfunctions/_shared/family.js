@@ -26,4 +26,9 @@ function makeRelationKey(familyId, recipeId) {
   return `${encodeURIComponent(familyId)}_${encodeURIComponent(recipeId)}`
 }
 
-module.exports = { resolveCurrentFamily, nextFamilyOwner, makeRelationKey }
+function makeMemberKey(openId) {
+  if (!openId) throw new TypeError('openId is required')
+  return encodeURIComponent(openId)
+}
+
+module.exports = { resolveCurrentFamily, nextFamilyOwner, makeRelationKey, makeMemberKey }

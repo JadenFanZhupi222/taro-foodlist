@@ -3,7 +3,8 @@ const assert = require('node:assert/strict')
 const {
   resolveCurrentFamily,
   nextFamilyOwner,
-  makeRelationKey
+  makeRelationKey,
+  makeMemberKey
 } = require('./family')
 
 test('returns null when the user has no family', () => {
@@ -35,4 +36,8 @@ test('selects the next member as owner', () => {
 
 test('builds a stable recipe relation key', () => {
   assert.equal(makeRelationKey('f/1', 'r/2'), 'f%2F1_r%2F2')
+})
+
+test('builds a stable family membership key', () => {
+  assert.equal(makeMemberKey('open/id'), 'open%2Fid')
 })

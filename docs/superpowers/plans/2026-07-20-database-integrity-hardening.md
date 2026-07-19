@@ -4,7 +4,7 @@
 
 **Goal:** 在不删除、改名或批量覆盖线上现有数据的前提下，为家庭、食谱和每日菜单增加审计、事务保护与并发去重能力。
 
-**Architecture:** 保留 `user`、`family`、`recipes`、`family_recipes`、`daily_menu` 的现有读写契约；先部署只读审计，再将多文档写入改为事务。每日菜单通过新增 `daily_menu_keys` 锁集合保证 `family_id + date` 唯一，同时继续返回现有 `daily_menu` 文档结构。所有发布均支持回滚到旧云函数，且旧集合数据不删除。
+**Architecture:** 保留 `user`、`family`、`recipes`、`family_recipes`、`daily_menu` 的现有读写契约；先部署只读审计，再将多文档写入改为事务。由于 CloudBase 事务只支持确定性 `doc()` 读取，新增 `family_members` 兼容锁集合保证一人一家庭；每日菜单通过新增 `daily_menu_keys` 锁集合保证 `family_id + date` 唯一。所有发布均支持回滚到旧云函数，且旧集合数据不删除。
 
 **Tech Stack:** Taro 4、腾讯云 CloudBase Node SDK、Node.js 18、Node 内置测试运行器、GitHub Actions
 
@@ -23,7 +23,7 @@
 本计划不包含：
 
 - 删除 `user.family_id` 或 `family.members`
-- 新增 `family_members` 集合
+- 删除或停止维护现有 `family.members` 与 `user.family_id`
 - 删除或重写已有 `daily_menu` 文档 ID
 - 收藏功能
 - 修改 30 天历史菜单清理策略
@@ -229,23 +229,23 @@ Expected: all tests pass.
 
 - [ ] **Step 4: Wrap create-family in one transaction**
 
-Inside `db.startTransaction()` perform, in order:
+先用旧结构只读查询进行兼容校验，再在 `db.startTransaction()` 中按确定性文档 ID 执行：
 
-1. Query `family` for `members: openId`.
-2. Abort with the existing response code if any family exists.
+1. Read `family_members.doc(encodeURIComponent(openId))`.
+2. Abort with the existing response code if membership exists.
 3. Add the family document.
-4. Update `user.family_id`.
+4. Set the membership lock document and update `user.family_id` by user document ID.
 5. Commit.
 
 On any error call `rollback()` and preserve the existing API response shape.
 
 - [ ] **Step 5: Wrap join-family in one transaction**
 
-Read the target family and current membership inside the same transaction. Use atomic array push only after the conflict check, then update `user.family_id`. Repeated joining of the same family remains idempotent.
+Read the target family and deterministic membership lock inside the same transaction. Use atomic array push only after the conflict check, then set `family_members` and update `user.family_id`. Repeated joining of the same family remains idempotent.
 
 - [ ] **Step 6: Wrap leave-family in one transaction**
 
-Within one transaction remove the member, clear `user.family_id`, and either delete the empty family or transfer `family_owner` to `newMembers[0]`.
+Within one transaction remove the member, delete the `family_members` lock, clear `user.family_id`, and either delete the empty family or transfer `family_owner` to `newMembers[0]`.
 
 - [ ] **Step 7: Verify and commit**
 
