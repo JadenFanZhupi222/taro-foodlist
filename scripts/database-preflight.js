@@ -78,6 +78,14 @@ async function main() {
   fs.writeFileSync(path.join(outputDir, 'manifest.json'), JSON.stringify(manifest, null, 2))
 
   const blocking = report.families.count + report.recipeRelations.count + report.menus.count
+  const orphanIds = new Set(report.recipeRelations.orphanRelations.map(item => item.relationId))
+  const orphanDetails = data.family_recipes.filter(item => orphanIds.has(item._id))
+  const orphanBreakdown = {
+    active: orphanDetails.filter(item => item.deleted !== true).length,
+    softDeleted: orphanDetails.filter(item => item.deleted === true).length,
+    missingFamily: report.recipeRelations.orphanRelations.filter(item => item.missing.includes('family')).length,
+    missingRecipe: report.recipeRelations.orphanRelations.filter(item => item.missing.includes('recipe')).length
+  }
   console.log(JSON.stringify({
     totals: report.totals,
     blockingConflicts: blocking,
@@ -88,6 +96,7 @@ async function main() {
       duplicateMenus: report.menus.duplicateMenus.length,
       orphanMenus: report.menus.orphanMenus.length
     },
+    orphanRelationBreakdown: orphanBreakdown,
     nonBlockingUserCacheWarnings: report.users.count
   }, null, 2))
   if (blocking > 0) throw new Error(`Database audit found ${blocking} blocking conflict group(s)`)
