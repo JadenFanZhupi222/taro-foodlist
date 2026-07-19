@@ -15,6 +15,7 @@
     "framework": "React"
   },
   "scripts": {
+    "test:backend": "node --test cloudfunctions/**/*.test.js",
     "build:weapp": "taro build --type weapp",
     "build:swan": "taro build --type swan",
     "build:alipay": "taro build --type alipay",
