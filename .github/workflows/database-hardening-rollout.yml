@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/database-hardening-rollout.yml'
       - 'scripts/database-preflight.js'
+      - 'scripts/database-quarantine-orphans.js'
       - 'scripts/database-provision-smoke.js'
       - 'cloudfunctions/**'
       - 'cloudbaserc.json'
@@ -41,6 +42,7 @@ jobs:
           TC_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
           TC_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
           PREFLIGHT_OUTPUT_DIR: database-preflight-output
+          ALLOW_ORPHAN_QUARANTINE: 'true'
         run: node scripts/database-preflight.js
 
       - name: Encrypt preflight backup
@@ -61,6 +63,20 @@ jobs:
           path: database-preflight.tar.gz.enc
           retention-days: 7
           if-no-files-found: error
+
+      - name: Quarantine active orphan recipe relations
+        env:
+          TC_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
+          TC_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
+        run: node scripts/database-quarantine-orphans.js
+
+      - name: Verify database after quarantine
+        env:
+          TC_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
+          TC_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
+          PREFLIGHT_OUTPUT_DIR: database-post-quarantine-verification
+          ALLOW_ORPHAN_QUARANTINE: 'false'
+        run: node scripts/database-preflight.js
 
       - name: Provision lock collections and verify transactions
         env:
