@@ -1,0 +1,100 @@
+name: Database hardening rollout
+
+on:
+  push:
+    branches: [codex/ui-redesign]
+    paths:
+      - '.github/workflows/database-hardening-rollout.yml'
+      - 'scripts/database-preflight.js'
+      - 'scripts/database-provision-smoke.js'
+      - 'cloudfunctions/**'
+      - 'cloudbaserc.json'
+
+concurrency:
+  group: database-hardening-production
+  cancel-in-progress: false
+
+env:
+  CLOUDBASE_ENV_ID: dev-4gs517j09b896e44
+  ROLLBACK_SHA: 2a80db36b44c24c7f5a6e0fed315faeb24ad71aa
+  NODE_PATH: scripts/deployment/node_modules
+  CI: 'true'
+
+jobs:
+  preflight-and-rollout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install deployment tooling
+        run: npm ci --prefix scripts/deployment
+
+      - name: Back up and audit existing data
+        env:
+          TC_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
+          TC_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
+          PREFLIGHT_OUTPUT_DIR: database-preflight-output
+        run: node scripts/database-preflight.js
+
+      - name: Encrypt preflight backup
+        if: always()
+        env:
+          BACKUP_PASSWORD: ${{ secrets.TENCENT_SECRET_KEY }}
+        run: |
+          if [ -d database-preflight-output ]; then
+            tar -czf - database-preflight-output | openssl enc -aes-256-cbc -pbkdf2 -salt -pass env:BACKUP_PASSWORD -out database-preflight.tar.gz.enc
+            rm -rf database-preflight-output
+          fi
+
+      - name: Upload encrypted preflight backup
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-preflight-${{ github.run_id }}-${{ github.run_attempt }}
+          path: database-preflight.tar.gz.enc
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: Provision lock collections and verify transactions
+        env:
+          TC_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
+          TC_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
+        run: node scripts/database-provision-smoke.js
+
+      - name: Authenticate CloudBase CLI
+        env:
+          TC_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
+          TC_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
+        run: scripts/deployment/node_modules/.bin/cloudbase login --apiKeyId "$TC_SECRET_ID" --apiKey "$TC_SECRET_KEY"
+
+      - name: Deploy transaction functions with rollback
+        run: |
+          set -e
+          TCB="$GITHUB_WORKSPACE/scripts/deployment/node_modules/.bin/tcb"
+          functions="create-family join-family leave-family create-recipe update-recipe delete-recipe create-or-update-daily-menu remove-recipe-from-menu"
+          rollback_dir="$RUNNER_TEMP/database-hardening-rollback"
+          git worktree add "$rollback_dir" "$ROLLBACK_SHA"
+          rollback() {
+            echo "::error::Deployment failed; restoring all affected functions from verified release $ROLLBACK_SHA"
+            rollback_failed=""
+            for name in $functions; do
+              (cd "$rollback_dir" && "$TCB" fn deploy "$name" -e "$CLOUDBASE_ENV_ID" --force --yes) || rollback_failed="$rollback_failed $name"
+            done
+            if [ -n "$rollback_failed" ]; then
+              echo "::error::Rollback incomplete; failed functions:$rollback_failed"
+            else
+              echo "::notice::Rollback completed for all affected functions"
+            fi
+          }
+          trap rollback ERR
+          for name in $functions; do
+            "$TCB" fn deploy "$name" -e "$CLOUDBASE_ENV_ID" --force --yes
+          done
+          trap - ERR
