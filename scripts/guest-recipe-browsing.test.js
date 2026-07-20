@@ -109,7 +109,9 @@ test('recipe list derives guest-safe visible recipes', () => {
     'utf8'
   )
 
-  assert.match(indexPage, /getVisibleRecipes/)
+  assert.match(indexPage, /import guestRecipeModule = require\('@\/data\/guestRecipes'\)/)
+  assert.doesNotMatch(indexPage, /import \{[^}]*getVisibleRecipes[^}]*\} from '@\/data\/guestRecipes'/)
+  assert.match(indexPage, /const \{ getVisibleRecipes \} = guestRecipeModule/)
   assert.match(indexPage, /const isGuest = !user/)
   assert.match(indexPage, /getVisibleRecipes\(recipes, !!user\)/)
 })
@@ -121,7 +123,9 @@ test('recipe detail resolves the current id from guest-safe Redux recipes', () =
   )
 
   assert.match(detailPage, /import \{ selectRecipes \} from '@\/store\/recipe\/selectors'/)
-  assert.match(detailPage, /import \{ findVisibleRecipe \} from '@\/data\/guestRecipes'/)
+  assert.match(detailPage, /import guestRecipeModule = require\('@\/data\/guestRecipes'\)/)
+  assert.doesNotMatch(detailPage, /import \{[^}]*findVisibleRecipe[^}]*\} from '@\/data\/guestRecipes'/)
+  assert.match(detailPage, /const \{ findVisibleRecipe \} = guestRecipeModule/)
   assert.match(detailPage, /const recipes = useSelector\(selectRecipes\)/)
   assert.match(detailPage, /const user = useSelector\(selectUser\)/)
   assert.match(detailPage, /findVisibleRecipe\(recipes, id \|\| '', !!user\)/)

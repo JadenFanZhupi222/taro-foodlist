@@ -4,9 +4,11 @@ import { FC } from 'react'
 import { useSelector } from 'react-redux'
 import { selectRecipes } from '@/store/recipe/selectors'
 import { selectUser } from '@/store/user/selectors'
-import { findVisibleRecipe } from '@/data/guestRecipes'
+import guestRecipeModule = require('@/data/guestRecipes')
 import StateView from '@/components/StateView'
 import './index.scss'
+
+const { findVisibleRecipe } = guestRecipeModule
 
 const RecipeDetail: FC = () => {
   const router = useRouter()

@@ -13,9 +13,10 @@ import type { AppDispatch } from '@/store'
 import Loading from '@/components/Loading'
 import { selectRecipeLoading } from '@/store/recipe/selectors'
 import SearchBar from '@/components/SearchBar'
-import { getVisibleRecipes } from '@/data/guestRecipes'
+import guestRecipeModule = require('@/data/guestRecipes')
 
 const CATEGORIES = ['全部', ...RECIPE_CATEGORIES]
+const { getVisibleRecipes } = guestRecipeModule
 
 const Index = () => {
   const recipes = useSelector(selectRecipes)
