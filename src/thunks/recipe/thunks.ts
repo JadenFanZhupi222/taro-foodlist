@@ -5,8 +5,8 @@ import { createAsyncThunk } from '@reduxjs/toolkit'
 import { callCloud } from '@/utils/cloud'
 import type { Recipe, Comment } from '@/store/recipe/types'
 import type { RootState } from '@/store'
-import detailRequestModule = require('@/store/recipe/detailRequest')
-import catalogRequestModule = require('@/store/recipe/catalogRequest')
+import * as detailRequestModule from '@/store/recipe/detailRequest'
+import * as catalogRequestModule from '@/store/recipe/catalogRequest'
 import {
   setComments,
   addRecipe,

@@ -16,4 +16,4 @@ function hydrateTodayRecipes(menu, recipes, catalogStatus) {
   }).filter(Boolean)
 }
 
-module.exports = { hydrateTodayRecipes }
+export { hydrateTodayRecipes }

@@ -64,7 +64,7 @@ function deleteLocalRecipe(state, recipeId) {
   invalidateCatalogRequest(state)
 }
 
-module.exports = {
+export {
   isCurrentCatalogRequest,
   startCatalogRequest,
   fulfillCatalogRequest,

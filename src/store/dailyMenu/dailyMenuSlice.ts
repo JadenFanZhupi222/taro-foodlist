@@ -3,9 +3,9 @@ import { initialState } from './initialState'
 import { fetchDailyMenus, createOrUpdateDailyMenu, removeRecipeFromMenu, fetchDailyMenuByDate } from '@/thunks/dailyMenu/thunks'
 import { DailyMenu, DailyMenuRecipeItem } from './types'
 import { isSameDay } from '@/utils/date'
-import dateRequestModule = require('./dateRequest')
-import menuMergeModule = require('./menuMerge')
-import loadingStateModule = require('./loadingState')
+import * as dateRequestModule from './dateRequest'
+import * as menuMergeModule from './menuMerge'
+import * as loadingStateModule from './loadingState'
 
 const {
   startDateRequest,

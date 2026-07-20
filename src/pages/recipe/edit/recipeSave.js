@@ -34,4 +34,4 @@ function createRecipeSaveController(onLockChange) {
   }
 }
 
-module.exports = { createRecipeSaveController }
+export { createRecipeSaveController }

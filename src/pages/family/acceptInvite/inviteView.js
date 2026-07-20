@@ -5,4 +5,4 @@ function classifyInviteView({ familyId, inviteFamily, inviteError, inviteErrorFa
   return 'loading'
 }
 
-module.exports = { classifyInviteView }
+export { classifyInviteView }

@@ -40,7 +40,7 @@ function rejectFamilyRequest(state, familyId, requestId) {
   return true
 }
 
-module.exports = {
+export {
   getDateRequestKey,
   startDateRequest,
   fulfillDateRequest,

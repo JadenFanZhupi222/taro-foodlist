@@ -27,4 +27,4 @@ function removeRecipeForFamilyDate(menus, familyId, date, recipeId) {
   return true
 }
 
-module.exports = { getMenuKey, markMenuRevision, mergeBulkMenus, removeRecipeForFamilyDate }
+export { getMenuKey, markMenuRevision, mergeBulkMenus, removeRecipeForFamilyDate }

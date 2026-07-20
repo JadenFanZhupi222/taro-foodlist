@@ -82,7 +82,7 @@ function isGuestRecipeId(recipeId) {
   return recipeId.startsWith('guest:')
 }
 
-module.exports = {
+export {
   guestRecipes,
   getVisibleRecipes,
   findVisibleRecipe,

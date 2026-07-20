@@ -13,8 +13,8 @@ import type { AppDispatch } from '@/store'
 import Loading from '@/components/Loading'
 import { selectRecipeLoading } from '@/store/recipe/selectors'
 import SearchBar from '@/components/SearchBar'
-import guestRecipeModule = require('@/data/guestRecipes')
-import recipeDeletionModule = require('./recipeDeletion')
+import * as guestRecipeModule from '@/data/guestRecipes'
+import * as recipeDeletionModule from './recipeDeletion'
 
 const CATEGORIES = ['全部', ...RECIPE_CATEGORIES]
 const { getVisibleRecipes } = guestRecipeModule

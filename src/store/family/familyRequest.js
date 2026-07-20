@@ -5,4 +5,4 @@ function startInviteRequest(state, familyId, requestId) { state.inviteFamily = n
 function current(state, familyId, requestId) { return state.inviteRequest?.familyId === familyId && state.inviteRequest?.requestId === requestId }
 function fulfillInviteRequest(state, familyId, requestId, family) { if (!current(state, familyId, requestId)) return false; state.inviteFamilyLoading = false; state.inviteRequest = null; state.inviteFamily = family; state.inviteError = family ? null : 'Family not found'; state.inviteErrorFamilyId = family ? null : familyId; return true }
 function rejectInviteRequest(state, familyId, requestId, error) { if (!current(state, familyId, requestId)) return false; state.inviteFamily = null; state.inviteFamilyLoading = false; state.inviteError = error || 'Failed to load invitation'; state.inviteErrorFamilyId = familyId; state.inviteRequest = null; return true }
-module.exports = { startFamilyRequest, fulfillFamilyRequest, rejectFamilyRequest, startInviteRequest, fulfillInviteRequest, rejectInviteRequest }
+export { startFamilyRequest, fulfillFamilyRequest, rejectFamilyRequest, startInviteRequest, fulfillInviteRequest, rejectInviteRequest }
