@@ -16,4 +16,4 @@ function meaningfulSteps(steps) {
     .filter(Boolean)
 }
 
-module.exports = { meaningfulIngredients, meaningfulSteps }
+export { meaningfulIngredients, meaningfulSteps }

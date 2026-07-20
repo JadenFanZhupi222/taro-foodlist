@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit'
 import { initialState } from './initialState'
 import { fetchFamily, createFamily, joinFamily, fetchFamilyById } from '@/thunks/family/thunks'
-import familyRequestModule = require('./familyRequest')
+import * as familyRequestModule from './familyRequest'
 const { startFamilyRequest, fulfillFamilyRequest, rejectFamilyRequest, startInviteRequest, fulfillInviteRequest, rejectInviteRequest } = familyRequestModule
 
 const familySlice = createSlice({

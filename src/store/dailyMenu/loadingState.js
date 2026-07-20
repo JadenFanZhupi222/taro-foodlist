@@ -17,4 +17,4 @@ function finishWrite(state, kind, requestId) {
   state[loadingKey] = Object.keys(state[requestsKey]).length > 0
 }
 
-module.exports = { syncFetchLoading, startWrite, finishWrite }
+export { syncFetchLoading, startWrite, finishWrite }

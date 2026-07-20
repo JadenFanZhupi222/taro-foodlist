@@ -10,7 +10,7 @@ import { toast } from '@/utils/toast'
 import MemberCardList from '@/components/family/memberCardList'
 import StateView from '@/components/StateView'
 import { selectJoinLoading, selectInviteFamily, selectInviteFamilyLoading, selectInviteFamilyError, selectInviteFamilyErrorFamilyId } from '@/store/family/selectors'
-import inviteViewModule = require('./inviteView')
+import * as inviteViewModule from './inviteView'
 
 const { classifyInviteView } = inviteViewModule
 const getRouteFamilyId = () => Taro.getCurrentInstance().router?.params?.familyId || ''

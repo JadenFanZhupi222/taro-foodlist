@@ -38,6 +38,44 @@ test('components using useState import it from React', () => {
   }
 })
 
+test('source modules do not use local runtime requires that Taro leaves unresolved', () => {
+  const files = []
+  const walk = directory => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const absolute = path.join(directory, entry.name)
+      if (entry.isDirectory()) walk(absolute)
+      else if (/\.[jt]sx?$/.test(entry.name)) files.push(absolute)
+    }
+  }
+  walk(path.join(root, 'src'))
+  for (const file of files) {
+    assert.doesNotMatch(
+      fs.readFileSync(file, 'utf8'),
+      /\brequire\(\s*['"](?:@\/|\.\.?\/)/,
+      path.relative(root, file)
+    )
+  }
+})
+
+test('local JavaScript helpers expose only ESM exports to the Taro module graph', () => {
+  const files = []
+  const walk = directory => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const absolute = path.join(directory, entry.name)
+      if (entry.isDirectory()) walk(absolute)
+      else if (/\.js$/.test(entry.name)) files.push(absolute)
+    }
+  }
+  walk(path.join(root, 'src'))
+  for (const file of files) {
+    assert.doesNotMatch(
+      fs.readFileSync(file, 'utf8'),
+      /\b(?:module\.exports(?:\.[A-Za-z_$][\w$]*)?|exports\.[A-Za-z_$][\w$]*)\s*=/,
+      path.relative(root, file)
+    )
+  }
+})
+
 test('WeChat styles keep full motion without unsupported reduced-motion blocks', () => {
   const styles = []
   const walk = directory => {

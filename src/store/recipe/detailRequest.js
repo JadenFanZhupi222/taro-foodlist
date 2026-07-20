@@ -39,7 +39,7 @@ function rejectDetailRequest(state, recipeId, requestId) {
   return true
 }
 
-module.exports = {
+export {
   canStartDetailRequest,
   startDetailRequest,
   fulfillDetailRequest,

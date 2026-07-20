@@ -10,4 +10,4 @@ async function runRecipeDeletion({ remove, onSuccess, onFailure }) {
   return true
 }
 
-module.exports = { runRecipeDeletion }
+export { runRecipeDeletion }

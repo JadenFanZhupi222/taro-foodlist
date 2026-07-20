@@ -19,9 +19,9 @@ import { selectUser } from '@/store/user/selectors'
 import { removeSelectedRecipe } from '@/store/dailyMenu/dailyMenuSlice'
 import { toast } from '@/utils/toast'
 import { toDateKey } from '@/utils/date'
-import todayStateModule = require('./todayState')
-import dateRequestModule = require('@/store/dailyMenu/dateRequest')
-import recipeHydrationModule = require('./recipeHydration')
+import * as todayStateModule from './todayState'
+import * as dateRequestModule from '@/store/dailyMenu/dateRequest'
+import * as recipeHydrationModule from './recipeHydration'
 
 const { classifyTodayState, getTodayAddAction, findFamilyMenu, shouldFetchDate } = todayStateModule
 const { getDateRequestKey } = dateRequestModule

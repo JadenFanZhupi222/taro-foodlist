@@ -14,7 +14,7 @@ import { AppDispatch } from '@/store'
 import { RecipeCategory, RECIPE_CATEGORIES } from '@/store/recipe/types'
 import { useCloudUpload } from '@/hooks/useCloudImageUpload'
 import Loading from '@/components/Loading'
-import recipeSaveModule = require('./recipeSave')
+import * as recipeSaveModule from './recipeSave'
 
 const { createRecipeSaveController } = recipeSaveModule
 

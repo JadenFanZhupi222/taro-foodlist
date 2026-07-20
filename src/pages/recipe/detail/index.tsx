@@ -6,8 +6,8 @@ import { selectRecipeDetailRequest, selectRecipes } from '@/store/recipe/selecto
 import { selectUser } from '@/store/user/selectors'
 import { fetchRecipeById } from '@/thunks/recipe/thunks'
 import { AppDispatch } from '@/store'
-import guestRecipeModule = require('@/data/guestRecipes')
-import recipeDetailContent = require('./recipeDetailContent')
+import * as guestRecipeModule from '@/data/guestRecipes'
+import * as recipeDetailContent from './recipeDetailContent'
 import StateView from '@/components/StateView'
 import './index.scss'
 

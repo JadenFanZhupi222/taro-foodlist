@@ -1,8 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit'
 import { initialState } from './initialState'
 import { fetchRecipes, fetchRecipeById, createRecipe, updateRecipeById, deleteRecipeById } from '@/thunks/recipe/thunks'
-import detailRequestModule = require('./detailRequest')
-import catalogRequestModule = require('./catalogRequest')
+import * as detailRequestModule from './detailRequest'
+import * as catalogRequestModule from './catalogRequest'
 
 const { startDetailRequest, fulfillDetailRequest, rejectDetailRequest } = detailRequestModule
 const {

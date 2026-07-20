@@ -23,4 +23,4 @@ function shouldFetchDate({ familyId, menu, requestStatus }) {
   return Boolean(familyId && !menu && requestStatus == null)
 }
 
-module.exports = { classifyTodayState, getTodayAddAction, findFamilyMenu, shouldFetchDate }
+export { classifyTodayState, getTodayAddAction, findFamilyMenu, shouldFetchDate }
