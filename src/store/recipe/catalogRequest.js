@@ -25,4 +25,4 @@ function rejectCatalogRequest(state, familyId, requestId) {
   return true
 }
 
-module.exports = { startCatalogRequest, fulfillCatalogRequest, rejectCatalogRequest }
+module.exports = { isCurrentCatalogRequest, startCatalogRequest, fulfillCatalogRequest, rejectCatalogRequest }

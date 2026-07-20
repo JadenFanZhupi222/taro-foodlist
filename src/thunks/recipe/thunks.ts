@@ -6,6 +6,7 @@ import { callCloud } from '@/utils/cloud'
 import type { Recipe, Comment } from '@/store/recipe/types'
 import type { RootState } from '@/store'
 import detailRequestModule = require('@/store/recipe/detailRequest')
+import catalogRequestModule = require('@/store/recipe/catalogRequest')
 import {
   setComments,
   addRecipe,
@@ -16,15 +17,18 @@ import {
 import { toast } from '@/utils/toast'
 
 const { canStartDetailRequest } = detailRequestModule
+const { isCurrentCatalogRequest } = catalogRequestModule
 
 export const fetchRecipes = createAsyncThunk(
   'recipe/fetchRecipes',
-  async (familyId: string) => {
+  async (familyId: string, { getState, requestId }) => {
     try {
       const r = await callCloud<Recipe[]>('get-recipes', { familyId })
       return r.data || []
     } catch (error) {
-      toast({ title: '获取食谱失败', icon: 'error' })
+      if (isCurrentCatalogRequest((getState() as RootState).recipe, familyId, requestId)) {
+        toast({ title: '获取食谱失败', icon: 'error' })
+      }
       throw error
     }
   }

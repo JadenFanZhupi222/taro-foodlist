@@ -436,6 +436,24 @@ test('recipe catalog thunk returns data and slice gates lifecycle by request ide
   assert.match(slice, /setRecipes\(state, action\)[\s\S]*state\.recipes = action\.payload/)
 })
 
+test('recipe catalog failure notifications are limited to the current request', () => {
+  const catalog = require(path.join(root, 'src/store/recipe/catalogRequest.js'))
+  const state = { catalogRequest: null }
+
+  catalog.startCatalogRequest(state, 'family-a', 'request-a')
+  assert.equal(catalog.isCurrentCatalogRequest(state, 'family-a', 'request-a'), true)
+  catalog.startCatalogRequest(state, 'family-b', 'request-b')
+  assert.equal(catalog.isCurrentCatalogRequest(state, 'family-a', 'request-a'), false)
+  assert.equal(catalog.isCurrentCatalogRequest(state, 'family-b', 'request-b'), true)
+  state.catalogRequest = null
+  assert.equal(catalog.isCurrentCatalogRequest(state, 'family-b', 'request-b'), false)
+
+  const thunk = read('src/thunks/recipe/thunks.ts')
+  assert.match(thunk, /async \(familyId: string, \{ getState, requestId \}\)/)
+  assert.match(thunk, /isCurrentCatalogRequest\(\(getState\(\) as RootState\)\.recipe, familyId, requestId\)/)
+  assert.match(thunk, /if \(isCurrentCatalogRequest[\s\S]*toast\(\{ title: '获取食谱失败'/)
+})
+
 test('per-date menu request transitions ignore stale completion and allow retry', () => {
   const helperPath = path.join(root, 'src/store/dailyMenu/dateRequest.js')
   assert.equal(fs.existsSync(helperPath), true, 'date request helper must exist')
