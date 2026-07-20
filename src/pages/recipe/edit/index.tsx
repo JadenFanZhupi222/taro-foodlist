@@ -1,7 +1,7 @@
 import { View, Input, Textarea, Button, Text, ScrollView, Image } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useRouter } from '@tarojs/taro'
-import { FC, useRef, useState } from 'react'
+import { FC, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { selectUser } from '@/store/user/selectors'
 import { selectRecipes } from '@/store/recipe/selectors'
@@ -14,6 +14,9 @@ import { AppDispatch } from '@/store'
 import { RecipeCategory, RECIPE_CATEGORIES } from '@/store/recipe/types'
 import { useCloudUpload } from '@/hooks/useCloudImageUpload'
 import Loading from '@/components/Loading'
+import recipeSaveModule = require('./recipeSave')
+
+const { createRecipeSaveController } = recipeSaveModule
 
 // 用于生成唯一id，兼容小程序
 function genId() {
@@ -47,7 +50,7 @@ const RecipeEdit: FC = () => {
   const [deletingIngredientIds, setDeletingIngredientIds] = useState<string[]>([])
   const [deletingStepIds, setDeletingStepIds] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
-  const savingRef = useRef(false)
+  const [saveController] = useState(() => createRecipeSaveController(setSaving))
 
   const handleChooseImage = async () => {
     const res = await Taro.chooseImage({ count: 1, sizeType: ['compressed'] })
@@ -57,8 +60,6 @@ const RecipeEdit: FC = () => {
   }
 
   const handleSave = async () => {
-    if (saving) return
-    if (savingRef.current) return
     if (!user) {
       toast({ title: '请先登录', icon: 'none' })
       return
@@ -77,36 +78,35 @@ const RecipeEdit: FC = () => {
       toast({ title: '请选择分类', icon: 'none' })
       return
     }
-    savingRef.current = true
-    setSaving(true)
-    try {
-      let imageUrl = imageLocal
-      if (imageLocal) {
-        imageUrl = await useCloudUpload(imageLocal, 'recipes', user._id)
+    await saveController.run({
+      upload: async () => imageLocal
+        ? useCloudUpload(imageLocal, 'recipes', user._id)
+        : imageLocal,
+      persist: async imageUrl => {
+        const recipe = {
+          name: name.trim(),
+          type: type,
+          image: imageUrl.trim(),
+          description: description.trim(),
+          steps: steps.map(s => s.text.trim()).filter(Boolean),
+          ingredients: ingredients.filter(i => i.name.trim()).map(({ name, amount }) => ({ name, amount })),
+          createdBy: user._id,
+          deleted: false
+        }
+        if (editingRecipe) {
+          await dispatch(updateRecipeById({ recipeId: editingRecipe._id, recipe })).unwrap()
+        } else {
+          await dispatch(createRecipe({ familyId, recipe })).unwrap()
+        }
+      },
+      onSuccess: () => {
+        toast({ title: '保存成功', icon: 'success' })
+        Taro.navigateBack()
+      },
+      onFailure: () => {
+        toast({ title: '保存失败，请重试', icon: 'none' })
       }
-      const recipe = {
-        name: name.trim(),
-        type: type,
-        image: imageUrl.trim(),
-        description: description.trim(),
-        steps: steps.map(s => s.text.trim()).filter(Boolean),
-        ingredients: ingredients.filter(i => i.name.trim()).map(({ name, amount }) => ({ name, amount })),
-        createdBy: user._id,
-        deleted: false
-      }
-      if (editingRecipe) {
-        await dispatch(updateRecipeById({ recipeId: editingRecipe._id, recipe })).unwrap()
-      } else {
-        await dispatch(createRecipe({ familyId, recipe })).unwrap()
-      }
-      toast({ title: '保存成功', icon: 'success' })
-      Taro.navigateBack()
-    } catch {
-      toast({ title: '保存失败，请重试', icon: 'none' })
-    } finally {
-      savingRef.current = false
-      setSaving(false)
-    }
+    })
   }
 
   // 食材操作

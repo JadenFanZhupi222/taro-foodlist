@@ -5,6 +5,7 @@ import { createAsyncThunk } from '@reduxjs/toolkit'
 import { callCloud } from '@/utils/cloud'
 import type { Recipe, Comment } from '@/store/recipe/types'
 import type { RootState } from '@/store'
+import detailRequestModule = require('@/store/recipe/detailRequest')
 import {
   setRecipes,
   setComments,
@@ -14,6 +15,8 @@ import {
   addComment
 } from '@/store/recipe/recipeSlice'
 import { toast } from '@/utils/toast'
+
+const { canStartDetailRequest } = detailRequestModule
 
 export const fetchRecipes = createAsyncThunk(
   'recipe/fetchRecipes',
@@ -43,7 +46,7 @@ export const fetchRecipeById = createAsyncThunk(
   },
   {
     condition: (recipeId, { getState }) =>
-      (getState() as RootState).recipe.detailRequests[recipeId]?.status !== 'loading'
+      canStartDetailRequest((getState() as RootState).recipe.detailRequests, recipeId)
   }
 )
 

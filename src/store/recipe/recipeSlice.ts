@@ -3,7 +3,7 @@ import { initialState } from './initialState'
 import { fetchRecipes, fetchRecipeById, createRecipe, updateRecipeById, deleteRecipeById } from '@/thunks/recipe/thunks'
 import detailRequestModule = require('./detailRequest')
 
-const { createDetailRequest, isCurrentDetailRequest } = detailRequestModule
+const { startDetailRequest, fulfillDetailRequest, rejectDetailRequest } = detailRequestModule
 
 const recipeSlice = createSlice({
   name: 'recipe',
@@ -45,24 +45,13 @@ const recipeSlice = createSlice({
       .addCase(fetchRecipes.fulfilled, (state) => { state.fetchLoading = false })
       .addCase(fetchRecipes.rejected, (state) => { state.fetchLoading = false })
       .addCase(fetchRecipeById.pending, (state, action) => {
-        state.detailRequests[action.meta.arg] = createDetailRequest(action.meta.requestId)
+        startDetailRequest(state, action.meta.arg, action.meta.requestId)
       })
       .addCase(fetchRecipeById.fulfilled, (state, action) => {
-        const recipeId = action.meta.arg
-        if (!isCurrentDetailRequest(state.detailRequests, recipeId, action.meta.requestId)) return
-        if (!action.payload) {
-          state.detailRequests[recipeId] = { status: 'not-found', requestId: action.meta.requestId }
-          return
-        }
-        const index = state.recipes.findIndex(recipe => recipe._id === recipeId)
-        if (index === -1) state.recipes.push(action.payload)
-        else state.recipes[index] = action.payload
-        delete state.detailRequests[recipeId]
+        fulfillDetailRequest(state, action.meta.arg, action.meta.requestId, action.payload)
       })
       .addCase(fetchRecipeById.rejected, (state, action) => {
-        const recipeId = action.meta.arg
-        if (!isCurrentDetailRequest(state.detailRequests, recipeId, action.meta.requestId)) return
-        state.detailRequests[recipeId] = { status: 'failed', requestId: action.meta.requestId }
+        rejectDetailRequest(state, action.meta.arg, action.meta.requestId)
       })
       .addCase(createRecipe.pending, (state) => { state.createLoading = true })
       .addCase(createRecipe.fulfilled, (state) => { state.createLoading = false })

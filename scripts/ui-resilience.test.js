@@ -63,21 +63,36 @@ test('cold recipe detail distinguishes loading, retryable failure, and confirmed
   assert.match(slice, /addCase\(fetchRecipeById\.pending/)
   assert.match(slice, /addCase\(fetchRecipeById\.rejected/)
   assert.match(slice, /addCase\(fetchRecipeById\.fulfilled/)
-  assert.match(slice, /state\.detailRequests\[action\.meta\.arg\]/)
+  assert.match(slice, /fulfillDetailRequest\(state, action\.meta\.arg/)
 })
 
-test('recipe detail request identity rejects stale completions and completions after reset', () => {
+test('recipe detail request transitions handle duplicate, retry, stale, and reset races', () => {
   const helperPath = path.join(root, 'src/store/recipe/detailRequest.js')
   assert.equal(fs.existsSync(helperPath), true, 'detail request identity helper must exist')
-  const { createDetailRequest, isCurrentDetailRequest } = require(helperPath)
+  const transitions = require(helperPath)
+  for (const name of ['canStartDetailRequest', 'startDetailRequest', 'fulfillDetailRequest', 'rejectDetailRequest']) {
+    assert.equal(typeof transitions[name], 'function', `${name} must be production-callable`)
+  }
 
-  let requests = { recipeA: createDetailRequest('first') }
-  assert.equal(isCurrentDetailRequest(requests, 'recipeA', 'first'), true)
-  requests = { recipeA: createDetailRequest('retry') }
-  assert.equal(isCurrentDetailRequest(requests, 'recipeA', 'first'), false)
-  assert.equal(isCurrentDetailRequest(requests, 'recipeA', 'retry'), true)
-  requests = {}
-  assert.equal(isCurrentDetailRequest(requests, 'recipeA', 'retry'), false)
+  const state = { recipes: [], detailRequests: {} }
+  assert.equal(transitions.canStartDetailRequest(state.detailRequests, 'recipeA'), true)
+  transitions.startDetailRequest(state, 'recipeA', 'first')
+  assert.equal(transitions.canStartDetailRequest(state.detailRequests, 'recipeA'), false)
+  transitions.rejectDetailRequest(state, 'recipeA', 'first')
+  assert.equal(state.detailRequests.recipeA.status, 'failed')
+  transitions.startDetailRequest(state, 'recipeA', 'retry')
+  assert.equal(state.detailRequests.recipeA.requestId, 'retry')
+  assert.equal(transitions.fulfillDetailRequest(state, 'recipeA', 'first', { _id: 'recipeA', name: 'stale' }), false)
+  assert.equal(transitions.rejectDetailRequest(state, 'recipeA', 'first'), false)
+  assert.equal(state.recipes.length, 0)
+  assert.equal(transitions.fulfillDetailRequest(state, 'recipeA', 'retry', { _id: 'recipeA', name: 'fresh' }), true)
+  assert.equal(state.recipes[0].name, 'fresh')
+
+  transitions.startDetailRequest(state, 'recipeB', 'before-reset')
+  state.detailRequests = {}
+  assert.equal(transitions.fulfillDetailRequest(state, 'recipeB', 'before-reset', { _id: 'recipeB' }), false)
+  assert.equal(transitions.rejectDetailRequest(state, 'recipeB', 'before-reset'), false)
+  assert.equal(state.recipes.some(recipe => recipe._id === 'recipeB'), false)
 })
 
 test('recipe detail reducers gate completions by request id and suppress duplicate loads', () => {
@@ -85,10 +100,66 @@ test('recipe detail reducers gate completions by request id and suppress duplica
   const thunks = read('src/thunks/recipe/thunks.ts')
 
   assert.match(slice, /import detailRequestModule = require\('\.\/detailRequest'\)/)
-  assert.match(slice, /createDetailRequest\(action\.meta\.requestId\)/)
-  assert.match(slice, /isCurrentDetailRequest\(state\.detailRequests, recipeId, action\.meta\.requestId\)/)
+  assert.match(slice, /startDetailRequest\(state, action\.meta\.arg, action\.meta\.requestId\)/)
+  assert.match(slice, /fulfillDetailRequest\(state, action\.meta\.arg, action\.meta\.requestId, action\.payload\)/)
+  assert.match(slice, /rejectDetailRequest\(state, action\.meta\.arg, action\.meta\.requestId\)/)
   assert.match(thunks, /condition:\s*\(recipeId, \{ getState \}\)/)
-  assert.match(thunks, /detailRequests\[recipeId\]\?\.status !== 'loading'/)
+  assert.match(thunks, /canStartDetailRequest\(\(getState\(\) as RootState\)\.recipe\.detailRequests, recipeId\)/)
+})
+
+test('recipe save controller owns ordering, failures, unlocking, and same-tick deduplication', async () => {
+  const helperPath = path.join(root, 'src/pages/recipe/edit/recipeSave.js')
+  assert.equal(fs.existsSync(helperPath), true, 'recipe save controller must exist')
+  const { createRecipeSaveController } = require(helperPath)
+  assert.equal(typeof createRecipeSaveController, 'function')
+
+  const events = []
+  const controller = createRecipeSaveController(locked => events.push(locked ? 'lock' : 'unlock'))
+  let persistCalls = 0
+  let successCalls = 0
+  let failureCalls = 0
+  const uploadFailure = await controller.run({
+    upload: async () => { events.push('upload'); throw new Error('upload failed') },
+    persist: async () => { persistCalls += 1 },
+    onSuccess: () => { successCalls += 1 },
+    onFailure: () => { failureCalls += 1 }
+  })
+  assert.equal(uploadFailure, false)
+  assert.equal(persistCalls, 0)
+  assert.equal(successCalls, 0)
+  assert.equal(failureCalls, 1)
+  assert.deepEqual(events, ['lock', 'upload', 'unlock'])
+
+  events.length = 0
+  const persistFailure = await controller.run({
+    upload: async () => { events.push('upload'); return 'image' },
+    persist: async () => { events.push('persist'); throw new Error('persist failed') },
+    onSuccess: () => { successCalls += 1 },
+    onFailure: () => { failureCalls += 1 }
+  })
+  assert.equal(persistFailure, false)
+  assert.equal(successCalls, 0)
+  assert.equal(failureCalls, 2)
+  assert.deepEqual(events, ['lock', 'upload', 'persist', 'unlock'])
+
+  events.length = 0
+  let releaseUpload
+  const first = controller.run({
+    upload: () => {
+      events.push('upload')
+      return new Promise(resolve => { releaseUpload = resolve })
+    },
+    persist: async image => { events.push(`persist:${image}`) },
+    onSuccess: () => { events.push('success') },
+    onFailure: () => { events.push('failure') }
+  })
+  const duplicate = await controller.run({
+    upload: async () => 'duplicate', persist: async () => {}, onSuccess: () => {}, onFailure: () => {}
+  })
+  assert.equal(duplicate, false)
+  releaseUpload('fresh-image')
+  assert.equal(await first, true)
+  assert.deepEqual(events, ['lock', 'upload', 'persist:fresh-image', 'success', 'unlock'])
 })
 
 test('recipe saves unwrap dispatch results and only leave after fulfillment', () => {
@@ -96,20 +167,20 @@ test('recipe saves unwrap dispatch results and only leave after fulfillment', ()
   const thunks = read('src/thunks/recipe/thunks.ts')
 
   assert.doesNotMatch(source, /updateRecipeInStore/)
+  assert.match(source, /import recipeSaveModule = require\('\.\/recipeSave'\)/)
   assert.match(source, /const \[saving, setSaving\] = useState\(false\)/)
-  assert.match(source, /if \(saving\) return/)
-  assert.match(source, /const savingRef = useRef\(false\)/)
-  assert.match(source, /if \(savingRef\.current\) return/)
-  assert.match(source, /savingRef\.current = true/)
-  assert.match(source, /savingRef\.current = false/)
-  assert.match(source, /setSaving\(true\)[\s\S]*try\s*\{[\s\S]*await useCloudUpload/)
-  assert.match(source, /finally\s*\{[\s\S]*savingRef\.current = false[\s\S]*setSaving\(false\)[\s\S]*\}/)
+  assert.match(source, /createRecipeSaveController\(setSaving\)/)
+  assert.match(source, /saveController\.run\(\{/)
+  assert.match(source, /upload:\s*async \(\) =>[\s\S]*useCloudUpload/)
+  assert.match(source, /persist:\s*async imageUrl =>/)
+  assert.match(source, /onSuccess:\s*\(\) =>/)
+  assert.match(source, /onFailure:\s*\(\) =>/)
   assert.match(source, /<Loading visible=\{saving\} \/>/)
   assert.match(source, /disabled=\{saving\}/)
   assert.match(source, /await dispatch\(updateRecipeById\([\s\S]*?\)\)\.unwrap\(\)/)
   assert.match(source, /await dispatch\(createRecipe\([\s\S]*?\)\)\.unwrap\(\)/)
-  assert.match(source, /try\s*\{[\s\S]*toast\(\{ title: '[^']*', icon: 'success' \}\)[\s\S]*Taro\.navigateBack\(\)[\s\S]*\}\s*catch/)
-  assert.match(source, /catch[\s\S]*toast\(\{ title: '[^']*', icon: 'none' \}\)/)
+  assert.match(source, /onSuccess:[\s\S]*toast\(\{ title: '[^']*', icon: 'success' \}\)[\s\S]*Taro\.navigateBack\(\)/)
+  assert.match(source, /onFailure:[\s\S]*toast\(\{ title: '[^']*', icon: 'none' \}\)/)
   assert.doesNotMatch(thunks, /createRecipe[\s\S]*?toast\([\s\S]*?updateRecipeById/)
   assert.doesNotMatch(thunks, /updateRecipeById[\s\S]*?toast\([\s\S]*?deleteRecipeById/)
 })
