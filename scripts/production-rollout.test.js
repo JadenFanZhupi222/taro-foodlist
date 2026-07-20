@@ -25,14 +25,10 @@ test('production rollout uses the protected production environment', () => {
 })
 
 test('production rollout explicitly deletes retired cloud functions', () => {
-  const listCalls = [...workflow.matchAll(/fn list[^\n]*--json/g)]
-  assert.ok(listCalls.length >= 2, 'retired functions must be checked before and after deletion')
-  assert.match(workflow, /function_exists/)
-  for (const functionName of ['get-user-info', 'reorder-daily-menu']) {
-    assert.match(workflow, new RegExp(`retired_functions=.*${functionName}`))
-  }
-  assert.match(workflow, /fn delete "\$name".*--force/)
-  assert.match(workflow, /still exists after deletion/)
+  assert.match(workflow, /run:\s*node scripts\/delete-retired-functions\.js/)
+  assert.doesNotMatch(workflow, /fn list[^\n]*--json/)
+  assert.match(workflow, /TC_SECRET_ID:\s*\$\{\{ secrets\.TENCENT_SECRET_ID \}\}/)
+  assert.match(workflow, /TC_SECRET_KEY:\s*\$\{\{ secrets\.TENCENT_SECRET_KEY \}\}/)
 })
 
 test('production rollout grants the GitHub token read-only contents access', () => {

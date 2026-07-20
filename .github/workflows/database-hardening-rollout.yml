@@ -137,26 +137,7 @@ jobs:
           trap - ERR
 
       - name: Delete retired unauthenticated functions
-        run: |
-          set -e
-          TCB="$GITHUB_WORKSPACE/scripts/deployment/node_modules/.bin/tcb"
-          retired_functions="get-user-info reorder-daily-menu"
-          functions_json="$("$TCB" fn list -e "$CLOUDBASE_ENV_ID" --limit 100 --json)"
-          function_exists() {
-            echo "$functions_json" | jq -e --arg name "$1" '.data | any(.FunctionName == $name)' >/dev/null
-          }
-          for name in $retired_functions; do
-            if function_exists "$name"; then
-              "$TCB" fn delete "$name" -e "$CLOUDBASE_ENV_ID" --force
-            else
-              echo "Retired function $name is already absent"
-            fi
-          done
-
-          functions_json="$("$TCB" fn list -e "$CLOUDBASE_ENV_ID" --limit 100 --json)"
-          for name in $retired_functions; do
-            if function_exists "$name"; then
-              echo "::error::Retired function $name still exists after deletion"
-              exit 1
-            fi
-          done
+        env:
+          TC_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
+          TC_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
+        run: node scripts/delete-retired-functions.js
