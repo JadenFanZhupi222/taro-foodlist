@@ -111,12 +111,18 @@ test('guest recipe cards cannot swipe to delete', () => {
   assert.match(indexPage, /onRemove=\{isGuest \? undefined :/)
 })
 
-test('guest creation action routes to login profile', () => {
+test('guest creation action switches to profile while signed-in creation opens editor', () => {
   const indexPage = readFileSync(
     path.resolve(__dirname, '../src/pages/index/index.tsx'),
     'utf8'
   )
 
-  assert.match(indexPage, /isGuest\s*\?\s*'\/pages\/profile\/index'/)
-  assert.match(indexPage, /:\s*'\/pages\/recipe\/edit\/index'/)
+  assert.match(
+    indexPage,
+    /if \(isGuest\)[\s\S]*Taro\.switchTab\(\{[\s\S]*url: '\/pages\/profile\/index'/
+  )
+  assert.match(
+    indexPage,
+    /Taro\.navigateTo\(\{[\s\S]*url: '\/pages\/recipe\/edit\/index'/
+  )
 })

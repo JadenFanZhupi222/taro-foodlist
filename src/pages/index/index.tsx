@@ -71,8 +71,14 @@ const Index = () => {
 
   // 处理新建食谱
   const handleAddRecipe = () => {
+    if (isGuest) {
+      Taro.switchTab({
+        url: '/pages/profile/index'
+      })
+      return
+    }
     Taro.navigateTo({
-      url: isGuest ? '/pages/profile/index' : '/pages/recipe/edit/index'
+      url: '/pages/recipe/edit/index'
     })
   }
 
