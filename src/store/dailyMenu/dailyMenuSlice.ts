@@ -3,6 +3,9 @@ import { initialState } from './initialState'
 import { fetchDailyMenus, createOrUpdateDailyMenu, removeRecipeFromMenu, fetchDailyMenuByDate } from '@/thunks/dailyMenu/thunks'
 import { DailyMenu, DailyMenuRecipeItem } from './types'
 import { isSameDay } from '@/utils/date'
+import dateRequestModule = require('./dateRequest')
+
+const { startDateRequest, fulfillDateRequest, rejectDateRequest } = dateRequestModule
 
 const dailyMenuSlice = createSlice({
   name: 'dailyMenu',
@@ -86,9 +89,23 @@ const dailyMenuSlice = createSlice({
       .addCase(fetchDailyMenus.pending, (state) => { state.fetchLoading = true })
       .addCase(fetchDailyMenus.fulfilled, (state) => { state.fetchLoading = false })
       .addCase(fetchDailyMenus.rejected, (state) => { state.fetchLoading = false })
-      .addCase(fetchDailyMenuByDate.pending, (state) => { state.fetchDailyLoading = true })
-      .addCase(fetchDailyMenuByDate.fulfilled, (state) => { state.fetchDailyLoading = false })
-      .addCase(fetchDailyMenuByDate.rejected, (state) => { state.fetchDailyLoading = false })
+      .addCase(fetchDailyMenuByDate.pending, (state, action) => {
+        state.fetchDailyLoading = true
+        startDateRequest(state, action.meta.arg.date, action.meta.requestId)
+      })
+      .addCase(fetchDailyMenuByDate.fulfilled, (state, action) => {
+        state.fetchDailyLoading = false
+        const date = action.meta.arg.date
+        if (!fulfillDateRequest(state, action.meta.arg.date, action.meta.requestId, action.payload)) return
+        state.dailyMenus = state.dailyMenus.filter(m => !isSameDay(m.date, date))
+        state.emptyDates = state.emptyDates.filter(d => d !== date)
+        if (action.payload) state.dailyMenus.push(action.payload)
+        else state.emptyDates.push(date)
+      })
+      .addCase(fetchDailyMenuByDate.rejected, (state, action) => {
+        state.fetchDailyLoading = false
+        rejectDateRequest(state, action.meta.arg.date, action.meta.requestId, action.error.message)
+      })
       .addCase(createOrUpdateDailyMenu.pending, (state) => { state.createLoading = true })
       .addCase(createOrUpdateDailyMenu.fulfilled, (state) => { state.createLoading = false })
       .addCase(createOrUpdateDailyMenu.rejected, (state) => { state.createLoading = false })
@@ -113,4 +130,4 @@ export const {
   optimisticAddRecipe,
   optimisticRemoveRecipe
 } = dailyMenuSlice.actions
-export const dailyMenuReducer = dailyMenuSlice.reducer 
+export const dailyMenuReducer = dailyMenuSlice.reducer

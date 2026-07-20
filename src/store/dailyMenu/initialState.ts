@@ -8,5 +8,6 @@ export const initialState: DailyMenuState = {
   updateLoading: false,
   removeLoading: false,
   selectedRecipes: [],
-  emptyDates: []
-} 
+  emptyDates: [],
+  dateRequests: {}
+}

@@ -20,4 +20,5 @@ export const selectDailyMenuLoading = createSelector(
 )
 
 export const selectSelectedRecipes = (state: RootState) => state.dailyMenu.selectedRecipes
-export const selectEmptyDates = (state: RootState) => state.dailyMenu.emptyDates 
+export const selectEmptyDates = (state: RootState) => state.dailyMenu.emptyDates
+export const selectDateRequests = (state: RootState) => state.dailyMenu.dateRequests

@@ -27,4 +27,9 @@ export interface DailyMenuState {
   removeLoading: boolean
   selectedRecipes: Recipe[]
   emptyDates: string[]
-} 
+  dateRequests: Record<string, {
+    status: 'loading' | 'loaded' | 'empty' | 'failed'
+    requestId: string
+    error?: string
+  }>
+}

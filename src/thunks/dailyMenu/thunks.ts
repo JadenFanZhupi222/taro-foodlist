@@ -4,9 +4,6 @@ import { callCloud } from '@/utils/cloud'
 import {
   setDailyMenus,
   clearDailyMenus,
-  addEmptyDate,
-  deleteDailyMenuByDate,
-  upsertDailyMenuByDate,
   optimisticAddRecipe,
   optimisticRemoveRecipe
 } from '@/store/dailyMenu/dailyMenuSlice'
@@ -42,15 +39,9 @@ export const fetchDailyMenus = createAsyncThunk(
 // 获取当前家庭某天的 dailyMenu（以服务端为权威，校正本地乐观状态）
 export const fetchDailyMenuByDate = createAsyncThunk(
   'dailyMenu/fetchDailyMenuByDate',
-  async ({ familyId, date }: { familyId: string, date: string }, { dispatch }) => {
+  async ({ familyId, date }: { familyId: string, date: string }) => {
     const res = await callCloud<DailyMenu>('get-family-daily-menu-by-date', { familyId, date })
-    if (res.data) {
-      dispatch(upsertDailyMenuByDate(res.data))
-    } else {
-      // 服务端确认该日期无菜单：清掉可能存在的临时菜单并标记为空
-      dispatch(deleteDailyMenuByDate(date))
-      dispatch(addEmptyDate(date))
-    }
+    return res.data || null
   }
 )
 
