@@ -15,7 +15,7 @@
     "framework": "React"
   },
   "scripts": {
-    "test:backend": "node --test cloudfunctions/**/*.test.js scripts/cloudfunction-packaging.test.js scripts/delete-retired-functions.test.js scripts/production-rollout.test.js scripts/taro-config.test.js",
+    "test:backend": "node --test cloudfunctions/**/*.test.js scripts/cloudfunction-packaging.test.js scripts/delete-retired-functions.test.js scripts/deploy-workflow.test.js scripts/production-rollout.test.js scripts/taro-config.test.js",
     "test:ui": "node --test scripts/app-style.test.js scripts/ui-source.test.js",
     "build:weapp": "taro build --type weapp",
     "build:swan": "taro build --type swan",
