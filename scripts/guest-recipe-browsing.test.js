@@ -1,12 +1,27 @@
 const test = require('node:test')
 const assert = require('node:assert/strict')
 const { spawnSync } = require('node:child_process')
+const { readFileSync } = require('node:fs')
+const path = require('node:path')
 
 const {
   guestRecipes,
   getVisibleRecipes,
   findVisibleRecipe
 } = require('../src/data/guestRecipes')
+
+test('app startup does not interrupt guests with login guidance', () => {
+  const appContainer = readFileSync(
+    path.resolve(__dirname, '../src/AppContainer.tsx'),
+    'utf8'
+  )
+
+  assert.doesNotMatch(appContainer, /\b(?:Taro\.)?showModal\s*\(/)
+  assert.doesNotMatch(
+    appContainer,
+    /\b(?:Taro\.)?switchTab\s*\(\s*\{[^}]*\/pages\/profile\/index/s
+  )
+})
 
 test('guest recipes provide complete read-only browsing fixtures', () => {
   assert.ok(guestRecipes.length >= 2)
