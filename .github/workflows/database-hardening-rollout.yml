@@ -8,6 +8,9 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: read
+
 concurrency:
   group: database-hardening-production
   cancel-in-progress: false
@@ -27,9 +30,14 @@ jobs:
       - name: Require explicit production confirmation
         env:
           CONFIRMATION: ${{ inputs.confirmation }}
+          DEPLOY_REF: ${{ github.ref }}
         run: |
           if [ "$CONFIRMATION" != 'DEPLOY' ]; then
             echo "::error::Confirmation must be exactly DEPLOY"
+            exit 1
+          fi
+          if [ "$DEPLOY_REF" != 'refs/heads/master' ]; then
+            echo "::error::Production rollout is restricted to refs/heads/master"
             exit 1
           fi
 
@@ -132,5 +140,23 @@ jobs:
         run: |
           set -e
           TCB="$GITHUB_WORKSPACE/scripts/deployment/node_modules/.bin/tcb"
-          "$TCB" fn delete get-user-info -e "$CLOUDBASE_ENV_ID" --force
-          "$TCB" fn delete reorder-daily-menu -e "$CLOUDBASE_ENV_ID" --force
+          retired_functions="get-user-info reorder-daily-menu"
+          functions_json="$("$TCB" fn list -e "$CLOUDBASE_ENV_ID" --limit 100 --json)"
+          function_exists() {
+            echo "$functions_json" | jq -e --arg name "$1" '.data | any(.FunctionName == $name)' >/dev/null
+          }
+          for name in $retired_functions; do
+            if function_exists "$name"; then
+              "$TCB" fn delete "$name" -e "$CLOUDBASE_ENV_ID" --force
+            else
+              echo "Retired function $name is already absent"
+            fi
+          done
+
+          functions_json="$("$TCB" fn list -e "$CLOUDBASE_ENV_ID" --limit 100 --json)"
+          for name in $retired_functions; do
+            if function_exists "$name"; then
+              echo "::error::Retired function $name still exists after deletion"
+              exit 1
+            fi
+          done
