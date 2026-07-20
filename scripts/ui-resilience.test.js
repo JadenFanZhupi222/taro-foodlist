@@ -284,8 +284,8 @@ test('daily menu loading transitions ignore stale fetches and count overlapping 
     fetchDailyLoading: false,
     createLoading: false,
     removeLoading: false,
-    createPendingCount: 0,
-    removePendingCount: 0,
+    createPendingRequests: {},
+    removePendingRequests: {},
     familyRequests: {},
     dateRequests: {}
   }
@@ -308,26 +308,91 @@ test('daily menu loading transitions ignore stale fetches and count overlapping 
   requests.syncFetchLoading(state)
   assert.equal(state.fetchDailyLoading, false)
 
-  requests.startWrite(state, 'create')
-  requests.startWrite(state, 'create')
-  requests.finishWrite(state, 'create')
+  requests.startWrite(state, 'create', 'create-a')
+  requests.startWrite(state, 'create', 'create-b')
+  requests.finishWrite(state, 'create', 'create-a')
   assert.equal(state.createLoading, true)
-  requests.finishWrite(state, 'create')
+  requests.finishWrite(state, 'create', 'create-b')
   assert.equal(state.createLoading, false)
 
-  requests.startWrite(state, 'remove')
-  requests.startWrite(state, 'remove')
-  requests.finishWrite(state, 'remove')
+  requests.startWrite(state, 'remove', 'remove-a')
+  requests.startWrite(state, 'remove', 'remove-b')
+  requests.finishWrite(state, 'remove', 'remove-a')
   assert.equal(state.removeLoading, true)
-  requests.finishWrite(state, 'remove')
-  requests.finishWrite(state, 'remove')
-  assert.equal(state.removePendingCount, 0)
+  requests.finishWrite(state, 'remove', 'remove-b')
+  requests.finishWrite(state, 'remove', 'unknown')
+  assert.equal(Object.keys(state.removePendingRequests).length, 0)
   assert.equal(state.removeLoading, false)
 
   const slice = read('src/store/dailyMenu/dailyMenuSlice.ts')
   assert.match(slice, /syncFetchLoading\(state\)/)
-  assert.match(slice, /startWrite\(state, 'create'\)/)
-  assert.match(slice, /finishWrite\(state, 'remove'\)/)
+  assert.match(slice, /startWrite\(state, 'create', action\.meta\.requestId\)/)
+  assert.match(slice, /finishWrite\(state, 'remove', action\.meta\.requestId\)/)
+})
+
+test('daily menu write requests survive reset and ignore stale pre-reset completions', () => {
+  const loading = require(path.join(root, 'src/store/dailyMenu/loadingState.js'))
+  for (const kind of ['create', 'remove']) {
+    const pendingKey = `${kind}PendingRequests`
+    const loadingKey = `${kind}Loading`
+    const state = { [pendingKey]: {}, [loadingKey]: false }
+
+    loading.startWrite(state, kind, 'request-a')
+    state[pendingKey] = {}
+    state[loadingKey] = false
+    loading.startWrite(state, kind, 'request-b')
+    loading.finishWrite(state, kind, 'request-a')
+
+    assert.equal(state[loadingKey], true)
+    assert.deepEqual(Object.keys(state[pendingKey]), ['request-b'])
+    loading.finishWrite(state, kind, 'request-b')
+    assert.equal(state[loadingKey], false)
+  }
+
+  const slice = read('src/store/dailyMenu/dailyMenuSlice.ts')
+  assert.match(slice, /startWrite\(state, 'create', action\.meta\.requestId\)/)
+  assert.match(slice, /finishWrite\(state, 'remove', action\.meta\.requestId\)/)
+})
+
+test('today recipe hydration distinguishes in-flight refs from terminal missing recipes', () => {
+  const hydration = require(path.join(root, 'src/pages/today/recipeHydration.js'))
+  const menu = { recipes: [
+    { recipe_id: 'known', order: 1 },
+    { recipe_id: 'snapshot', order: 2, name: '旧菜名', type: '其他' },
+    { recipe_id: 'missing', order: 3 }
+  ] }
+  const recipes = [{ _id: 'known', name: '已加载', type: '其他', image: 'known.png' }]
+
+  const loading = hydration.hydrateTodayRecipes(menu, recipes, 'loading')
+  assert.equal(loading.length, 1)
+  assert.equal(loading[0]._id, 'known')
+
+  const ready = hydration.hydrateTodayRecipes(menu, recipes, 'ready')
+  assert.equal(ready.length, 3)
+  assert.equal(ready[1].name, '旧菜名')
+  assert.equal(ready[1].unavailable, true)
+  assert.equal(ready[2].name, '食谱已移除')
+  assert.equal(ready[2].unavailable, true)
+
+  const failed = hydration.hydrateTodayRecipes(menu, recipes, 'failed')
+  assert.equal(failed[2].name, '食谱信息暂不可用')
+})
+
+test('today consumes catalog status and guards unavailable recipe navigation', () => {
+  const page = read('src/pages/today/index.tsx')
+  const recipeSlice = read('src/store/recipe/recipeSlice.ts')
+  const selectors = read('src/store/recipe/selectors.ts')
+  const initialState = read('src/store/recipe/initialState.ts')
+
+  assert.match(page, /selectRecipeCatalogStatus/)
+  assert.match(page, /hydrateTodayRecipes\(todayMenu, allRecipes, recipeCatalogStatus\)/)
+  assert.match(page, /if \(recipe\.unavailable\) return/)
+  assert.match(recipeSlice, /catalogStatus = 'loading'/)
+  assert.match(recipeSlice, /catalogStatus = 'ready'/)
+  assert.match(recipeSlice, /catalogStatus = 'failed'/)
+  assert.match(recipeSlice, /resetRecipes: \(\) => initialState/)
+  assert.match(initialState, /catalogStatus: 'idle'/)
+  assert.match(selectors, /selectRecipeCatalogStatus/)
 })
 
 test('per-date menu request transitions ignore stale completion and allow retry', () => {

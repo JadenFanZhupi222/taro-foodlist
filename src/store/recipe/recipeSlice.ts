@@ -41,9 +41,9 @@ const recipeSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchRecipes.pending, (state) => { state.fetchLoading = true })
-      .addCase(fetchRecipes.fulfilled, (state) => { state.fetchLoading = false })
-      .addCase(fetchRecipes.rejected, (state) => { state.fetchLoading = false })
+      .addCase(fetchRecipes.pending, (state) => { state.fetchLoading = true; state.catalogStatus = 'loading' })
+      .addCase(fetchRecipes.fulfilled, (state) => { state.fetchLoading = false; state.catalogStatus = 'ready' })
+      .addCase(fetchRecipes.rejected, (state) => { state.fetchLoading = false; state.catalogStatus = 'failed' })
       .addCase(fetchRecipeById.pending, (state, action) => {
         startDetailRequest(state, action.meta.arg, action.meta.requestId)
       })

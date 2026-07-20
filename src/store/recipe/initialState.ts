@@ -4,6 +4,7 @@ export interface RecipeState {
   recipes: Recipe[]
   comments: Comment[]
   fetchLoading: boolean
+  catalogStatus: 'idle' | 'loading' | 'ready' | 'failed'
   createLoading: boolean
   updateLoading: boolean
   deleteLoading: boolean
@@ -14,6 +15,7 @@ export const initialState: RecipeState = {
   recipes: [],
   comments: [],
   fetchLoading: false,
+  catalogStatus: 'idle',
   createLoading: false,
   updateLoading: false,
   deleteLoading: false,

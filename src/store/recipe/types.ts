@@ -41,6 +41,7 @@ export interface RecipeState {
   recipes: Recipe[]
   comments: Comment[]
   fetchLoading: boolean
+  catalogStatus: 'idle' | 'loading' | 'ready' | 'failed'
   createLoading: boolean
   updateLoading: boolean
   deleteLoading: boolean

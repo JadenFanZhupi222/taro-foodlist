@@ -3,18 +3,18 @@ function syncFetchLoading(state) {
   state.fetchDailyLoading = Object.values(state.dateRequests).some(request => request.status === 'loading')
 }
 
-function startWrite(state, kind) {
-  const countKey = `${kind}PendingCount`
+function startWrite(state, kind, requestId) {
+  const requestsKey = `${kind}PendingRequests`
   const loadingKey = `${kind}Loading`
-  state[countKey] = (state[countKey] || 0) + 1
-  state[loadingKey] = true
+  state[requestsKey][requestId] = true
+  state[loadingKey] = Object.keys(state[requestsKey]).length > 0
 }
 
-function finishWrite(state, kind) {
-  const countKey = `${kind}PendingCount`
+function finishWrite(state, kind, requestId) {
+  const requestsKey = `${kind}PendingRequests`
   const loadingKey = `${kind}Loading`
-  state[countKey] = Math.max(0, (state[countKey] || 0) - 1)
-  state[loadingKey] = state[countKey] > 0
+  delete state[requestsKey][requestId]
+  state[loadingKey] = Object.keys(state[requestsKey]).length > 0
 }
 
 module.exports = { syncFetchLoading, startWrite, finishWrite }

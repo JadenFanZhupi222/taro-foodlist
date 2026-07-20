@@ -126,12 +126,12 @@ const dailyMenuSlice = createSlice({
         rejectDateRequest(state, action.meta.arg.familyId, action.meta.arg.date, action.meta.requestId, action.error.message)
         syncFetchLoading(state)
       })
-      .addCase(createOrUpdateDailyMenu.pending, (state) => { startWrite(state, 'create') })
-      .addCase(createOrUpdateDailyMenu.fulfilled, (state) => { finishWrite(state, 'create') })
-      .addCase(createOrUpdateDailyMenu.rejected, (state) => { finishWrite(state, 'create') })
-      .addCase(removeRecipeFromMenu.pending, (state) => { startWrite(state, 'remove') })
-      .addCase(removeRecipeFromMenu.fulfilled, (state) => { finishWrite(state, 'remove') })
-      .addCase(removeRecipeFromMenu.rejected, (state) => { finishWrite(state, 'remove') })
+      .addCase(createOrUpdateDailyMenu.pending, (state, action) => { startWrite(state, 'create', action.meta.requestId) })
+      .addCase(createOrUpdateDailyMenu.fulfilled, (state, action) => { finishWrite(state, 'create', action.meta.requestId) })
+      .addCase(createOrUpdateDailyMenu.rejected, (state, action) => { finishWrite(state, 'create', action.meta.requestId) })
+      .addCase(removeRecipeFromMenu.pending, (state, action) => { startWrite(state, 'remove', action.meta.requestId) })
+      .addCase(removeRecipeFromMenu.fulfilled, (state, action) => { finishWrite(state, 'remove', action.meta.requestId) })
+      .addCase(removeRecipeFromMenu.rejected, (state, action) => { finishWrite(state, 'remove', action.meta.requestId) })
   }
 })
 

@@ -9,8 +9,7 @@ import { SwitchTransition, CSSTransition } from 'react-transition-group'
 import { fetchDailyMenus, fetchDailyMenuByDate, createOrUpdateDailyMenu, removeRecipeFromMenu } from '@/thunks/dailyMenu/thunks'
 import { selectDailyMenus, selectDailyMenuLoading, selectSelectedRecipes, selectDateRequests, selectFamilyRequests } from '@/store/dailyMenu/selectors'
 import { selectFamily } from '@/store/family/selectors'
-import { selectRecipes } from '@/store/recipe/selectors'
-import { DailyMenuRecipeItem } from '@/store/dailyMenu/types'
+import { selectRecipeCatalogStatus, selectRecipes } from '@/store/recipe/selectors'
 import 'taro-ui/dist/style/components/float-layout.scss'
 import './index.scss'
 import { AppDispatch } from '@/store'
@@ -22,9 +21,11 @@ import { toast } from '@/utils/toast'
 import { toDateKey } from '@/utils/date'
 import todayStateModule = require('./todayState')
 import dateRequestModule = require('@/store/dailyMenu/dateRequest')
+import recipeHydrationModule = require('./recipeHydration')
 
 const { classifyTodayState, getTodayAddAction, findFamilyMenu, shouldFetchDate } = todayStateModule
 const { getDateRequestKey } = dateRequestModule
+const { hydrateTodayRecipes } = recipeHydrationModule
 
 const getDateKey = (date: Date) => toDateKey(date)
 
@@ -47,6 +48,7 @@ const Today = () => {
   const dailyMenus = useSelector(selectDailyMenus)
   const loading = useSelector(selectDailyMenuLoading)
   const allRecipes = useSelector(selectRecipes)
+  const recipeCatalogStatus = useSelector(selectRecipeCatalogStatus)
   const selectedRecipes = useSelector(selectSelectedRecipes)
   const user = useSelector(selectUser)
   const dateRequests = useSelector(selectDateRequests)
@@ -75,28 +77,9 @@ const Today = () => {
   // 当前日期的菜单
   const todayMenu = useMemo(() => 
     findFamilyMenu(dailyMenus, family?._id, dateKey), [dailyMenus, family?._id, dateKey])
-  const todayRecipes = useMemo(() => {
-    if (!todayMenu) return []
-    return todayMenu.recipes
-      .map((r: DailyMenuRecipeItem) => {
-        const recipe = allRecipes.find(item => item._id === r.recipe_id)
-        if (!recipe) {
-          // 菜谱已被删除：回退到下单时的快照，保住历史记录
-          if (r.name) {
-            return { _id: r.recipe_id, name: r.name, type: r.type || '其他', image: '', order: r.order }
-          }
-          return null
-        }
-        // 保证 id、order、image 字段存在
-        return {
-          ...recipe,
-          _id: recipe._id,
-          order: r.order,
-          image: recipe.image || ''
-        }
-      })
-      .filter(Boolean)
-  }, [todayMenu, allRecipes])
+  const todayRecipes = useMemo(() =>
+    hydrateTodayRecipes(todayMenu, allRecipes, recipeCatalogStatus),
+  [todayMenu, allRecipes, recipeCatalogStatus])
 
   // 进入页面优先拉取今天
   useEffect(() => {
@@ -160,9 +143,10 @@ const Today = () => {
     }
   }
 
-  const handleRecipeClick = (id: string) => {
+  const handleRecipeClick = (recipe: { _id: string; unavailable?: boolean }) => {
+    if (recipe.unavailable) return
     Taro.navigateTo({
-      url: `/pages/recipe/detail/index?id=${id}`
+      url: `/pages/recipe/detail/index?id=${recipe._id}`
     })
   }
 
@@ -334,7 +318,7 @@ const Today = () => {
                     image={recipe.image}
                     type={recipe.type}
                     className='fade-in-card'
-                    onClick={() => handleRecipeClick(recipe._id)}
+                    onClick={() => handleRecipeClick(recipe)}
                     onRemove={() => handleRemoveRecipe(recipe)}
                     showRemove={!isPast}
                   />
