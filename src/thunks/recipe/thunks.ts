@@ -10,8 +10,7 @@ import {
   addRecipe,
   updateRecipe,
   deleteRecipe,
-  addComment,
-  updateRecipeInStore
+  addComment
 } from '@/store/recipe/recipeSlice'
 import { toast } from '@/utils/toast'
 
@@ -30,10 +29,10 @@ export const fetchRecipes = createAsyncThunk(
 
 export const fetchRecipeById = createAsyncThunk(
   'recipe/fetchRecipeById',
-  async (recipeId: string, { dispatch }) => {
+  async (recipeId: string) => {
     try {
-      const r = await callCloud<Recipe>('get-recipe', { recipeId })
-      dispatch(updateRecipeInStore({ recipeId, recipe: r.data! }))
+      const r = await callCloud<Recipe | null>('get-recipe', { recipeId })
+      return r.data ?? null
     } catch (error) {
       console.error('获取食谱详情失败:', error)
       toast({ title: '获取食谱详情失败', icon: 'error' })

@@ -77,8 +77,14 @@ function findVisibleRecipe(realRecipes, recipeId, isLoggedIn) {
   return getVisibleRecipes(realRecipes, isLoggedIn).find(recipe => recipe._id === recipeId)
 }
 
+/** @param {string} recipeId */
+function isGuestRecipeId(recipeId) {
+  return recipeId.startsWith('guest:')
+}
+
 module.exports = {
   guestRecipes,
   getVisibleRecipes,
-  findVisibleRecipe
+  findVisibleRecipe,
+  isGuestRecipeId
 }

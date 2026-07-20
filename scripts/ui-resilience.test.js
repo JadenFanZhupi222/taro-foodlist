@@ -37,3 +37,36 @@ test('long recipe detail text wraps without crowding adjacent content', () => {
   assert.match(styles, /\.recipe-detail__ingredient-name\s*\{[^}]*min-width:\s*0[^}]*overflow-wrap:\s*anywhere/s)
   assert.match(styles, /\.recipe-detail__ingredient-amount\s*\{[^}]*overflow-wrap:\s*anywhere/s)
 })
+
+test('signed-in cold recipe details fetch by id without requesting guest fixtures', () => {
+  const source = read('src/pages/recipe/detail/index.tsx')
+
+  assert.match(source, /dispatch\(fetchRecipeById\(id\)\)/)
+  assert.match(source, /if \(!user \|\| !id \|\| recipe \|\| isGuestRecipeId\(id\)\) return/)
+  assert.match(source, /const \{[^}]*isGuestRecipeId[^}]*\} = guestRecipeModule/)
+})
+
+test('cold recipe detail distinguishes loading, retryable failure, and confirmed not found', () => {
+  const source = read('src/pages/recipe/detail/index.tsx')
+  const slice = read('src/store/recipe/recipeSlice.ts')
+
+  assert.match(source, /detailRequest\?\.status === 'loading'/)
+  assert.match(source, /detailRequest\?\.status === 'failed'/)
+  assert.match(source, /actionLabel='[^']*'/)
+  assert.match(source, /onAction=\{\(\) => dispatch\(fetchRecipeById\(id!\)\)\}/)
+  assert.match(source, /detailRequest\?\.status === 'not-found'/)
+  assert.match(slice, /addCase\(fetchRecipeById\.pending/)
+  assert.match(slice, /addCase\(fetchRecipeById\.rejected/)
+  assert.match(slice, /addCase\(fetchRecipeById\.fulfilled/)
+  assert.match(slice, /state\.detailRequests\[action\.meta\.arg\]/)
+})
+
+test('recipe saves unwrap dispatch results and only leave after fulfillment', () => {
+  const source = read('src/pages/recipe/edit/index.tsx')
+
+  assert.doesNotMatch(source, /updateRecipeInStore/)
+  assert.match(source, /await dispatch\(updateRecipeById\([\s\S]*?\)\)\.unwrap\(\)/)
+  assert.match(source, /await dispatch\(createRecipe\([\s\S]*?\)\)\.unwrap\(\)/)
+  assert.match(source, /try\s*\{[\s\S]*toast\(\{ title: '[^']*', icon: 'success' \}\)[\s\S]*Taro\.navigateBack\(\)[\s\S]*\}\s*catch/)
+  assert.match(source, /catch[\s\S]*toast\(\{ title: '[^']*', icon: 'none' \}\)/)
+})

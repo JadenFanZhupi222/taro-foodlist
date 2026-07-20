@@ -12,7 +12,6 @@ import { toast } from '@/utils/toast'
 import { User as GlobalUser } from '@/types/store'
 import { AppDispatch } from '@/store'
 import { RecipeCategory, RECIPE_CATEGORIES } from '@/store/recipe/types'
-import { updateRecipeInStore } from '@/store/recipe/recipeSlice'
 import { useCloudUpload } from '@/hooks/useCloudImageUpload'
 import Loading from '@/components/Loading'
 
@@ -89,14 +88,17 @@ const RecipeEdit: FC = () => {
       createdBy: user._id,
       deleted: false
     }
-    if (editingRecipe) {
-      dispatch(updateRecipeInStore({ recipeId: editingRecipe._id, recipe }))
-      await dispatch(updateRecipeById({ recipeId: editingRecipe._id, recipe }))
-    } else {
-      await dispatch(createRecipe({ familyId, recipe }))
+    try {
+      if (editingRecipe) {
+        await dispatch(updateRecipeById({ recipeId: editingRecipe._id, recipe })).unwrap()
+      } else {
+        await dispatch(createRecipe({ familyId, recipe })).unwrap()
+      }
+      toast({ title: '保存成功', icon: 'success' })
+      Taro.navigateBack()
+    } catch {
+      toast({ title: '保存失败，请重试', icon: 'none' })
     }
-    toast({ title: '保存成功', icon: 'success' })
-    Taro.navigateBack()
   }
 
   // 食材操作

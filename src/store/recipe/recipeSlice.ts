@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
 import { initialState } from './initialState'
-import { fetchRecipes, createRecipe, updateRecipeById, deleteRecipeById } from '@/thunks/recipe/thunks'
+import { fetchRecipes, fetchRecipeById, createRecipe, updateRecipeById, deleteRecipeById } from '@/thunks/recipe/thunks'
 
 const recipeSlice = createSlice({
   name: 'recipe',
@@ -41,6 +41,23 @@ const recipeSlice = createSlice({
       .addCase(fetchRecipes.pending, (state) => { state.fetchLoading = true })
       .addCase(fetchRecipes.fulfilled, (state) => { state.fetchLoading = false })
       .addCase(fetchRecipes.rejected, (state) => { state.fetchLoading = false })
+      .addCase(fetchRecipeById.pending, (state, action) => {
+        state.detailRequests[action.meta.arg] = { status: 'loading' }
+      })
+      .addCase(fetchRecipeById.fulfilled, (state, action) => {
+        const recipeId = action.meta.arg
+        if (!action.payload) {
+          state.detailRequests[recipeId] = { status: 'not-found' }
+          return
+        }
+        const index = state.recipes.findIndex(recipe => recipe._id === recipeId)
+        if (index === -1) state.recipes.push(action.payload)
+        else state.recipes[index] = action.payload
+        delete state.detailRequests[recipeId]
+      })
+      .addCase(fetchRecipeById.rejected, (state, action) => {
+        state.detailRequests[action.meta.arg] = { status: 'failed' }
+      })
       .addCase(createRecipe.pending, (state) => { state.createLoading = true })
       .addCase(createRecipe.fulfilled, (state) => { state.createLoading = false })
       .addCase(createRecipe.rejected, (state) => { state.createLoading = false })
@@ -64,4 +81,4 @@ export const {
   clearRecipes,
   resetRecipes
 } = recipeSlice.actions
-export const recipeReducer = recipeSlice.reducer 
+export const recipeReducer = recipeSlice.reducer

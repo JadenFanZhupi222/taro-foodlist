@@ -1,14 +1,16 @@
 import { View, Image, Text, Button } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
-import { FC } from 'react'
-import { useSelector } from 'react-redux'
-import { selectRecipes } from '@/store/recipe/selectors'
+import { FC, useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { selectRecipeDetailRequest, selectRecipes } from '@/store/recipe/selectors'
 import { selectUser } from '@/store/user/selectors'
+import { fetchRecipeById } from '@/thunks/recipe/thunks'
+import { AppDispatch } from '@/store'
 import guestRecipeModule = require('@/data/guestRecipes')
 import StateView from '@/components/StateView'
 import './index.scss'
 
-const { findVisibleRecipe } = guestRecipeModule
+const { findVisibleRecipe, isGuestRecipeId } = guestRecipeModule
 
 const RecipeDetail: FC = () => {
   const router = useRouter()
@@ -16,13 +18,33 @@ const RecipeDetail: FC = () => {
   const recipes = useSelector(selectRecipes)
   const user = useSelector(selectUser)
   const recipe = findVisibleRecipe(recipes, id || '', !!user)
+  const detailRequest = useSelector(selectRecipeDetailRequest(id || ''))
+  const dispatch = useDispatch<AppDispatch>()
+
+  useEffect(() => {
+    if (!user || !id || recipe || isGuestRecipeId(id)) return
+    dispatch(fetchRecipeById(id))
+  }, [dispatch, id, recipe, user])
 
   if (!recipe) {
-    return (
-      <View className='recipe-detail'>
-        <StateView kind='error' title='没有找到这道食谱' description='它可能已被家人移除，返回食谱库看看其他家常味道吧。' actionLabel='返回上一页' onAction={() => Taro.navigateBack()} />
-      </View>
-    )
+    if (user && id && !isGuestRecipeId(id) && (!detailRequest || detailRequest?.status === 'loading')) {
+      return <View className='recipe-detail'><StateView kind='info' title='正在加载食谱' description='请稍候。' /></View>
+    }
+    if (detailRequest?.status === 'failed') {
+      return (
+        <View className='recipe-detail'>
+          <StateView kind='error' title='食谱加载失败' description='网络可能开了小差，请重试。' actionLabel='重试' onAction={() => dispatch(fetchRecipeById(id!))} />
+        </View>
+      )
+    }
+    if (detailRequest?.status === 'not-found' || !user || !id || isGuestRecipeId(id)) {
+      return (
+        <View className='recipe-detail'>
+          <StateView kind='error' title='没有找到这道食谱' description='它可能已被家人移除，返回食谱库看看其他家常味道吧。' actionLabel='返回上一页' onAction={() => Taro.navigateBack()} />
+        </View>
+      )
+    }
+    return null
   }
 
   // 权限判断逻辑（如有更复杂权限可扩展）

@@ -122,10 +122,10 @@ test('recipe detail resolves the current id from guest-safe Redux recipes', () =
     'utf8'
   )
 
-  assert.match(detailPage, /import \{ selectRecipes \} from '@\/store\/recipe\/selectors'/)
+  assert.match(detailPage, /import \{[^}]*selectRecipes[^}]*\} from '@\/store\/recipe\/selectors'/)
   assert.match(detailPage, /import guestRecipeModule = require\('@\/data\/guestRecipes'\)/)
   assert.doesNotMatch(detailPage, /import \{[^}]*findVisibleRecipe[^}]*\} from '@\/data\/guestRecipes'/)
-  assert.match(detailPage, /const \{ findVisibleRecipe \} = guestRecipeModule/)
+  assert.match(detailPage, /const \{[^}]*findVisibleRecipe[^}]*\} = guestRecipeModule/)
   assert.match(detailPage, /const recipes = useSelector\(selectRecipes\)/)
   assert.match(detailPage, /const user = useSelector\(selectUser\)/)
   assert.match(detailPage, /findVisibleRecipe\(recipes, id \|\| '', !!user\)/)

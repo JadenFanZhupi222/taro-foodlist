@@ -7,6 +7,7 @@ export interface RecipeState {
   createLoading: boolean
   updateLoading: boolean
   deleteLoading: boolean
+  detailRequests: Record<string, { status: 'loading' | 'failed' | 'not-found' }>
 }
 
 export const initialState: RecipeState = {
@@ -15,5 +16,6 @@ export const initialState: RecipeState = {
   fetchLoading: false,
   createLoading: false,
   updateLoading: false,
-  deleteLoading: false
-} 
+  deleteLoading: false,
+  detailRequests: {}
+}
