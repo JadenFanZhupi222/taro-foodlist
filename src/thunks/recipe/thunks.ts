@@ -4,6 +4,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import { callCloud } from '@/utils/cloud'
 import type { Recipe, Comment } from '@/store/recipe/types'
+import type { RootState } from '@/store'
 import {
   setRecipes,
   setComments,
@@ -29,10 +30,11 @@ export const fetchRecipes = createAsyncThunk(
 
 export const fetchRecipeById = createAsyncThunk(
   'recipe/fetchRecipeById',
-  async (recipeId: string) => {
+  async (recipeId: string, { getState }) => {
     try {
-      const r = await callCloud<Recipe | null>('get-recipe', { recipeId })
-      return r.data ?? null
+      const familyId = (getState() as RootState).user.current?.family_id
+      const r = await callCloud<Recipe[]>('get-recipes', { familyId })
+      return r.data?.find(recipe => recipe._id === recipeId) ?? null
     } catch (error) {
       console.error('获取食谱详情失败:', error)
       toast({ title: '获取食谱详情失败', icon: 'error' })

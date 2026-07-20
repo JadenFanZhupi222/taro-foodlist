@@ -40,10 +40,15 @@ test('long recipe detail text wraps without crowding adjacent content', () => {
 
 test('signed-in cold recipe details fetch by id without requesting guest fixtures', () => {
   const source = read('src/pages/recipe/detail/index.tsx')
+  const thunks = read('src/thunks/recipe/thunks.ts')
 
   assert.match(source, /dispatch\(fetchRecipeById\(id\)\)/)
   assert.match(source, /if \(!user \|\| !id \|\| recipe \|\| isGuestRecipeId\(id\)\) return/)
   assert.match(source, /const \{[^}]*isGuestRecipeId[^}]*\} = guestRecipeModule/)
+  assert.doesNotMatch(thunks, /callCloud<[^>]+>\('get-recipe'/)
+  assert.match(thunks, /async \(recipeId: string, \{ getState \}\)/)
+  assert.match(thunks, /callCloud<Recipe\[\]>\('get-recipes', \{ familyId \}\)/)
+  assert.match(thunks, /r\.data\?\.find\(recipe => recipe\._id === recipeId\) \?\? null/)
 })
 
 test('cold recipe detail distinguishes loading, retryable failure, and confirmed not found', () => {
