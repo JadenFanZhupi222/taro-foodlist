@@ -9,7 +9,7 @@ import type { AppDispatch } from '@/store'
 import { toast } from '@/utils/toast'
 import MemberCardList from '@/components/family/memberCardList'
 import StateView from '@/components/StateView'
-import { selectJoinLoading, selectInviteFamily, selectInviteFamilyLoading, selectInviteFamilyError } from '@/store/family/selectors'
+import { selectJoinLoading, selectInviteFamily, selectInviteFamilyLoading, selectInviteFamilyError, selectInviteFamilyErrorFamilyId } from '@/store/family/selectors'
 import inviteViewModule = require('./inviteView')
 
 const { classifyInviteView } = inviteViewModule
@@ -24,7 +24,8 @@ export default function AcceptInvite() {
   const inviteFamily = useSelector(selectInviteFamily)
   const inviteFamilyLoading = useSelector(selectInviteFamilyLoading)
   const inviteError = useSelector(selectInviteFamilyError)
-  const inviteView = classifyInviteView({ familyId, inviteFamily, inviteError })
+  const inviteErrorFamilyId = useSelector(selectInviteFamilyErrorFamilyId)
+  const inviteView = classifyInviteView({ familyId, inviteFamily, inviteError, inviteErrorFamilyId })
 
   useEffect(() => {
     if (familyId) dispatch(fetchFamilyById(familyId))

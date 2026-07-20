@@ -377,6 +377,7 @@ test('invite transitions suppress unresolved data, record errors, and reject sta
   assert.equal(requests.fulfillInviteRequest(state, 'family-b', 'second', null), true)
   assert.equal(state.inviteFamily, null)
   assert.match(state.inviteError, /not found/i)
+  assert.equal(state.inviteErrorFamilyId, 'family-b')
 
   requests.startInviteRequest(state, 'family-b', 'third')
   delete state.inviteRequest
@@ -421,13 +422,14 @@ test('invite view treats a valid unresolved route as loading and a missing route
 
   assert.equal(classifyInviteView({ familyId: 'family-a', inviteFamily: null, inviteError: null }), 'loading')
   assert.equal(classifyInviteView({ familyId: '', inviteFamily: null, inviteError: null }), 'error')
-  assert.equal(classifyInviteView({ familyId: 'family-a', inviteFamily: null, inviteError: 'network' }), 'error')
+  assert.equal(classifyInviteView({ familyId: 'family-a', inviteFamily: null, inviteError: 'network', inviteErrorFamilyId: 'family-a' }), 'error')
+  assert.equal(classifyInviteView({ familyId: 'family-b', inviteFamily: null, inviteError: 'network', inviteErrorFamilyId: 'family-a' }), 'loading')
   assert.equal(classifyInviteView({ familyId: 'family-a', inviteFamily: { _id: 'family-a' }, inviteError: null }), 'ready')
   assert.equal(classifyInviteView({ familyId: 'family-b', inviteFamily: { _id: 'family-a' }, inviteError: null }), 'loading')
 
   const source = read('src/pages/family/acceptInvite/index.tsx')
   assert.match(source, /useState\(\(\) => getRouteFamilyId\(\)\)/)
-  assert.match(source, /classifyInviteView\(\{ familyId, inviteFamily, inviteError \}\)/)
+  assert.match(source, /classifyInviteView\(\{ familyId, inviteFamily, inviteError, inviteErrorFamilyId \}\)/)
   assert.doesNotMatch(source, /fetchFamilyById\(''\)/)
   assert.match(source, /inviteView === 'loading'/)
   assert.match(source, /inviteView === 'error'/)

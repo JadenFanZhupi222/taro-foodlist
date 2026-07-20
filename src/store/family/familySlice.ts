@@ -27,12 +27,14 @@ const familySlice = createSlice({
       state.inviteRequest = null
       state.inviteFamilyLoading = false
       state.inviteError = null
+      state.inviteErrorFamilyId = null
     },
     clearInviteFamily(state) {
       state.inviteFamily = null
       state.inviteRequest = null
       state.inviteFamilyLoading = false
       state.inviteError = null
+      state.inviteErrorFamilyId = null
     },
     resetFamily: () => initialState,
   },

@@ -20,3 +20,4 @@ export const selectIsFamilyOwner = createSelector(
 export const selectInviteFamily = (state: RootState) => state.family.inviteFamily
 export const selectInviteFamilyLoading = (state: RootState) => state.family.inviteFamilyLoading
 export const selectInviteFamilyError = (state: RootState) => state.family.inviteError
+export const selectInviteFamilyErrorFamilyId = (state: RootState) => state.family.inviteErrorFamilyId

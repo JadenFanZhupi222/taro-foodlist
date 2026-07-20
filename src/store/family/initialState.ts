@@ -12,6 +12,7 @@ export interface FamilyState {
   inviteFamily: Family | null
   inviteFamilyLoading: boolean
   inviteError: string | null
+  inviteErrorFamilyId: string | null
   inviteRequest: { familyId: string; requestId: string } | null
 }
 
@@ -26,5 +27,6 @@ export const initialState: FamilyState = {
   inviteFamily: null,
   inviteFamilyLoading: false,
   inviteError: null,
+  inviteErrorFamilyId: null,
   inviteRequest: null
 }
