@@ -13,4 +13,13 @@ function classifyTodayState({ userId, familyId, requestStatus, menu, resolvedRec
   return 'ready'
 }
 
-module.exports = { classifyTodayState, getTodayAddAction }
+function findFamilyMenu(menus, familyId, date) {
+  if (!familyId) return undefined
+  return menus.find(menu => menu.family_id === familyId && String(menu.date).slice(0, 10) === date)
+}
+
+function shouldFetchDate({ familyId, menu, requestStatus }) {
+  return Boolean(familyId && !menu && requestStatus == null)
+}
+
+module.exports = { classifyTodayState, getTodayAddAction, findFamilyMenu, shouldFetchDate }

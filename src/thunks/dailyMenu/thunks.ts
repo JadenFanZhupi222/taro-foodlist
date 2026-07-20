@@ -2,37 +2,18 @@ import { createAsyncThunk } from '@reduxjs/toolkit'
 import { DailyMenu } from '@/store/dailyMenu/types'
 import { callCloud } from '@/utils/cloud'
 import {
-  setDailyMenus,
-  clearDailyMenus,
   optimisticAddRecipe,
   optimisticRemoveRecipe
 } from '@/store/dailyMenu/dailyMenuSlice'
 import { RootState } from '@/store'
 import  { toast } from '@/utils/toast'
-import { isSameDay, toDateKey } from '@/utils/date'
 
 // 获取当前家庭所有 dailyMenus
 export const fetchDailyMenus = createAsyncThunk(
   'dailyMenu/fetchDailyMenus',
-  async ({ familyId }: { familyId: string }, { dispatch, getState }) => {
-    try {
-      const res = await callCloud<DailyMenu[]>('get-family-daily-menus', { familyId })
-      const state = getState() as RootState
-      const today = toDateKey(new Date())
-      const localToday = state.dailyMenu.dailyMenus.find(m => isSameDay(m.date, today))
-      const remoteMenus = res.data || []
-      let mergedMenus = remoteMenus
-      if (localToday) {
-        mergedMenus = [
-          ...remoteMenus.filter(m => !isSameDay(m.date, today)),
-          localToday
-        ]
-      }
-      dispatch(setDailyMenus(mergedMenus))
-    } catch (error) {
-      dispatch(clearDailyMenus())
-      throw error
-    }
+  async ({ familyId }: { familyId: string }) => {
+    const res = await callCloud<DailyMenu[]>('get-family-daily-menus', { familyId })
+    return { familyId, menus: res.data || [] }
   }
 )
 

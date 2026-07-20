@@ -7,7 +7,7 @@ import RecipeCard from '@/components/RecipeCard'
 import Loading from '@/components/Loading'
 import { SwitchTransition, CSSTransition } from 'react-transition-group'
 import { fetchDailyMenus, fetchDailyMenuByDate, createOrUpdateDailyMenu, removeRecipeFromMenu } from '@/thunks/dailyMenu/thunks'
-import { selectDailyMenus, selectDailyMenuLoading, selectSelectedRecipes, selectDateRequests } from '@/store/dailyMenu/selectors'
+import { selectDailyMenus, selectDailyMenuLoading, selectSelectedRecipes, selectDateRequests, selectFamilyRequests } from '@/store/dailyMenu/selectors'
 import { selectFamily } from '@/store/family/selectors'
 import { selectRecipes } from '@/store/recipe/selectors'
 import { DailyMenuRecipeItem } from '@/store/dailyMenu/types'
@@ -19,10 +19,12 @@ import { Recipe } from '@/store/recipe/types'
 import { selectUser } from '@/store/user/selectors'
 import { removeSelectedRecipe } from '@/store/dailyMenu/dailyMenuSlice'
 import { toast } from '@/utils/toast'
-import { isSameDay, toDateKey } from '@/utils/date'
+import { toDateKey } from '@/utils/date'
 import todayStateModule = require('./todayState')
+import dateRequestModule = require('@/store/dailyMenu/dateRequest')
 
-const { classifyTodayState, getTodayAddAction } = todayStateModule
+const { classifyTodayState, getTodayAddAction, findFamilyMenu, shouldFetchDate } = todayStateModule
+const { getDateRequestKey } = dateRequestModule
 
 const getDateKey = (date: Date) => toDateKey(date)
 
@@ -48,13 +50,12 @@ const Today = () => {
   const selectedRecipes = useSelector(selectSelectedRecipes)
   const user = useSelector(selectUser)
   const dateRequests = useSelector(selectDateRequests)
+  const familyRequests = useSelector(selectFamilyRequests)
 
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [pendingDate, setPendingDate] = useState<Date | null>(null)
   const [slideDir, setSlideDir] = useState<'left' | 'right'>('left')
   const [isPlannerOpen, setIsPlannerOpen] = useState(false)
-  const [hasFetchedToday, setHasFetchedToday] = useState(false)
-  const [hasFetchedAll, setHasFetchedAll] = useState(false)
 
   useDidShow(() => {
     const page = Taro.getCurrentInstance().page
@@ -73,7 +74,7 @@ const Today = () => {
 
   // 当前日期的菜单
   const todayMenu = useMemo(() => 
-    dailyMenus.find(m => isSameDay(m.date, dateKey)), [dailyMenus, dateKey])
+    findFamilyMenu(dailyMenus, family?._id, dateKey), [dailyMenus, family?._id, dateKey])
   const todayRecipes = useMemo(() => {
     if (!todayMenu) return []
     return todayMenu.recipes
@@ -101,25 +102,21 @@ const Today = () => {
   useEffect(() => {
     if (!family?._id) return;
     // 只要 store 内没有该日期的 dailyMenu，就按日拉取（避免 emptyDates/批量数据不全导致误判）
-    const hasMenu = dailyMenus.some(m => isSameDay(m.date, dateKey));
-    const requestStatus = dateRequests[dateKey]?.status
-    if (!hasMenu && requestStatus !== 'empty' && requestStatus !== 'loading' && !hasFetchedToday) {
-      setHasFetchedToday(true);
+    const requestStatus = dateRequests[getDateRequestKey(family._id, dateKey)]?.status
+    if (shouldFetchDate({ familyId: family._id, menu: todayMenu, requestStatus })) {
       dispatch(fetchDailyMenuByDate({ familyId: family._id, date: dateKey }));
     }
-  }, [family?._id, dateKey, hasFetchedToday, dailyMenus, dateRequests, dispatch]);
+  }, [family?._id, dateKey, todayMenu, dateRequests, dispatch]);
 
   // 后台异步拉取所有
   useEffect(() => {
     if (
       family?._id &&
-      !hasFetchedAll &&
-      dailyMenus.length === 0
+      !familyRequests[family._id]
     ) {
-      setHasFetchedAll(true)
       dispatch(fetchDailyMenus({ familyId: family._id }))
     }
-  }, [family?._id, hasFetchedAll, dailyMenus.length, dispatch])
+  }, [family?._id, familyRequests, dispatch])
 
   // 👇 用 useLayoutEffect 保证方向先于 date 更新
   useLayoutEffect(() => {
@@ -133,7 +130,6 @@ const Today = () => {
     if (!inDateRange(newDate)) return
     setSlideDir(newDate > selectedDate ? 'right' : 'left')
     setPendingDate(newDate)
-    setHasFetchedToday(false)
   }
 
   const handleDateChange = (date: Date) => {
@@ -231,7 +227,7 @@ const Today = () => {
   const todayState = classifyTodayState({
     userId: user?._id,
     familyId: family?._id,
-    requestStatus: dateRequests[dateKey]?.status,
+    requestStatus: family?._id ? dateRequests[getDateRequestKey(family._id, dateKey)]?.status : undefined,
     menu: todayMenu,
     resolvedRecipeCount: todayRecipes.length
   })

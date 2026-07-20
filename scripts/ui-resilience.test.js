@@ -209,17 +209,18 @@ test('per-date menu request transitions ignore stale completion and allow retry'
   const requests = require(helperPath)
   const state = { dateRequests: {} }
 
-  requests.startDateRequest(state, '2026-07-20', 'first')
-  requests.startDateRequest(state, '2026-07-20', 'retry')
-  assert.equal(requests.rejectDateRequest(state, '2026-07-20', 'first', 'stale'), false)
-  assert.equal(state.dateRequests['2026-07-20'].status, 'loading')
-  assert.equal(requests.rejectDateRequest(state, '2026-07-20', 'retry', 'network'), true)
-  assert.equal(state.dateRequests['2026-07-20'].status, 'failed')
-  assert.equal(state.dateRequests['2026-07-20'].error, 'network')
-  requests.startDateRequest(state, '2026-07-20', 'third')
-  assert.equal(requests.fulfillDateRequest(state, '2026-07-20', 'retry', null), false)
-  assert.equal(requests.fulfillDateRequest(state, '2026-07-20', 'third', null), true)
-  assert.equal(state.dateRequests['2026-07-20'].status, 'empty')
+  const key = requests.getDateRequestKey('family', '2026-07-20')
+  requests.startDateRequest(state, 'family', '2026-07-20', 'first')
+  requests.startDateRequest(state, 'family', '2026-07-20', 'retry')
+  assert.equal(requests.rejectDateRequest(state, 'family', '2026-07-20', 'first', 'stale'), false)
+  assert.equal(state.dateRequests[key].status, 'loading')
+  assert.equal(requests.rejectDateRequest(state, 'family', '2026-07-20', 'retry', 'network'), true)
+  assert.equal(state.dateRequests[key].status, 'failed')
+  assert.equal(state.dateRequests[key].error, 'network')
+  requests.startDateRequest(state, 'family', '2026-07-20', 'third')
+  assert.equal(requests.fulfillDateRequest(state, 'family', '2026-07-20', 'retry', null), false)
+  assert.equal(requests.fulfillDateRequest(state, 'family', '2026-07-20', 'third', null), true)
+  assert.equal(state.dateRequests[key].status, 'empty')
 })
 
 test('today page guards writes and renders actionable access and retry states', () => {
@@ -235,7 +236,46 @@ test('today page guards writes and renders actionable access and retry states', 
   assert.doesNotMatch(source, /userId: user\?\._id \|\| ''/)
   assert.match(source, /todayState === 'failed'/)
   assert.match(source, /retryDateFetch/)
-  assert.match(slice, /startDateRequest\(state, action\.meta\.arg\.date, action\.meta\.requestId\)/)
-  assert.match(slice, /fulfillDateRequest\(state, action\.meta\.arg\.date, action\.meta\.requestId, action\.payload\)/)
-  assert.match(slice, /rejectDateRequest\(state, action\.meta\.arg\.date, action\.meta\.requestId/)
+  assert.match(slice, /startDateRequest\(state, action\.meta\.arg\.familyId, action\.meta\.arg\.date, action\.meta\.requestId\)/)
+  assert.match(slice, /fulfillDateRequest\(state, familyId, date, action\.meta\.requestId, action\.payload\)/)
+  assert.match(slice, /rejectDateRequest\(state, action\.meta\.arg\.familyId, action\.meta\.arg\.date, action\.meta\.requestId/)
+})
+
+test('today date requests and menu lookup are scoped by family', () => {
+  const requests = require(path.join(root, 'src/store/dailyMenu/dateRequest.js'))
+  const today = require(path.join(root, 'src/pages/today/todayState.js'))
+  const state = { dateRequests: {} }
+  const date = '2026-07-20'
+
+  assert.equal(requests.getDateRequestKey('family-a', date), 'family-a::2026-07-20')
+  requests.startDateRequest(state, 'family-a', date, 'a-request')
+  requests.startDateRequest(state, 'family-b', date, 'b-request')
+  assert.equal(state.dateRequests[requests.getDateRequestKey('family-a', date)].status, 'loading')
+  assert.equal(state.dateRequests[requests.getDateRequestKey('family-b', date)].status, 'loading')
+  assert.equal(requests.fulfillDateRequest(state, 'family-a', date, 'a-request', { family_id: 'family-a' }), true)
+  assert.equal(state.dateRequests[requests.getDateRequestKey('family-b', date)].status, 'loading')
+
+  const menus = [
+    { _id: 'a-menu', family_id: 'family-a', date, recipes: [] },
+    { _id: 'b-menu', family_id: 'family-b', date, recipes: [] }
+  ]
+  assert.equal(today.findFamilyMenu(menus, 'family-b', date)._id, 'b-menu')
+  assert.equal(today.shouldFetchDate({ familyId: 'family-b', menu: null, requestStatus: undefined }), true)
+})
+
+test('daily menu reducers protect family-scoped date and background list results', () => {
+  const page = read('src/pages/today/index.tsx')
+  const slice = read('src/store/dailyMenu/dailyMenuSlice.ts')
+  const thunks = read('src/thunks/dailyMenu/thunks.ts')
+
+  assert.match(page, /getDateRequestKey\(family\._id, dateKey\)/)
+  assert.match(page, /findFamilyMenu\(dailyMenus, family\?\._id, dateKey\)/)
+  assert.doesNotMatch(page, /hasFetchedToday/)
+  assert.doesNotMatch(page, /hasFetchedAll/)
+  assert.match(slice, /startDateRequest\(state, action\.meta\.arg\.familyId, action\.meta\.arg\.date, action\.meta\.requestId\)/)
+  assert.match(slice, /m\.family_id !== familyId \|\| !isSameDay\(m\.date, date\)/)
+  assert.match(slice, /startFamilyRequest\(state, action\.meta\.arg\.familyId, action\.meta\.requestId\)/)
+  assert.match(slice, /fulfillFamilyRequest\(state, action\.meta\.arg\.familyId, action\.meta\.requestId\)/)
+  assert.match(thunks, /return \{ familyId, menus:/)
+  assert.doesNotMatch(thunks, /dispatch\(setDailyMenus/)
 })
