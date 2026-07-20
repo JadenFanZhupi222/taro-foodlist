@@ -4,6 +4,7 @@
  *   _id: string,
  *   name: string,
  *   type: string,
+ *   image?: string,
  *   description: string,
  *   ingredients: GuestIngredient[],
  *   steps: string[],

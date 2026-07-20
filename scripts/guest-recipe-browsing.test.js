@@ -80,6 +80,29 @@ test('guest recipe helpers remain compatible with JavaScript type checking', () 
   assert.equal(result.status, 0, result.stdout + result.stderr + (result.error || ''))
 })
 
+test('visible recipe union exposes an optional image to list rendering', () => {
+  const result = spawnSync('pnpm', [
+    'exec',
+    'tsc',
+    '--allowJs',
+    '--checkJs',
+    '--noEmit',
+    '--target',
+    'es2017',
+    '--module',
+    'commonjs',
+    '--skipLibCheck',
+    'src/data/guestRecipes.js',
+    'scripts/fixtures/guest-recipe-image-typecheck.ts'
+  ], {
+    cwd: path.resolve(__dirname, '..'),
+    encoding: 'utf8',
+    shell: true
+  })
+
+  assert.equal(result.status, 0, result.stdout + result.stderr + (result.error || ''))
+})
+
 test('recipe list derives guest-safe visible recipes', () => {
   const indexPage = readFileSync(
     path.resolve(__dirname, '../src/pages/index/index.tsx'),
