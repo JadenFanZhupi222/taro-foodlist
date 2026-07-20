@@ -44,7 +44,7 @@ export interface RecipeState {
   createLoading: boolean
   updateLoading: boolean
   deleteLoading: boolean
-  detailRequests: Record<string, { status: 'loading' | 'failed' | 'not-found' }>
+  detailRequests: Record<string, { status: 'loading' | 'failed' | 'not-found'; requestId: string }>
 }
 
 export const RECIPE_ACTIONS = {

@@ -40,6 +40,10 @@ export const fetchRecipeById = createAsyncThunk(
       toast({ title: '获取食谱详情失败', icon: 'error' })
       throw error
     }
+  },
+  {
+    condition: (recipeId, { getState }) =>
+      (getState() as RootState).recipe.detailRequests[recipeId]?.status !== 'loading'
   }
 )
 
@@ -49,9 +53,7 @@ export const createRecipe = createAsyncThunk(
     try {
       const r = await callCloud<Recipe>('create-recipe', { familyId, recipe })
       dispatch(addRecipe(r.data!))
-      toast({ title: '创建成功', icon: 'success' })
     } catch (error) {
-      toast({ title: '创建失败', icon: 'error' })
       throw error
     }
   }
@@ -63,9 +65,7 @@ export const updateRecipeById = createAsyncThunk(
     try {
       const r = await callCloud<Recipe>('update-recipe', { recipeId, recipe })
       dispatch(updateRecipe(r.data!))
-      toast({ title: '更新成功', icon: 'success' })
     } catch (error) {
-      toast({ title: '更新失败', icon: 'error' })
       throw error
     }
   }

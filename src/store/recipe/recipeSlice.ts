@@ -1,6 +1,9 @@
 import { createSlice } from '@reduxjs/toolkit'
 import { initialState } from './initialState'
 import { fetchRecipes, fetchRecipeById, createRecipe, updateRecipeById, deleteRecipeById } from '@/thunks/recipe/thunks'
+import detailRequestModule = require('./detailRequest')
+
+const { createDetailRequest, isCurrentDetailRequest } = detailRequestModule
 
 const recipeSlice = createSlice({
   name: 'recipe',
@@ -42,12 +45,13 @@ const recipeSlice = createSlice({
       .addCase(fetchRecipes.fulfilled, (state) => { state.fetchLoading = false })
       .addCase(fetchRecipes.rejected, (state) => { state.fetchLoading = false })
       .addCase(fetchRecipeById.pending, (state, action) => {
-        state.detailRequests[action.meta.arg] = { status: 'loading' }
+        state.detailRequests[action.meta.arg] = createDetailRequest(action.meta.requestId)
       })
       .addCase(fetchRecipeById.fulfilled, (state, action) => {
         const recipeId = action.meta.arg
+        if (!isCurrentDetailRequest(state.detailRequests, recipeId, action.meta.requestId)) return
         if (!action.payload) {
-          state.detailRequests[recipeId] = { status: 'not-found' }
+          state.detailRequests[recipeId] = { status: 'not-found', requestId: action.meta.requestId }
           return
         }
         const index = state.recipes.findIndex(recipe => recipe._id === recipeId)
@@ -56,7 +60,9 @@ const recipeSlice = createSlice({
         delete state.detailRequests[recipeId]
       })
       .addCase(fetchRecipeById.rejected, (state, action) => {
-        state.detailRequests[action.meta.arg] = { status: 'failed' }
+        const recipeId = action.meta.arg
+        if (!isCurrentDetailRequest(state.detailRequests, recipeId, action.meta.requestId)) return
+        state.detailRequests[recipeId] = { status: 'failed', requestId: action.meta.requestId }
       })
       .addCase(createRecipe.pending, (state) => { state.createLoading = true })
       .addCase(createRecipe.fulfilled, (state) => { state.createLoading = false })

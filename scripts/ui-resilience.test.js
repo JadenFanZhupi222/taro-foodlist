@@ -66,12 +66,50 @@ test('cold recipe detail distinguishes loading, retryable failure, and confirmed
   assert.match(slice, /state\.detailRequests\[action\.meta\.arg\]/)
 })
 
+test('recipe detail request identity rejects stale completions and completions after reset', () => {
+  const helperPath = path.join(root, 'src/store/recipe/detailRequest.js')
+  assert.equal(fs.existsSync(helperPath), true, 'detail request identity helper must exist')
+  const { createDetailRequest, isCurrentDetailRequest } = require(helperPath)
+
+  let requests = { recipeA: createDetailRequest('first') }
+  assert.equal(isCurrentDetailRequest(requests, 'recipeA', 'first'), true)
+  requests = { recipeA: createDetailRequest('retry') }
+  assert.equal(isCurrentDetailRequest(requests, 'recipeA', 'first'), false)
+  assert.equal(isCurrentDetailRequest(requests, 'recipeA', 'retry'), true)
+  requests = {}
+  assert.equal(isCurrentDetailRequest(requests, 'recipeA', 'retry'), false)
+})
+
+test('recipe detail reducers gate completions by request id and suppress duplicate loads', () => {
+  const slice = read('src/store/recipe/recipeSlice.ts')
+  const thunks = read('src/thunks/recipe/thunks.ts')
+
+  assert.match(slice, /import detailRequestModule = require\('\.\/detailRequest'\)/)
+  assert.match(slice, /createDetailRequest\(action\.meta\.requestId\)/)
+  assert.match(slice, /isCurrentDetailRequest\(state\.detailRequests, recipeId, action\.meta\.requestId\)/)
+  assert.match(thunks, /condition:\s*\(recipeId, \{ getState \}\)/)
+  assert.match(thunks, /detailRequests\[recipeId\]\?\.status !== 'loading'/)
+})
+
 test('recipe saves unwrap dispatch results and only leave after fulfillment', () => {
   const source = read('src/pages/recipe/edit/index.tsx')
+  const thunks = read('src/thunks/recipe/thunks.ts')
 
   assert.doesNotMatch(source, /updateRecipeInStore/)
+  assert.match(source, /const \[saving, setSaving\] = useState\(false\)/)
+  assert.match(source, /if \(saving\) return/)
+  assert.match(source, /const savingRef = useRef\(false\)/)
+  assert.match(source, /if \(savingRef\.current\) return/)
+  assert.match(source, /savingRef\.current = true/)
+  assert.match(source, /savingRef\.current = false/)
+  assert.match(source, /setSaving\(true\)[\s\S]*try\s*\{[\s\S]*await useCloudUpload/)
+  assert.match(source, /finally\s*\{[\s\S]*savingRef\.current = false[\s\S]*setSaving\(false\)[\s\S]*\}/)
+  assert.match(source, /<Loading visible=\{saving\} \/>/)
+  assert.match(source, /disabled=\{saving\}/)
   assert.match(source, /await dispatch\(updateRecipeById\([\s\S]*?\)\)\.unwrap\(\)/)
   assert.match(source, /await dispatch\(createRecipe\([\s\S]*?\)\)\.unwrap\(\)/)
   assert.match(source, /try\s*\{[\s\S]*toast\(\{ title: '[^']*', icon: 'success' \}\)[\s\S]*Taro\.navigateBack\(\)[\s\S]*\}\s*catch/)
   assert.match(source, /catch[\s\S]*toast\(\{ title: '[^']*', icon: 'none' \}\)/)
+  assert.doesNotMatch(thunks, /createRecipe[\s\S]*?toast\([\s\S]*?updateRecipeById/)
+  assert.doesNotMatch(thunks, /updateRecipeById[\s\S]*?toast\([\s\S]*?deleteRecipeById/)
 })
