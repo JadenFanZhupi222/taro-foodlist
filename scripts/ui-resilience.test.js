@@ -309,6 +309,22 @@ test('older bulk menus preserve newer family-date state while refreshing other d
   assert.equal(state.menuRevisions['family-a::2026-07-22'], 2)
 })
 
+test('add-recipe grids stay contained in pages and floating panels', () => {
+  const panelStyles = read('src/components/today/AddRecipes/index.scss')
+  const pageStyles = read('src/pages/today/addRecipes/index.scss')
+
+  assert.match(panelStyles, /\.planner-content\s*\{[^}]*width:\s*100%[^}]*max-width:\s*100%/s)
+  assert.match(panelStyles, /\.available-recipes\s*\{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)[^}]*gap:\s*[\d.]+rem/s)
+  assert.match(panelStyles, /\.available-recipe\s*\{[^}]*width:\s*100%[^}]*max-width:\s*100%/s)
+  assert.match(panelStyles, /&\.add-placeholder\s*\{[^}]*grid-column:\s*1\s*\/\s*-1[^}]*width:\s*100%[^}]*max-width:\s*100%/s)
+  assert.doesNotMatch(panelStyles, /(?:width|max-width|min-width|gap):\s*[\d.]+vw/)
+
+  assert.match(pageStyles, /\.add-recipes-list\s*\{[^}]*width:\s*100%[^}]*max-width:\s*100%[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)[^}]*gap:\s*[\d.]+rem/s)
+  assert.match(pageStyles, /\.add-recipes-empty\s*\{[^}]*grid-column:\s*1\s*\/\s*-1[^}]*width:\s*100%[^}]*max-width:\s*100%/s)
+  assert.doesNotMatch(pageStyles, /(?:width|max-width|min-width|gap):\s*[\d.]+vw/)
+  assert.match(pageStyles, /\.add-recipes-footer\{[^}]*position:fixed[^}]*bottom:0[^}]*env\(safe-area-inset-bottom\)/s)
+})
+
 test('optimistic removal only mutates the requested family menu', () => {
   const merge = require(path.join(root, 'src/store/dailyMenu/menuMerge.js'))
   const menus = [
