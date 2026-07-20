@@ -415,6 +415,31 @@ test('family pages distinguish retryable failures from confirmed absence and unr
   assert.match(slice, /clearInviteFamily\(state\)[\s\S]*?state\.inviteRequest = null/)
 })
 
+test('member lists render a dedicated compact centered empty state', () => {
+  const source = read('src/components/family/memberCardList/index.tsx')
+  const styles = read('src/components/family/memberCardList/index.scss')
+
+  assert.match(source, /className='member-list-empty'/)
+  assert.match(styles, /\.member-list-empty\s*\{[^}]*display:\s*flex[^}]*align-items:\s*center[^}]*justify-content:\s*center[^}]*min-height:\s*[\d.]+rem/s)
+})
+
+test('profile and member cards share the default avatar fallback', () => {
+  const avatar = read('src/constants/avatar.ts')
+  const profile = read('src/pages/profile/index.tsx')
+  const memberCard = read('src/components/family/memberCard/index.tsx')
+
+  assert.match(avatar, /export const DEFAULT_AVATAR_URL\s*=/)
+  assert.match(profile, /user\?\.avatar\?\.trim\(\)\s*\|\|\s*DEFAULT_AVATAR_URL/)
+  assert.match(memberCard, /avatar\?\.trim\(\)\s*\|\|\s*DEFAULT_AVATAR_URL/)
+  assert.match(memberCard, /onError=/)
+})
+
+test('long setting values yield space to labels and wrap safely', () => {
+  const styles = read('src/components/SettingPage/index.scss')
+
+  assert.match(styles, /\.setting-page__value\s*\{[^}]*max-width:\s*[^;]+[^}]*min-width:\s*0[^}]*flex-shrink:\s*1[^}]*text-align:\s*right[^}]*overflow-wrap:\s*anywhere/s)
+})
+
 test('invite view treats a valid unresolved route as loading and a missing route as error', () => {
   const helperPath = path.join(root, 'src/pages/family/acceptInvite/inviteView.js')
   assert.equal(fs.existsSync(helperPath), true, 'invite view classifier must exist')
