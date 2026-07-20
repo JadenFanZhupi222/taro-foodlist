@@ -6,6 +6,24 @@ const assert = require('node:assert/strict')
 const root = path.resolve(__dirname, '..')
 const read = file => fs.readFileSync(path.join(root, file), 'utf8')
 
+test('recipe detail fixed action lives outside the transformed content card', () => {
+  const source = read('src/pages/recipe/detail/index.tsx')
+  assert.match(
+    source,
+    /\n      <\/View>\r?\n      \{canEdit && \(/,
+    'fixed edit action must be a sibling after the animated content card'
+  )
+})
+
+test('recipe detail normalizes blank legacy ingredients and steps as empty content', () => {
+  const { meaningfulIngredients, meaningfulSteps } = require('../src/pages/recipe/detail/recipeDetailContent')
+
+  assert.deepEqual(meaningfulIngredients([{}, { name: '   ', amount: '' }, { name: '', amount: '  ' }]), [])
+  assert.deepEqual(meaningfulIngredients([{ name: '牛肉', amount: '200g' }]), [{ name: '牛肉', amount: '200g' }])
+  assert.deepEqual(meaningfulSteps(['', '   ', null]), [])
+  assert.deepEqual(meaningfulSteps(['  焯水  ']), ['焯水'])
+})
+
 test('recipe detail renders compact empty ingredient and step states', () => {
   const source = read('src/pages/recipe/detail/index.tsx')
   const styles = read('src/pages/recipe/detail/index.scss')
