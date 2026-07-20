@@ -185,6 +185,35 @@ test('recipe saves unwrap dispatch results and only leave after fulfillment', ()
   assert.doesNotMatch(thunks, /updateRecipeById[\s\S]*?toast\([\s\S]*?deleteRecipeById/)
 })
 
+test('recipe deletion reports exactly one truthful outcome after persistence settles', async () => {
+  const helperPath = path.join(root, 'src/pages/index/recipeDeletion.js')
+  assert.equal(fs.existsSync(helperPath), true, 'recipe deletion controller must exist')
+  const { runRecipeDeletion } = require(helperPath)
+
+  const successEvents = []
+  assert.equal(await runRecipeDeletion({
+    remove: async () => { successEvents.push('remove') },
+    onSuccess: () => { successEvents.push('success') },
+    onFailure: () => { successEvents.push('failure') }
+  }), true)
+  assert.deepEqual(successEvents, ['remove', 'success'])
+
+  const failureEvents = []
+  assert.equal(await runRecipeDeletion({
+    remove: async () => { failureEvents.push('remove'); throw new Error('rejected') },
+    onSuccess: () => { failureEvents.push('success') },
+    onFailure: () => { failureEvents.push('failure') }
+  }), false)
+  assert.deepEqual(failureEvents, ['remove', 'failure'])
+
+  const page = read('src/pages/index/index.tsx')
+  const thunks = read('src/thunks/recipe/thunks.ts')
+  const deleteThunk = thunks.slice(thunks.indexOf('export const deleteRecipeById'), thunks.indexOf('export const fetchComments'))
+  assert.match(page, /import recipeDeletionModule = require\('\.\/recipeDeletion'\)/)
+  assert.match(page, /remove:\s*async \(\) => dispatch\(deleteRecipeById\([\s\S]*?\)\)\.unwrap\(\)/)
+  assert.doesNotMatch(deleteThunk, /toast\(/)
+})
+
 test('today state distinguishes access, resolving, failed, and confirmed empty menus', () => {
   const helperPath = path.join(root, 'src/pages/today/todayState.js')
   assert.equal(fs.existsSync(helperPath), true, 'Today state helper must exist')

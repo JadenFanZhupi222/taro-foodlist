@@ -14,9 +14,11 @@ import Loading from '@/components/Loading'
 import { selectRecipeLoading } from '@/store/recipe/selectors'
 import SearchBar from '@/components/SearchBar'
 import guestRecipeModule = require('@/data/guestRecipes')
+import recipeDeletionModule = require('./recipeDeletion')
 
 const CATEGORIES = ['全部', ...RECIPE_CATEGORIES]
 const { getVisibleRecipes } = guestRecipeModule
+const { runRecipeDeletion } = recipeDeletionModule
 
 const Index = () => {
   const recipes = useSelector(selectRecipes)
@@ -94,8 +96,11 @@ const Index = () => {
       content: '确定要删除这个食谱吗？',
       success: async (res) => {
         if (res.confirm) {
-          await dispatch(deleteRecipeById({ familyId, recipeId: id }))
-          Taro.showToast({ title: '删除成功', icon: 'success' })
+          await runRecipeDeletion({
+            remove: async () => dispatch(deleteRecipeById({ familyId, recipeId: id })).unwrap(),
+            onSuccess: () => Taro.showToast({ title: '删除成功', icon: 'success' }),
+            onFailure: () => Taro.showToast({ title: '删除失败', icon: 'error' })
+          })
         }
       }
     })

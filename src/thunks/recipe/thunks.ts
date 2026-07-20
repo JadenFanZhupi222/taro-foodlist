@@ -77,14 +77,8 @@ export const updateRecipeById = createAsyncThunk(
 export const deleteRecipeById = createAsyncThunk(
   'recipe/deleteRecipeById',
   async ({ familyId, recipeId }: { familyId: string; recipeId: string }, { dispatch }) => {
-    try {
-      await callCloud<null>('delete-recipe', { familyId, recipeId })
-      dispatch(deleteRecipe(recipeId))
-      toast({ title: '删除成功', icon: 'success' })
-    } catch (error) {
-      toast({ title: '删除失败', icon: 'error' })
-      throw error
-    }
+    await callCloud<null>('delete-recipe', { familyId, recipeId })
+    dispatch(deleteRecipe(recipeId))
   }
 )
 
