@@ -5,32 +5,39 @@ import detailRequestModule = require('./detailRequest')
 import catalogRequestModule = require('./catalogRequest')
 
 const { startDetailRequest, fulfillDetailRequest, rejectDetailRequest } = detailRequestModule
-const { startCatalogRequest, fulfillCatalogRequest, rejectCatalogRequest } = catalogRequestModule
+const {
+  startCatalogRequest,
+  fulfillCatalogRequest,
+  rejectCatalogRequest,
+  replaceLocalRecipes,
+  addLocalRecipe,
+  updateLocalRecipe,
+  patchLocalRecipe,
+  deleteLocalRecipe
+} = catalogRequestModule
 
 const recipeSlice = createSlice({
   name: 'recipe',
   initialState,
   reducers: {
     setRecipes(state, action) {
-      state.recipes = action.payload
+      replaceLocalRecipes(state, action.payload)
     },
     setComments(state, action) {
       state.comments = action.payload
     },
     addRecipe(state, action) {
-      state.recipes.push(action.payload)
+      addLocalRecipe(state, action.payload)
     },
     updateRecipe(state, action) {
-      const idx = state.recipes.findIndex(r => r._id === action.payload._id)
-      if (idx !== -1) state.recipes[idx] = action.payload
+      updateLocalRecipe(state, action.payload)
     },
     updateRecipeInStore(state, action) {
       const { recipeId, recipe } = action.payload
-      const idx = state.recipes.findIndex(r => r._id === recipeId)
-      if (idx !== -1) state.recipes[idx] = { ...state.recipes[idx], ...recipe }
+      patchLocalRecipe(state, recipeId, recipe)
     },
     deleteRecipe(state, action) {
-      state.recipes = state.recipes.filter(r => r._id !== action.payload)
+      deleteLocalRecipe(state, action.payload)
     },
     addComment(state, action) {
       state.comments.push(action.payload)
