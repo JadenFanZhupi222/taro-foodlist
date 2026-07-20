@@ -4,6 +4,7 @@ import { FC } from 'react'
 import { useSelector } from 'react-redux'
 import { selectRecipeById } from '@/store/recipe/selectors'
 import { selectUser } from '@/store/user/selectors'
+import StateView from '@/components/StateView'
 import './index.scss'
 
 const RecipeDetail: FC = () => {
@@ -15,7 +16,7 @@ const RecipeDetail: FC = () => {
   if (!recipe) {
     return (
       <View className='recipe-detail'>
-        <Text>食谱不存在</Text>
+        <StateView kind='error' title='没有找到这道食谱' description='它可能已被家人移除，返回食谱库看看其他家常味道吧。' actionLabel='返回上一页' onAction={() => Taro.navigateBack()} />
       </View>
     )
   }
@@ -25,13 +26,19 @@ const RecipeDetail: FC = () => {
 
   return (
     <View className='recipe-detail'>
-      <Image className='recipe-detail__image' src={recipe.image || ''} mode='aspectFill' />
+      {recipe.image ? (
+        <Image className='recipe-detail__image' src={recipe.image} mode='aspectFill' />
+      ) : (
+        <View className='recipe-detail__image-placeholder'><View className='recipe-detail__plate' /></View>
+      )}
       
       <View className='recipe-detail__content'>
         <View className='recipe-detail__header'>
           <Text className='recipe-detail__name'>{recipe.name}</Text>
           <Text className='recipe-detail__type'>{recipe.type}</Text>
         </View>
+
+        {recipe.description && <Text className='recipe-detail__description'>{recipe.description}</Text>}
 
         <View className='recipe-detail__section'>
           <Text className='recipe-detail__section-title'>食材</Text>
@@ -75,4 +82,4 @@ export default RecipeDetail
 
 export const config = {
   navigationBarTitleText: '食谱详情'
-} 
+}

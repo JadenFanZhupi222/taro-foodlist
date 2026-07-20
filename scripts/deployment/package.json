@@ -1,0 +1,10 @@
+{
+  "name": "database-hardening-deployment-tools",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@cloudbase/cli": "2.6.16",
+    "@cloudbase/manager-node": "4.2.10",
+    "@cloudbase/node-sdk": "3.7.0"
+  }
+}

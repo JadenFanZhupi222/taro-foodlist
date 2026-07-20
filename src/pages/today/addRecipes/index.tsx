@@ -11,6 +11,7 @@ import RecipeCard from '@/components/RecipeCard'
 import SearchBar from '@/components/SearchBar'
 import { RECIPE_CATEGORIES } from '@/store/recipe/types'
 import { selectSelectedRecipes } from '@/store/dailyMenu/selectors'
+import StateView from '@/components/StateView'
 
 const CATEGORIES = ['全部', ...RECIPE_CATEGORIES]
 
@@ -61,10 +62,7 @@ const AddRecipes = () => {
         </View>
         <View className='add-recipes-list'>
           {filteredRecipes.length === 0 ? (
-            <View className='add-recipes-empty'>
-              <View className='add-recipes-empty-icon'>🍽️</View>
-              <Text className='add-recipes-empty-text'>暂无可选菜谱</Text>
-            </View>
+            <View className='add-recipes-empty'><StateView compact title='暂无可选菜谱' description='试试其他分类或搜索词，也可以先回到食谱库记录一道家常菜。' /></View>
           ) : (
             filteredRecipes.map(recipe => (
               <RecipeCard
@@ -90,4 +88,4 @@ const AddRecipes = () => {
   )
 }
 
-export default AddRecipes 
+export default AddRecipes

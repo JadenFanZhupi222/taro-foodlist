@@ -9,8 +9,30 @@ page {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: transparent;
+  min-height: 100%;
+}
+
+view,
+text,
+button,
+input,
+image {
+  box-sizing: border-box;
 }
 
 body {
   background: $color-bg-main;
+}
+
+#app {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+button::after {
+  border: none;
+}
+
+image {
+  display: block;
 }

@@ -1,61 +1,59 @@
-// 颜色
-$color-bg-main: #f5f5f5 !default;
-$color-bg-card: #fff !default;
-$color-primary: #ff6b6b !default;
-$color-border: #f0f0f0 !default;
-$color-text-main: #333 !default;
-$color-text-secondary: #666 !default;
-$color-text-light: #fff !default;
-$color-success: #21ba45 !default;
-$color-success-light: #e6f9e6 !default;
-$color-danger: #ff4d4f !default;
-$color-error-light: #fff0f0 !default;
-$color-warning: #faad14 !default;
-$color-primary-rgb: 255, 107, 107; // 与 $color-primary (#ff6b6b) 保持一致，供 rgba() 使用
-$color-member-bg: #fdf6f7; // 主色淡化背景
-$color-member-border: #ffe0e0; // 主色淡化边框
-$color-member-avatar-shadow: #ffe0e0; // 头像外圈
-$color-member-text: #222;
-$color-member-role-member-bg: #f0f0f0;
-$color-member-role-member-text: #888;
-$color-empty: #bdbdbd !default;
+// 家庭食谱设计令牌。与根目录 DESIGN.md 保持一致。
+$color-bg-main: #f7f7f4 !default;
+$color-bg-card: #ffffff !default;
+$color-bg-muted: #eceee9 !default;
+$color-primary: #c9573a !default;
+$color-primary-deep: #9e3d27 !default;
+$color-border: #dee1da !default;
+$color-text-main: #20241f !default;
+$color-text-secondary: #62685f !default;
+$color-text-light: #ffffff !default;
+$color-success: #477554 !default;
+$color-success-light: #e9f2eb !default;
+$color-danger: #b64238 !default;
+$color-error-light: #f9ecea !default;
+$color-warning: #a76a21 !default;
+$color-primary-rgb: 201, 87, 58;
+$color-member-bg: #f3f4f0;
+$color-member-border: #dee1da;
+$color-member-avatar-shadow: #d6d9d2;
+$color-member-text: #20241f;
+$color-member-role-member-bg: #eceee9;
+$color-member-role-member-text: #62685f;
+$color-empty: #8a9087 !default;
 
-// 字体
-$font-family-base: 'PingFang SC', 'Helvetica Neue', Arial, 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif !default;
-
-// 字号
+$font-family-base: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', 'Microsoft YaHei', sans-serif !default;
 $font-size-base: 1rem !default;
 $font-size-small: 0.875rem !default;
-$font-size-large: 1.25rem !default;
-$font-size-title: 1.5rem !default;
-$font-size-empty-icon: 2.8rem !default;
-$font-size-empty-text: 1.1rem !default;
+$font-size-large: 1.125rem !default;
+$font-size-title: 1.75rem !default;
+$font-size-empty-icon: 2.5rem !default;
+$font-size-empty-text: 0.9375rem !default;
 
-// 圆角
+$radius-sm: 0.5rem !default;
+$radius-md: 0.75rem !default;
 $radius-base: 0.75rem !default;
-$radius-btn: 1.75rem !default;
-
-// 阴影
-$shadow-card: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1) !default;
-$shadow-btn: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1) !default;
-$shadow-btn-active: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1) !default;
-
-// 新增通用变量（如有重复请忽略）
 $radius-lg: 1rem !default;
-$radius-md: 0.5rem !default;
-$radius-sm: 0.25rem !default;
+$radius-btn: 0.75rem !default;
+$radius-pill: 999px !default;
 
-$shadow-sm: 0 1px 4px rgba(0,0,0,0.04) !default;
-$shadow-md: 0 2px 8px rgba(0,0,0,0.08) !default;
+$shadow-card: none !default;
+$shadow-btn: 0 3px 8px rgba(32, 36, 31, 0.1) !default;
+$shadow-btn-active: 0 1px 4px rgba(32, 36, 31, 0.12) !default;
+$shadow-sm: 0 2px 6px rgba(32, 36, 31, 0.08) !default;
+$shadow-md: 0 6px 18px rgba(32, 36, 31, 0.12) !default;
 
-$font-size-lg: 1.2rem !default;
-$font-size-sm: 0.95rem !default;
-
-$space-xs: 0.5rem !default;
-$space-sm: 1rem !default;
-$space-md: 2rem !default;
-$space-lg: 3rem !default;
-
+$font-size-lg: 1.125rem !default;
+$font-size-sm: 0.875rem !default;
+$space-xs: 0.25rem !default;
+$space-sm: 0.5rem !default;
+$space-md: 1rem !default;
+$space-lg: 1.5rem !default;
+$space-xl: 2rem !default;
 $font-weight-normal: 400 !default;
 $font-weight-medium: 500 !default;
 $font-weight-bold: 700 !default;
+$ease-out: cubic-bezier(.22, 1, .36, 1) !default;
+$duration-fast: 180ms !default;
+$duration-content: 240ms !default;
+$tab-bar-space: calc(6.25rem + env(safe-area-inset-bottom)) !default;

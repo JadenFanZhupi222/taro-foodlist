@@ -1,7 +1,7 @@
 import { View, Image, Text } from '@tarojs/components'
 import { useSelector, useDispatch } from 'react-redux'
 import { selectUser, selectLoginLoading } from '@/store/user/selectors'
-import Taro from '@tarojs/taro'
+import Taro, { useDidShow } from '@tarojs/taro'
 import LoginButton from '@/components/LoginButton'
 import './index.scss'
 import Loading from '@/components/Loading'
@@ -9,21 +9,17 @@ import UserCard from '@/components/profile/userCard'
 import { login } from '@/thunks/user/thunks'
 import type { AppDispatch } from '@/store'
 
-// 云存储fileID路径
-const historyIcon = 'cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/history.png'
-const favoriteIcon = 'cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/favorite.png'
-const familyIcon = 'cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/family.png'
-const notificationIcon = 'cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/notification.png'
-const privacyIcon = 'cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/privacy.png'
-const arrowIcon = 'cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/arrow-right.png'
-const profileIcon = 'cloud://dev-4gs517j09b896e44.6465-dev-4gs517j09b896e44-1361692354/assets/icons/profile.png'
-
 const defaultAvatarUrl = 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0'
 
 const Profile = () => {
   const user = useSelector(selectUser)
   const loginLoading = useSelector(selectLoginLoading)
   const dispatch = useDispatch<AppDispatch>()
+
+  useDidShow(() => {
+    const page = Taro.getCurrentInstance().page
+    ;(page as any)?.getTabBar?.()?.setData({ selected: 2 })
+  })
 
   // 生成稳定的"微信用户xxxxx"（避免 Math.random 每次渲染变化）
   const getDefaultNickname = () => (user?._id ? '微信用户' + user._id.slice(-5) : '微信用户')
@@ -51,17 +47,17 @@ const Profile = () => {
   const menuItems = [
     {
       title: '历史食谱',
-      icon: historyIcon,
+      icon: '时',
       path: '/pages/history/index'
     },
     {
       title: '我的收藏',
-      icon: favoriteIcon,
+      icon: '藏',
       path: '/pages/favorites/index'
     },
     {
       title: '家庭管理',
-      icon: familyIcon,
+      icon: '家',
       path: '/pages/family/index'
     }
   ]
@@ -70,17 +66,17 @@ const Profile = () => {
   const settingItems = [
     {
       title: '通知设置',
-      icon: notificationIcon,
+      icon: '知',
       path: '/pages/settings/notification/index'
     },
     {
       title: '隐私设置',
-      icon: privacyIcon,
+      icon: '隐',
       path: '/pages/settings/privacy/index'
     },
     {
       title: '关于我们',
-      icon: profileIcon,
+      icon: '关',
       path: '/pages/settings/about/index'
     }
   ]
@@ -104,12 +100,16 @@ const Profile = () => {
   return (
     <View className='profile'>
       <Loading visible={loginLoading} mask={true} />
+      <View className='profile-header'>
+        <Text className='profile-header__eyebrow'>账户与家庭</Text>
+        <Text className='profile-header__title'>我的</Text>
+      </View>
       {!user ? (
         /* 未登录：醒目的登录 CTA，替代角落小按钮 + 引导遮罩 */
         <View className='login-cta'>
           <Image className='login-cta__avatar' src={defaultAvatarUrl} />
-          <Text className='login-cta__title'>登录享受完整功能</Text>
-          <Text className='login-cta__subtitle'>登录后可创建家庭、收藏与同步每日菜单</Text>
+          <Text className='login-cta__title'>把家里的味道存下来</Text>
+          <Text className='login-cta__subtitle'>登录后可与家人共享食谱、收藏和每日菜单</Text>
           <LoginButton className='login-cta__btn' />
         </View>
       ) : (
@@ -126,7 +126,7 @@ const Profile = () => {
       )}
       {/* 功能列表 */}
       <View className='menu-section'>
-        <Text className='section-title'>功能</Text>
+        <Text className='section-title'>常用功能</Text>
         <View className='menu-list'>
           {menuItems.map(item => (
             <View 
@@ -134,9 +134,9 @@ const Profile = () => {
               className='menu-item'
               onClick={() => handleItemClick(item.path)}
             >
-              <Image className='menu-icon' src={item.icon} />
+              <View className='menu-icon'>{item.icon}</View>
               <Text className='menu-title'>{item.title}</Text>
-              <Image className='arrow-icon' src={arrowIcon} />
+              <View className='arrow-icon' />
             </View>
           ))}
         </View>
@@ -144,7 +144,7 @@ const Profile = () => {
 
       {/* 设置列表 */}
       <View className='menu-section'>
-        <Text className='section-title'>设置</Text>
+        <Text className='section-title'>偏好与设置</Text>
         <View className='menu-list'>
           {settingItems.map(item => (
             <View 
@@ -152,9 +152,9 @@ const Profile = () => {
               className='menu-item'
               onClick={() => handleItemClick(item.path)}
             >
-              <Image className='menu-icon' src={item.icon} />
+              <View className='menu-icon'>{item.icon}</View>
               <Text className='menu-title'>{item.title}</Text>
-              <Image className='arrow-icon' src={arrowIcon} />
+              <View className='arrow-icon' />
             </View>
           ))}
         </View>
@@ -163,4 +163,4 @@ const Profile = () => {
   )
 }
 
-export default Profile 
+export default Profile

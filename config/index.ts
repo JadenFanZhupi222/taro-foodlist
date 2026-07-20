@@ -28,6 +28,8 @@ export default defineConfig<'vite'>(async (merge) => {
     },
     copy: {
       patterns: [
+        // Vite runner 不会自动扫描原生 custom-tab-bar，显式复制微信原生组件产物。
+        { from: 'src/custom-tab-bar', to: `${OUTPUT_ROOT}/custom-tab-bar` }
       ],
       options: {
       }
@@ -62,10 +64,6 @@ export default defineConfig<'vite'>(async (merge) => {
     h5: {
       publicPath: '/',
       staticDirectory: 'static',
-      output: {
-        filename: 'js/[name].[hash:8].js',
-        chunkFilename: 'js/[name].[chunkhash:8].js'
-      },
       miniCssExtractPluginOption: {
         ignoreOrder: true,
         filename: 'css/[name].[hash].css',

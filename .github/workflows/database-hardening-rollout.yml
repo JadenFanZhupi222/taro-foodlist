@@ -1,0 +1,143 @@
+name: Database hardening rollout
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Type DEPLOY to approve the production database rollout'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: database-hardening-production
+  cancel-in-progress: false
+
+env:
+  CLOUDBASE_ENV_ID: dev-4gs517j09b896e44
+  ROLLBACK_SHA: 2a80db36b44c24c7f5a6e0fed315faeb24ad71aa
+  NODE_PATH: scripts/deployment/node_modules
+  CI: 'true'
+
+jobs:
+  preflight-and-rollout:
+    environment: production
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Require explicit production confirmation
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+          DEPLOY_REF: ${{ github.ref }}
+        run: |
+          if [ "$CONFIRMATION" != 'DEPLOY' ]; then
+            echo "::error::Confirmation must be exactly DEPLOY"
+            exit 1
+          fi
+          if [ "$DEPLOY_REF" != 'refs/heads/master' ]; then
+            echo "::error::Production rollout is restricted to refs/heads/master"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install deployment tooling
+        run: npm ci --prefix scripts/deployment
+
+      - name: Show production rollout target
+        run: |
+          echo "Commit: ${{ github.sha }}"
+          echo "CloudBase environment: $CLOUDBASE_ENV_ID"
+          echo "Rollback commit: $ROLLBACK_SHA"
+
+      - name: Back up and audit existing data
+        env:
+          TC_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
+          TC_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
+          PREFLIGHT_OUTPUT_DIR: database-preflight-output
+          ALLOW_ORPHAN_QUARANTINE: 'true'
+        run: node scripts/database-preflight.js
+
+      - name: Encrypt preflight backup
+        if: always()
+        env:
+          BACKUP_PASSWORD: ${{ secrets.TENCENT_SECRET_KEY }}
+        run: |
+          if [ -d database-preflight-output ]; then
+            tar -czf - database-preflight-output | openssl enc -aes-256-cbc -pbkdf2 -salt -pass env:BACKUP_PASSWORD -out database-preflight.tar.gz.enc
+            rm -rf database-preflight-output
+          fi
+
+      - name: Upload encrypted preflight backup
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-preflight-${{ github.run_id }}-${{ github.run_attempt }}
+          path: database-preflight.tar.gz.enc
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: Quarantine active orphan recipe relations
+        env:
+          TC_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
+          TC_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
+        run: node scripts/database-quarantine-orphans.js
+
+      - name: Verify database after quarantine
+        env:
+          TC_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
+          TC_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
+          PREFLIGHT_OUTPUT_DIR: database-post-quarantine-verification
+          ALLOW_ORPHAN_QUARANTINE: 'false'
+        run: node scripts/database-preflight.js
+
+      - name: Provision lock collections and verify transactions
+        env:
+          TC_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
+          TC_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
+        run: node scripts/database-provision-smoke.js
+
+      - name: Authenticate CloudBase CLI
+        env:
+          TC_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
+          TC_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
+        run: scripts/deployment/node_modules/.bin/cloudbase login --apiKeyId "$TC_SECRET_ID" --apiKey "$TC_SECRET_KEY"
+
+      - name: Deploy transaction functions with rollback
+        run: |
+          set -e
+          TCB="$GITHUB_WORKSPACE/scripts/deployment/node_modules/.bin/tcb"
+          functions="create-family join-family leave-family create-recipe update-recipe delete-recipe create-or-update-daily-menu remove-recipe-from-menu"
+          rollback_dir="$RUNNER_TEMP/database-hardening-rollback"
+          git worktree add "$rollback_dir" "$ROLLBACK_SHA"
+          rollback() {
+            echo "::error::Deployment failed; restoring all affected functions from verified release $ROLLBACK_SHA"
+            rollback_failed=""
+            for name in $functions; do
+              (cd "$rollback_dir" && "$TCB" fn deploy "$name" -e "$CLOUDBASE_ENV_ID" --force) || rollback_failed="$rollback_failed $name"
+            done
+            if [ -n "$rollback_failed" ]; then
+              echo "::error::Rollback incomplete; failed functions:$rollback_failed"
+            else
+              echo "::notice::Rollback completed for all affected functions"
+            fi
+          }
+          trap rollback ERR
+          for name in $functions; do
+            "$TCB" fn deploy "$name" -e "$CLOUDBASE_ENV_ID" --force
+          done
+          trap - ERR
+
+      - name: Delete retired unauthenticated functions
+        env:
+          TC_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
+          TC_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
+        run: node scripts/delete-retired-functions.js

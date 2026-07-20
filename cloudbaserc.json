@@ -171,6 +171,15 @@
       "timeout": 60,
       "memorySize": 512,
       "description": "一次性迁移 family.recipes 到 family_recipes 表"
+    },
+    {
+      "name": "audit-database",
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "installDependency": true,
+      "timeout": 60,
+      "memorySize": 512,
+      "description": "只读数据库完整性审计"
     }
   ]
 }

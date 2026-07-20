@@ -1,96 +1,90 @@
 const cloud = require('@cloudbase/node-sdk')
 
-const getShanghaiDateKey = (date = new Date()) => {
-  // en-CA 格式为 YYYY-MM-DD；指定上海时区，避免云端 UTC 导致日期错一天
+const first = result => Array.isArray(result.data) ? result.data[0] : result.data
+const dateKey = value => {
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value
+  const date = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(date.getTime())) throw new TypeError('日期格式无效')
   return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Shanghai',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
+    timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit'
   }).format(date)
 }
+const menuKey = (familyId, date) => `${encodeURIComponent(familyId)}_${dateKey(date)}`
 
-/**
- * event: {
- *   familyId: string,
- *   date: string, // '2024-06-01'
- *   recipe: { recipeId: string }, // 不再需要 order
- *   userId: string // 操作人
- * }
- */
-exports.main = async (event, context) => {
+exports.main = async event => {
+  const { date, recipe } = event
+  if (!date || !recipe?.recipe_id) return { code: 1, message: '参数缺失' }
+
   const app = cloud.init({ env: cloud.SYMBOL_CURRENT_ENV })
   const db = app.database()
-  const _ = db.command
-  const { date, recipe } = event
-
-  if (!date || !recipe) {
-    return { code: 1, message: '参数缺失' }
-  }
-
-  // 鉴权：从可信上下文取身份，忽略客户端传入的 familyId/userId
   const wxContext = app.auth().getUserInfo()
   const openId = wxContext.openId || wxContext.OPENID
   if (!openId) return { code: 401, message: '未登录' }
-  const myFamilyRes = await db.collection('family').where({ members: openId }).get()
-  const myFamily = myFamilyRes.data[0]
-  if (!myFamily) return { code: 403, message: '未加入家庭' }
-  const familyId = myFamily._id
-  const userId = openId
 
-  // 统一 date 字段为字符串
-  const dateStr = typeof date === 'string' ? date.slice(0, 10) : getShanghaiDateKey(date)
+  let transaction
+  try {
+    const dateStr = dateKey(date)
+    if (dateStr < dateKey(new Date())) return { code: 2, message: '不能添加历史日期菜单' }
 
-  // 判断是否为今天及以后
-  const todayStr = getShanghaiDateKey()
-  if (dateStr < todayStr) {
-    return { code: 2, message: '不能添加历史日期菜单' }
-  }
+    const familyResult = await db.collection('family').where({ members: openId }).limit(2).get()
+    if ((familyResult.data || []).length !== 1) return { code: 403, message: '家庭归属异常或未加入家庭' }
+    const familyId = familyResult.data[0]._id
 
-  // 快照菜名/类型，避免菜谱被删除或改名后历史菜单丢失
-  let recipeSnapshot = { recipe_id: recipe.recipe_id }
-  if (recipe.recipe_id) {
-    const recipeDoc = await db.collection('recipes').doc(recipe.recipe_id).get()
-    const r0 = recipeDoc.data && recipeDoc.data[0]
-    if (r0) {
-      recipeSnapshot = { recipe_id: recipe.recipe_id, name: r0.name, type: r0.type }
-    }
-  }
+    const [recipeResult, relationResult, oldMenusResult] = await Promise.all([
+      db.collection('recipes').doc(recipe.recipe_id).get(),
+      db.collection('family_recipes').where({
+        family_id: familyId, recipe_id: recipe.recipe_id, deleted: false
+      }).limit(1).get(),
+      db.collection('daily_menu').where({ family_id: familyId, date: dateStr }).limit(2).get()
+    ])
+    const recipeDoc = first(recipeResult)
+    if (!recipeDoc || !(relationResult.data || []).length) return { code: 3, message: '该菜谱不属于当前家庭' }
+    const oldMenus = oldMenusResult.data || []
+    if (oldMenus.length > 1) return { code: 409, message: '当天存在重复菜单，请联系管理员处理' }
 
-  // 查找当天菜单
-  const dailyMenuRes = await db.collection('daily_menu')
-    .where({ family_id: familyId, date: dateStr })
-    .get()
+    transaction = await db.startTransaction()
+    const keyId = menuKey(familyId, dateStr)
+    let keyDoc = first(await transaction.collection('daily_menu_keys').doc(keyId).get())
+    let menu
 
-  let dailyMenu = dailyMenuRes.data[0]
-
-  if (!dailyMenu) {
-    // 没有则新建，第一个食谱的 order 为 100
-    const newMenu = {
-      family_id: familyId,
-      date: dateStr,
-      recipes: [{ ...recipeSnapshot, order: 100 }],
-      _openid: userId,
-      createdAt: db.serverDate(),
-      updatedAt: db.serverDate()
-    }
-    const addRes = await db.collection('daily_menu').add(newMenu)
-    return { code: 0, message: '创建成功', data: { _id: addRes.id, ...newMenu } }
-  } else {
-    // 已有则追加菜品
-    const exists = dailyMenu.recipes.some(r => r.recipe_id === recipe.recipe_id)
-    if (!exists) {
-      // 找到当前最大的 order 值
-      const maxOrder = Math.max(...dailyMenu.recipes.map(r => r.order), 0)
-      // 新食谱的 order 为最大 order + 100
-      const newRecipe = { ...recipeSnapshot, order: maxOrder + 100 }
-      // 使用原子 push 追加，避免并发时整数组覆盖导致丢菜
-      await db.collection('daily_menu').doc(dailyMenu._id).update({
-        recipes: _.push([newRecipe]),
-        updatedAt: db.serverDate()
+    if (!keyDoc && oldMenus.length === 1) {
+      keyDoc = { menu_id: oldMenus[0]._id }
+      await transaction.collection('daily_menu_keys').doc(keyId).set({
+        family_id: familyId, date: dateStr, menu_id: oldMenus[0]._id, createdAt: db.serverDate()
       })
-      dailyMenu.recipes.push(newRecipe)
     }
-    return { code: 0, message: '已更新', data: dailyMenu }
+
+    if (keyDoc) {
+      menu = first(await transaction.collection('daily_menu').doc(keyDoc.menu_id).get())
+      if (!menu || menu.family_id !== familyId || menu.date !== dateStr) throw new Error('菜单唯一键指向无效数据')
+    } else {
+      const newMenu = {
+        family_id: familyId,
+        date: dateStr,
+        recipes: [],
+        _openid: openId,
+        createdAt: db.serverDate(),
+        updatedAt: db.serverDate()
+      }
+      const added = await transaction.collection('daily_menu').add(newMenu)
+      const menuId = added.id || added._id
+      menu = { _id: menuId, ...newMenu }
+      await transaction.collection('daily_menu_keys').doc(keyId).set({
+        family_id: familyId, date: dateStr, menu_id: menuId, createdAt: db.serverDate()
+      })
+    }
+
+    const recipes = menu.recipes || []
+    if (!recipes.some(item => item.recipe_id === recipe.recipe_id)) {
+      const maxOrder = Math.max(...recipes.map(item => Number(item.order) || 0), 0)
+      recipes.push({ recipe_id: recipe.recipe_id, name: recipeDoc.name, type: recipeDoc.type, order: maxOrder + 100 })
+      await transaction.collection('daily_menu').doc(menu._id).update({ recipes, updatedAt: db.serverDate() })
+    }
+    await transaction.commit()
+    transaction = null
+    return { code: 0, message: '已更新', data: { ...menu, recipes } }
+  } catch (error) {
+    if (transaction) await transaction.rollback().catch(() => {})
+    return { code: error.message.includes('write conflict') ? 409 : 500, message: error.message }
   }
-} 
+}
