@@ -23,8 +23,10 @@ export interface DailyMenuState {
   fetchLoading: boolean
   fetchDailyLoading: boolean
   createLoading: boolean
+  createPendingCount: number
   updateLoading: boolean
   removeLoading: boolean
+  removePendingCount: number
   selectedRecipes: Recipe[]
   dateRequests: Record<string, {
     status: 'loading' | 'loaded' | 'empty' | 'failed'

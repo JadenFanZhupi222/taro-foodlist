@@ -265,6 +265,69 @@ test('today state distinguishes access, resolving, failed, and confirmed empty m
   assert.equal(classifyTodayState({ userId: 'user', familyId: 'family', menu: { recipes: [] } }), 'empty')
   assert.equal(classifyTodayState({ userId: 'user', familyId: 'family', menu: { recipes: [{ recipe_id: 'r1' }] }, resolvedRecipeCount: 0 }), 'resolving')
   assert.equal(classifyTodayState({ userId: 'user', familyId: 'family', menu: { recipes: [{ recipe_id: 'r1' }] }, resolvedRecipeCount: 1 }), 'ready')
+  assert.equal(classifyTodayState({ userId: 'user', familyId: 'family', menu: { recipes: [{ recipe_id: 'r1' }, { recipe_id: 'r2' }] }, totalRecipeCount: 2, resolvedRecipeCount: 1 }), 'resolving')
+})
+
+test('today page reports the planned count while recipe hydration is partial', () => {
+  const source = read('src/pages/today/index.tsx')
+
+  assert.match(source, /totalRecipeCount:\s*todayMenu\?\.recipes\.length\s*\|\|\s*0/)
+  assert.match(source, /const todayRecipeCount = todayMenu\?\.recipes\.length \|\| 0/)
+  assert.match(source, /todayRecipeCount > 0 \? `[^`]*\$\{todayRecipeCount\}/)
+  assert.match(source, /menu-summary__count[^\n]*\{todayRecipeCount\}/)
+})
+
+test('daily menu loading transitions ignore stale fetches and count overlapping writes', () => {
+  const requests = require(path.join(root, 'src/store/dailyMenu/loadingState.js'))
+  const state = {
+    fetchLoading: false,
+    fetchDailyLoading: false,
+    createLoading: false,
+    removeLoading: false,
+    createPendingCount: 0,
+    removePendingCount: 0,
+    familyRequests: {},
+    dateRequests: {}
+  }
+
+  requests.syncFetchLoading(state)
+  state.familyRequests.a = { status: 'loading', requestId: 'new' }
+  requests.syncFetchLoading(state)
+  assert.equal(state.fetchLoading, true)
+  requests.syncFetchLoading(state)
+  assert.equal(state.fetchLoading, true, 'a stale completion must not clear a current family request')
+  state.familyRequests.a.status = 'loaded'
+  requests.syncFetchLoading(state)
+  assert.equal(state.fetchLoading, false)
+
+  state.dateRequests.first = { status: 'loaded', requestId: 'old' }
+  state.dateRequests.second = { status: 'loading', requestId: 'current' }
+  requests.syncFetchLoading(state)
+  assert.equal(state.fetchDailyLoading, true)
+  state.dateRequests.second.status = 'empty'
+  requests.syncFetchLoading(state)
+  assert.equal(state.fetchDailyLoading, false)
+
+  requests.startWrite(state, 'create')
+  requests.startWrite(state, 'create')
+  requests.finishWrite(state, 'create')
+  assert.equal(state.createLoading, true)
+  requests.finishWrite(state, 'create')
+  assert.equal(state.createLoading, false)
+
+  requests.startWrite(state, 'remove')
+  requests.startWrite(state, 'remove')
+  requests.finishWrite(state, 'remove')
+  assert.equal(state.removeLoading, true)
+  requests.finishWrite(state, 'remove')
+  requests.finishWrite(state, 'remove')
+  assert.equal(state.removePendingCount, 0)
+  assert.equal(state.removeLoading, false)
+
+  const slice = read('src/store/dailyMenu/dailyMenuSlice.ts')
+  assert.match(slice, /syncFetchLoading\(state\)/)
+  assert.match(slice, /startWrite\(state, 'create'\)/)
+  assert.match(slice, /finishWrite\(state, 'remove'\)/)
 })
 
 test('per-date menu request transitions ignore stale completion and allow retry', () => {

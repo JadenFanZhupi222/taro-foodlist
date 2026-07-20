@@ -4,12 +4,13 @@ function getTodayAddAction({ userId, familyId }) {
   return 'add'
 }
 
-function classifyTodayState({ userId, familyId, requestStatus, menu, resolvedRecipeCount = 0 }) {
+function classifyTodayState({ userId, familyId, requestStatus, menu, totalRecipeCount, resolvedRecipeCount = 0 }) {
   const access = getTodayAddAction({ userId, familyId })
   if (access !== 'add') return access
   if (requestStatus === 'failed') return 'failed'
   if (menu?.recipes?.length === 0 || (!menu && requestStatus === 'empty')) return 'empty'
-  if (!menu || (menu.recipes.length > 0 && resolvedRecipeCount === 0)) return 'resolving'
+  const expectedRecipeCount = totalRecipeCount ?? menu?.recipes?.length ?? 0
+  if (!menu || resolvedRecipeCount < expectedRecipeCount) return 'resolving'
   return 'ready'
 }
 

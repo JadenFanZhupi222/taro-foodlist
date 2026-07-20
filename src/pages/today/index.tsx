@@ -223,12 +223,14 @@ const Today = () => {
   const todayStr = toDateKey(new Date())
   const selectedStr = toDateKey(selectedDate)
   const isPast = selectedStr < todayStr
+  const todayRecipeCount = todayMenu?.recipes.length || 0
 
   const todayState = classifyTodayState({
     userId: user?._id,
     familyId: family?._id,
     requestStatus: family?._id ? dateRequests[getDateRequestKey(family._id, dateKey)]?.status : undefined,
     menu: todayMenu,
+    totalRecipeCount: todayMenu?.recipes.length || 0,
     resolvedRecipeCount: todayRecipes.length
   })
 
@@ -284,10 +286,10 @@ const Today = () => {
         <View>
           <Text className='menu-summary__label'>{isPast ? '历史菜单' : '今日菜单'}</Text>
           <Text className='menu-summary__title'>
-            {todayRecipes.length > 0 ? `已经安排 ${todayRecipes.length} 道菜` : '还没有安排菜品'}
+            {todayRecipeCount > 0 ? `已经安排 ${todayRecipeCount} 道菜` : '还没有安排菜品'}
           </Text>
         </View>
-        <View className='menu-summary__count'>{todayRecipes.length}</View>
+        <View className='menu-summary__count'>{todayRecipeCount}</View>
       </View>
       <View
         className='recipe-swipe-area'

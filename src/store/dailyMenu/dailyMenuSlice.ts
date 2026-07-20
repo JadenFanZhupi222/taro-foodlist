@@ -5,6 +5,7 @@ import { DailyMenu, DailyMenuRecipeItem } from './types'
 import { isSameDay } from '@/utils/date'
 import dateRequestModule = require('./dateRequest')
 import menuMergeModule = require('./menuMerge')
+import loadingStateModule = require('./loadingState')
 
 const {
   startDateRequest,
@@ -15,6 +16,7 @@ const {
   rejectFamilyRequest
 } = dateRequestModule
 const { markMenuRevision, mergeBulkMenus, removeRecipeForFamilyDate } = menuMergeModule
+const { syncFetchLoading, startWrite, finishWrite } = loadingStateModule
 
 const dailyMenuSlice = createSlice({
   name: 'dailyMenu',
@@ -87,43 +89,49 @@ const dailyMenuSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchDailyMenus.pending, (state, action) => {
-        state.fetchLoading = true
         startFamilyRequest(state, action.meta.arg.familyId, action.meta.requestId)
+        syncFetchLoading(state)
       })
       .addCase(fetchDailyMenus.fulfilled, (state, action) => {
-        state.fetchLoading = false
         const familyId = action.meta.arg.familyId
         const bulkRevision = state.familyRequests[familyId]?.revision || 0
-        if (!fulfillFamilyRequest(state, action.meta.arg.familyId, action.meta.requestId)) return
+        if (!fulfillFamilyRequest(state, action.meta.arg.familyId, action.meta.requestId)) {
+          syncFetchLoading(state)
+          return
+        }
+        syncFetchLoading(state)
         mergeBulkMenus(state, familyId, action.payload.menus, bulkRevision)
       })
       .addCase(fetchDailyMenus.rejected, (state, action) => {
-        state.fetchLoading = false
         rejectFamilyRequest(state, action.meta.arg.familyId, action.meta.requestId)
+        syncFetchLoading(state)
       })
       .addCase(fetchDailyMenuByDate.pending, (state, action) => {
-        state.fetchDailyLoading = true
         markMenuRevision(state, action.meta.arg.familyId, action.meta.arg.date)
         startDateRequest(state, action.meta.arg.familyId, action.meta.arg.date, action.meta.requestId)
+        syncFetchLoading(state)
       })
       .addCase(fetchDailyMenuByDate.fulfilled, (state, action) => {
-        state.fetchDailyLoading = false
         const familyId = action.meta.arg.familyId
         const date = action.meta.arg.date
-        if (!fulfillDateRequest(state, familyId, date, action.meta.requestId, action.payload)) return
+        if (!fulfillDateRequest(state, familyId, date, action.meta.requestId, action.payload)) {
+          syncFetchLoading(state)
+          return
+        }
+        syncFetchLoading(state)
         state.dailyMenus = state.dailyMenus.filter(m => m.family_id !== familyId || !isSameDay(m.date, date))
         if (action.payload) state.dailyMenus.push(action.payload)
       })
       .addCase(fetchDailyMenuByDate.rejected, (state, action) => {
-        state.fetchDailyLoading = false
         rejectDateRequest(state, action.meta.arg.familyId, action.meta.arg.date, action.meta.requestId, action.error.message)
+        syncFetchLoading(state)
       })
-      .addCase(createOrUpdateDailyMenu.pending, (state) => { state.createLoading = true })
-      .addCase(createOrUpdateDailyMenu.fulfilled, (state) => { state.createLoading = false })
-      .addCase(createOrUpdateDailyMenu.rejected, (state) => { state.createLoading = false })
-      .addCase(removeRecipeFromMenu.pending, (state) => { state.removeLoading = true })
-      .addCase(removeRecipeFromMenu.fulfilled, (state) => { state.removeLoading = false })
-      .addCase(removeRecipeFromMenu.rejected, (state) => { state.removeLoading = false })
+      .addCase(createOrUpdateDailyMenu.pending, (state) => { startWrite(state, 'create') })
+      .addCase(createOrUpdateDailyMenu.fulfilled, (state) => { finishWrite(state, 'create') })
+      .addCase(createOrUpdateDailyMenu.rejected, (state) => { finishWrite(state, 'create') })
+      .addCase(removeRecipeFromMenu.pending, (state) => { startWrite(state, 'remove') })
+      .addCase(removeRecipeFromMenu.fulfilled, (state) => { finishWrite(state, 'remove') })
+      .addCase(removeRecipeFromMenu.rejected, (state) => { finishWrite(state, 'remove') })
   }
 })
 
