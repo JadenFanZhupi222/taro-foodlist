@@ -45,7 +45,38 @@ test('reports duplicate and orphan recipe relations', () => {
     { relationKey: 'f1_r1', relationIds: ['x1', 'x2'] }
   ])
   assert.deepEqual(result.orphanRelations, [
-    { relationId: 'x3', familyId: 'missing', recipeId: 'r2', missing: ['family', 'recipe'] }
+    { relationId: 'x3', familyId: 'missing', recipeId: 'r2', missing: ['family', 'recipe'], deleted: false }
+  ])
+})
+
+test('ignores soft-deleted recipe relations when detecting duplicates', () => {
+  const result = auditRecipeRelations(
+    [
+      { _id: 'active', family_id: 'f1', recipe_id: 'r1' },
+      { _id: 'deleted', family_id: 'f1', recipe_id: 'r1', deleted: true }
+    ],
+    [{ _id: 'r1' }],
+    [{ _id: 'f1' }]
+  )
+
+  assert.deepEqual(result.duplicateRelations, [])
+})
+
+test('reports soft-deleted orphans without marking them active', () => {
+  const result = auditRecipeRelations(
+    [{ _id: 'deleted-orphan', family_id: 'missing', recipe_id: 'r1', deleted: true }],
+    [{ _id: 'r1' }],
+    []
+  )
+
+  assert.deepEqual(result.orphanRelations, [
+    {
+      relationId: 'deleted-orphan',
+      familyId: 'missing',
+      recipeId: 'r1',
+      missing: ['family'],
+      deleted: true
+    }
   ])
 })
 

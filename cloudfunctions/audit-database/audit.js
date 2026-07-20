@@ -52,7 +52,7 @@ function auditRecipeRelations(relations, recipes, families) {
   const familyIds = new Set(families.map(family => family._id))
   const groups = new Map()
 
-  for (const relation of relations) {
+  for (const relation of relations.filter(item => item.deleted !== true)) {
     const key = `${relation.family_id}_${relation.recipe_id}`
     const ids = groups.get(key) || []
     ids.push(relation._id)
@@ -73,7 +73,8 @@ function auditRecipeRelations(relations, recipes, families) {
         relationId: relation._id,
         familyId: relation.family_id,
         recipeId: relation.recipe_id,
-        missing
+        missing,
+        deleted: relation.deleted === true
       }
     })
     .filter(item => item.missing.length > 0)
