@@ -2,16 +2,18 @@ import { View, Image, Text, Button } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import { FC } from 'react'
 import { useSelector } from 'react-redux'
-import { selectRecipeById } from '@/store/recipe/selectors'
+import { selectRecipes } from '@/store/recipe/selectors'
 import { selectUser } from '@/store/user/selectors'
+import { findVisibleRecipe } from '@/data/guestRecipes'
 import StateView from '@/components/StateView'
 import './index.scss'
 
 const RecipeDetail: FC = () => {
   const router = useRouter()
   const { id } = router.params
-  const recipe = useSelector(selectRecipeById(id || ''))
+  const recipes = useSelector(selectRecipes)
   const user = useSelector(selectUser)
+  const recipe = findVisibleRecipe(recipes, id || '', !!user)
 
   if (!recipe) {
     return (

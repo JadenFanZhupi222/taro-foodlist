@@ -114,6 +114,20 @@ test('recipe list derives guest-safe visible recipes', () => {
   assert.match(indexPage, /getVisibleRecipes\(recipes, !!user\)/)
 })
 
+test('recipe detail resolves the current id from guest-safe Redux recipes', () => {
+  const detailPage = readFileSync(
+    path.resolve(__dirname, '../src/pages/recipe/detail/index.tsx'),
+    'utf8'
+  )
+
+  assert.match(detailPage, /import \{ selectRecipes \} from '@\/store\/recipe\/selectors'/)
+  assert.match(detailPage, /import \{ findVisibleRecipe \} from '@\/data\/guestRecipes'/)
+  assert.match(detailPage, /const recipes = useSelector\(selectRecipes\)/)
+  assert.match(detailPage, /const user = useSelector\(selectUser\)/)
+  assert.match(detailPage, /findVisibleRecipe\(recipes, id \|\| '', !!user\)/)
+  assert.match(detailPage, /const canEdit = !!user/)
+})
+
 test('recipe list visibly identifies guest read-only mode', () => {
   const indexPage = readFileSync(
     path.resolve(__dirname, '../src/pages/index/index.tsx'),
