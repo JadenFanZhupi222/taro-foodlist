@@ -214,6 +214,41 @@ test('recipe deletion reports exactly one truthful outcome after persistence set
   assert.doesNotMatch(deleteThunk, /toast\(/)
 })
 
+test('recipe deletion awaits one selected outcome and propagates callback errors', async () => {
+  const { runRecipeDeletion } = require(path.join(root, 'src/pages/index/recipeDeletion.js'))
+
+  const syncEvents = []
+  await assert.rejects(runRecipeDeletion({
+    remove: async () => { syncEvents.push('remove') },
+    onSuccess: () => { syncEvents.push('success'); throw new Error('success callback failed') },
+    onFailure: () => { syncEvents.push('failure') }
+  }), /success callback failed/)
+  assert.deepEqual(syncEvents, ['remove', 'success'])
+
+  const asyncEvents = []
+  await assert.rejects(runRecipeDeletion({
+    remove: async () => { asyncEvents.push('remove'); throw new Error('persistence failed') },
+    onSuccess: () => { asyncEvents.push('success') },
+    onFailure: async () => {
+      await Promise.resolve()
+      asyncEvents.push('failure')
+      throw new Error('failure callback failed')
+    }
+  }), /failure callback failed/)
+  assert.deepEqual(asyncEvents, ['remove', 'failure'])
+
+  const awaitedEvents = []
+  assert.equal(await runRecipeDeletion({
+    remove: async () => { awaitedEvents.push('remove') },
+    onSuccess: async () => {
+      await Promise.resolve()
+      awaitedEvents.push('success')
+    },
+    onFailure: () => { awaitedEvents.push('failure') }
+  }), true)
+  assert.deepEqual(awaitedEvents, ['remove', 'success'])
+})
+
 test('today state distinguishes access, resolving, failed, and confirmed empty menus', () => {
   const helperPath = path.join(root, 'src/pages/today/todayState.js')
   assert.equal(fs.existsSync(helperPath), true, 'Today state helper must exist')

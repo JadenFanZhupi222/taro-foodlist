@@ -1,12 +1,13 @@
 async function runRecipeDeletion({ remove, onSuccess, onFailure }) {
   try {
     await remove()
-    onSuccess()
-    return true
   } catch (error) {
-    onFailure(error)
+    await onFailure(error)
     return false
   }
+
+  await onSuccess()
+  return true
 }
 
 module.exports = { runRecipeDeletion }
