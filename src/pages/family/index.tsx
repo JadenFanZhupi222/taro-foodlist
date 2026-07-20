@@ -9,14 +9,16 @@ import Loading from '@/components/Loading'
 import MemberCardList from '@/components/family/memberCardList'
 import NoFamilyScreen from '@/components/family/noFamilyScreen'
 import ShareInvitationBtn from '@/components/family/shareInvitationBtn'
-import { selectCurrentFamily, selectFamilyLoading, selectCreateFamilyLoading } from '@/store/family/selectors'
+import { selectCurrentFamily, selectFamilyLoading, selectFamilyError, selectCreateFamilyLoading } from '@/store/family/selectors'
 import { selectUser } from '@/store/user/selectors'
 import { toast } from '@/utils/toast'
+import StateView from '@/components/StateView'
 
 export default function Family() {
   const dispatch = useDispatch<AppDispatch>()
   const family = useSelector(selectCurrentFamily)
   const fetchLoading = useSelector(selectFamilyLoading)
+  const fetchError = useSelector(selectFamilyError)
   const createLoading = useSelector(selectCreateFamilyLoading)
   const user = useSelector(selectUser)
 
@@ -68,6 +70,7 @@ export default function Family() {
       <Loading visible={fetchLoading} text='加载家庭信息中...' mask />
       {family ? (
         <>
+          {fetchError && <StateView compact kind='error' title='家庭信息更新失败' description='当前显示的是上次加载的信息。' actionLabel='重试' onAction={() => dispatch(fetchFamily())} />}
           <View className='family-header'>
             <Text className='family-title'>{family.name}</Text>
           </View>
@@ -97,6 +100,8 @@ export default function Family() {
             </View>
           </View>
         </>
+      ) : fetchError ? (
+        <StateView kind='error' title='家庭信息加载失败' description='网络可能开了小差，请重试。' actionLabel='重试' onAction={() => dispatch(fetchFamily())} />
       ) : (
         <NoFamilyScreen onCreate={handleCreate} loading={createLoading} />
       )}

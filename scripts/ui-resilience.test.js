@@ -341,3 +341,75 @@ test('optimistic removal only mutates the requested family menu', () => {
   assert.match(slice, /PayloadAction<\{ date: string; familyId: string; recipeId: string \}>/)
   assert.match(thunks, /optimisticRemoveRecipe\(\{ familyId, date, recipeId \}\)/)
 })
+
+test('family request transitions preserve known data on failure and ignore stale completions', () => {
+  const helperPath = path.join(root, 'src/store/family/familyRequest.js')
+  assert.equal(fs.existsSync(helperPath), true, 'family request transition helper must exist')
+  const requests = require(helperPath)
+  const family = { _id: 'family-a', membersInfo: [{ openId: 'member-a' }] }
+  const state = { currentFamily: family, membersInfo: family.membersInfo, fetchLoading: false, fetchError: null }
+
+  requests.startFamilyRequest(state, 'first')
+  requests.rejectFamilyRequest(state, 'first', 'network')
+  assert.equal(state.currentFamily, family)
+  assert.equal(state.membersInfo, family.membersInfo)
+  assert.equal(state.fetchError, 'network')
+
+  requests.startFamilyRequest(state, 'retry')
+  assert.equal(state.fetchError, null)
+  assert.equal(requests.fulfillFamilyRequest(state, 'first', null), false)
+  assert.equal(state.currentFamily, family)
+  assert.equal(requests.fulfillFamilyRequest(state, 'retry', null), true)
+  assert.equal(state.currentFamily, null)
+  assert.deepEqual(state.membersInfo, [])
+})
+
+test('invite transitions suppress unresolved data, record errors, and reject stale or reset results', () => {
+  const requests = require(path.join(root, 'src/store/family/familyRequest.js'))
+  const state = { inviteFamily: { _id: 'old' }, inviteFamilyLoading: false, inviteError: 'old error' }
+
+  requests.startInviteRequest(state, 'family-a', 'first')
+  assert.equal(state.inviteFamily, null)
+  assert.equal(state.inviteError, null)
+  requests.startInviteRequest(state, 'family-b', 'second')
+  assert.equal(requests.fulfillInviteRequest(state, 'family-a', 'first', { _id: 'family-a' }), false)
+  assert.equal(requests.rejectInviteRequest(state, 'family-a', 'first', 'stale'), false)
+  assert.equal(requests.fulfillInviteRequest(state, 'family-b', 'second', null), true)
+  assert.equal(state.inviteFamily, null)
+  assert.match(state.inviteError, /not found/i)
+
+  requests.startInviteRequest(state, 'family-b', 'third')
+  delete state.inviteRequest
+  assert.equal(requests.fulfillInviteRequest(state, 'family-b', 'third', { _id: 'family-b' }), false)
+})
+
+test('family pages distinguish retryable failures from confirmed absence and unresolved invites', () => {
+  const familyPage = read('src/pages/family/index.tsx')
+  const invitePage = read('src/pages/family/acceptInvite/index.tsx')
+  const slice = read('src/store/family/familySlice.ts')
+  const thunks = read('src/thunks/family/thunks.ts')
+
+  assert.match(familyPage, /selectFamilyError/)
+  assert.match(familyPage, /kind='error'/)
+  assert.match(familyPage, /onAction=\{\(\) => dispatch\(fetchFamily\(\)\)\}/)
+  assert.match(familyPage, /family \? \(/)
+  assert.match(familyPage, /fetchError \? \(/)
+  assert.match(familyPage, /NoFamilyScreen/)
+
+  assert.match(invitePage, /selectInviteFamilyError/)
+  assert.match(invitePage, /if \(!queryFamilyId\)/)
+  assert.match(invitePage, /fetchFamilyById\(queryFamilyId\)/)
+  assert.match(invitePage, /inviteError \|\| !familyId/)
+  assert.match(invitePage, /kind='error'/)
+  assert.match(invitePage, /inviteFamily && familyId/)
+  assert.match(invitePage, /disabled=\{joined \|\| !inviteFamily \|\| !familyId\}/)
+
+  assert.match(slice, /startFamilyRequest\(state, action\.meta\.requestId\)/)
+  assert.match(slice, /rejectFamilyRequest\(state, action\.meta\.requestId/)
+  assert.match(slice, /startInviteRequest\(state, action\.meta\.arg, action\.meta\.requestId\)/)
+  assert.match(slice, /fulfillInviteRequest\(state, action\.meta\.arg, action\.meta\.requestId, action\.payload\)/)
+  assert.match(thunks, /fetchFamily = createAsyncThunk\(/)
+  assert.match(thunks, /async \(\) => \{[\s\S]*?return r\.data \?\? null/)
+  assert.match(slice, /setFamily\(state, action\)[\s\S]*?state\.fetchRequestId = null/)
+  assert.match(slice, /clearInviteFamily\(state\)[\s\S]*?state\.inviteRequest = null/)
+})
