@@ -279,3 +279,49 @@ test('daily menu reducers protect family-scoped date and background list results
   assert.match(thunks, /return \{ familyId, menus:/)
   assert.doesNotMatch(thunks, /dispatch\(setDailyMenus/)
 })
+
+test('older bulk menus preserve newer family-date state while refreshing other dates', () => {
+  const merge = require(path.join(root, 'src/store/dailyMenu/menuMerge.js'))
+  const requests = require(path.join(root, 'src/store/dailyMenu/dateRequest.js'))
+  const state = {
+    dailyMenus: [
+      { _id: 'a-new', family_id: 'family-a', date: '2026-07-20', recipes: [{ recipe_id: 'new' }] },
+      { _id: 'b-local', family_id: 'family-b', date: '2026-07-20', recipes: [] }
+    ],
+    menuRevisions: {},
+    menuRevision: 0,
+    familyRequests: {}
+  }
+  const incoming = [
+    { _id: 'a-stale', family_id: 'family-a', date: '2026-07-20', recipes: [{ recipe_id: 'stale' }] },
+    { _id: 'a-refresh', family_id: 'family-a', date: '2026-07-21', recipes: [{ recipe_id: 'remote' }] }
+  ]
+
+  requests.startFamilyRequest(state, 'family-a', 'bulk-request')
+  const bulkRevision = state.familyRequests['family-a'].revision
+  merge.markMenuRevision(state, 'family-a', '2026-07-20')
+  merge.mergeBulkMenus(state, 'family-a', incoming, bulkRevision)
+  assert.equal(state.dailyMenus.find(menu => menu.family_id === 'family-a' && menu.date === '2026-07-20')._id, 'a-new')
+  assert.equal(state.dailyMenus.find(menu => menu.family_id === 'family-a' && menu.date === '2026-07-21')._id, 'a-refresh')
+  assert.equal(state.dailyMenus.find(menu => menu.family_id === 'family-b')._id, 'b-local')
+
+  merge.markMenuRevision(state, 'family-a', '2026-07-22')
+  assert.equal(state.menuRevisions['family-a::2026-07-22'], 2)
+})
+
+test('optimistic removal only mutates the requested family menu', () => {
+  const merge = require(path.join(root, 'src/store/dailyMenu/menuMerge.js'))
+  const menus = [
+    { family_id: 'family-a', date: '2026-07-20', recipes: [{ recipe_id: 'shared' }] },
+    { family_id: 'family-b', date: '2026-07-20', recipes: [{ recipe_id: 'shared' }] }
+  ]
+
+  assert.equal(merge.removeRecipeForFamilyDate(menus, 'family-b', '2026-07-20', 'shared'), true)
+  assert.equal(menus[0].recipes.length, 1)
+  assert.equal(menus[1].recipes.length, 0)
+
+  const slice = read('src/store/dailyMenu/dailyMenuSlice.ts')
+  const thunks = read('src/thunks/dailyMenu/thunks.ts')
+  assert.match(slice, /PayloadAction<\{ date: string; familyId: string; recipeId: string \}>/)
+  assert.match(thunks, /optimisticRemoveRecipe\(\{ familyId, date, recipeId \}\)/)
+})

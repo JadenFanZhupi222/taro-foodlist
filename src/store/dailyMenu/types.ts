@@ -34,5 +34,8 @@ export interface DailyMenuState {
   familyRequests: Record<string, {
     status: 'loading' | 'loaded' | 'failed'
     requestId: string
+    revision?: number
   }>
+  menuRevision: number
+  menuRevisions: Record<string, number>
 }

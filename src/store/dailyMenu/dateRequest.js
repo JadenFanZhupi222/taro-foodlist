@@ -23,12 +23,14 @@ function rejectDateRequest(state, familyId, date, requestId, error) {
 }
 
 function startFamilyRequest(state, familyId, requestId) {
-  state.familyRequests[familyId] = { status: 'loading', requestId }
+  state.familyRequests[familyId] = { status: 'loading', requestId, revision: state.menuRevision }
 }
 
 function fulfillFamilyRequest(state, familyId, requestId) {
   if (state.familyRequests[familyId]?.requestId !== requestId) return false
-  state.familyRequests[familyId] = { status: 'loaded', requestId }
+  state.familyRequests[familyId] = {
+    status: 'loaded', requestId, revision: state.familyRequests[familyId].revision
+  }
   return true
 }
 

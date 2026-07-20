@@ -65,7 +65,7 @@ export const removeRecipeFromMenu = createAsyncThunk(
     const date = menu ? (typeof menu.date === 'string' ? menu.date.slice(0, 10) : menu.date) : ''
 
     // 1. 乐观移除：本地立即移除（纯 UI，不写服务端）
-    if (date) dispatch(optimisticRemoveRecipe({ date, recipeId }))
+    if (date && familyId) dispatch(optimisticRemoveRecipe({ familyId, date, recipeId }))
     try {
       // 2. 写服务端
       await callCloud('remove-recipe-from-menu', { menuId, recipeId })

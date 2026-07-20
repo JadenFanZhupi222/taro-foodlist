@@ -4,6 +4,7 @@ import { fetchDailyMenus, createOrUpdateDailyMenu, removeRecipeFromMenu, fetchDa
 import { DailyMenu, DailyMenuRecipeItem } from './types'
 import { isSameDay } from '@/utils/date'
 import dateRequestModule = require('./dateRequest')
+import menuMergeModule = require('./menuMerge')
 
 const {
   startDateRequest,
@@ -13,6 +14,7 @@ const {
   fulfillFamilyRequest,
   rejectFamilyRequest
 } = dateRequestModule
+const { markMenuRevision, mergeBulkMenus, removeRecipeForFamilyDate } = menuMergeModule
 
 const dailyMenuSlice = createSlice({
   name: 'dailyMenu',
@@ -44,6 +46,7 @@ const dailyMenuSlice = createSlice({
     // 用权威数据替换同一日期的菜单（含清理乐观更新产生的临时菜单），保证同日期不重复
     upsertDailyMenuByDate(state, action: PayloadAction<DailyMenu>) {
       const menu = action.payload
+      markMenuRevision(state, menu.family_id, menu.date)
       state.dailyMenus = state.dailyMenus.filter(m => m.family_id !== menu.family_id || !isSameDay(m.date, menu.date))
       state.dailyMenus.push(menu)
     },
@@ -53,6 +56,7 @@ const dailyMenuSlice = createSlice({
       action: PayloadAction<{ date: string; familyId: string; item: DailyMenuRecipeItem }>
     ) {
       const { date, familyId, item } = action.payload
+      markMenuRevision(state, familyId, date)
       const menu = state.dailyMenus.find(m => m.family_id === familyId && isSameDay(m.date, date))
       if (menu) {
         if (!menu.recipes.some(r => r.recipe_id === item.recipe_id)) {
@@ -73,12 +77,11 @@ const dailyMenuSlice = createSlice({
     // 乐观移除菜品：本地立即移除；纯 UI 状态，不写服务端
     optimisticRemoveRecipe(
       state,
-      action: PayloadAction<{ date: string; recipeId: string }>
+      action: PayloadAction<{ date: string; familyId: string; recipeId: string }>
     ) {
-      const menu = state.dailyMenus.find(m => isSameDay(m.date, action.payload.date))
-      if (menu) {
-        menu.recipes = menu.recipes.filter(r => r.recipe_id !== action.payload.recipeId)
-      }
+      const { familyId, date, recipeId } = action.payload
+      markMenuRevision(state, familyId, date)
+      removeRecipeForFamilyDate(state.dailyMenus, familyId, date, recipeId)
     },
   },
   extraReducers: (builder) => {
@@ -90,11 +93,9 @@ const dailyMenuSlice = createSlice({
       .addCase(fetchDailyMenus.fulfilled, (state, action) => {
         state.fetchLoading = false
         const familyId = action.meta.arg.familyId
+        const bulkRevision = state.familyRequests[familyId]?.revision || 0
         if (!fulfillFamilyRequest(state, action.meta.arg.familyId, action.meta.requestId)) return
-        state.dailyMenus = [
-          ...state.dailyMenus.filter(menu => menu.family_id !== familyId),
-          ...action.payload.menus
-        ]
+        mergeBulkMenus(state, familyId, action.payload.menus, bulkRevision)
       })
       .addCase(fetchDailyMenus.rejected, (state, action) => {
         state.fetchLoading = false
@@ -102,6 +103,7 @@ const dailyMenuSlice = createSlice({
       })
       .addCase(fetchDailyMenuByDate.pending, (state, action) => {
         state.fetchDailyLoading = true
+        markMenuRevision(state, action.meta.arg.familyId, action.meta.arg.date)
         startDateRequest(state, action.meta.arg.familyId, action.meta.arg.date, action.meta.requestId)
       })
       .addCase(fetchDailyMenuByDate.fulfilled, (state, action) => {
