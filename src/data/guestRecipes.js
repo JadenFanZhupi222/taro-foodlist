@@ -59,14 +59,14 @@ const guestRecipes = [
  * @template T
  * @param {T[]} realRecipes
  * @param {boolean} isLoggedIn
- * @returns {T[] | GuestRecipe[]}
+ * @returns {Array<T | GuestRecipe>}
  */
 function getVisibleRecipes(realRecipes, isLoggedIn) {
   return isLoggedIn ? realRecipes : guestRecipes
 }
 
 /**
- * @template T extends {{ _id: string }}
+ * @template {{ _id: string }} T
  * @param {T[]} realRecipes
  * @param {string} recipeId
  * @param {boolean} isLoggedIn

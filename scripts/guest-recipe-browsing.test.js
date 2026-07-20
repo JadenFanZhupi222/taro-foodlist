@@ -1,5 +1,6 @@
 const test = require('node:test')
 const assert = require('node:assert/strict')
+const { spawnSync } = require('node:child_process')
 
 const {
   guestRecipes,
@@ -40,4 +41,26 @@ test('recipe lookup respects login state', () => {
   assert.equal(findVisibleRecipe([realRecipe], realRecipe._id, false), undefined)
   assert.equal(findVisibleRecipe([realRecipe], realRecipe._id, true), realRecipe)
   assert.equal(findVisibleRecipe([realRecipe], guestRecipe._id, true), undefined)
+})
+
+test('guest recipe helpers remain compatible with JavaScript type checking', () => {
+  const result = spawnSync('pnpm', [
+    'exec',
+    'tsc',
+    '--allowJs',
+    '--checkJs',
+    '--noEmit',
+    '--target',
+    'es2017',
+    '--module',
+    'commonjs',
+    '--skipLibCheck',
+    'src/data/guestRecipes.js'
+  ], {
+    cwd: require('node:path').resolve(__dirname, '..'),
+    encoding: 'utf8',
+    shell: true
+  })
+
+  assert.equal(result.status, 0, result.stdout + result.stderr + (result.error || ''))
 })
