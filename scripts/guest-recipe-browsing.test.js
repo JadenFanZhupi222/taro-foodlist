@@ -1,0 +1,169 @@
+const test = require('node:test')
+const assert = require('node:assert/strict')
+const { spawnSync } = require('node:child_process')
+const { readFileSync } = require('node:fs')
+const path = require('node:path')
+
+const {
+  guestRecipes,
+  getVisibleRecipes,
+  findVisibleRecipe
+} = require('../src/data/guestRecipes')
+
+test('app startup does not interrupt guests with login guidance', () => {
+  const appContainer = readFileSync(
+    path.resolve(__dirname, '../src/AppContainer.tsx'),
+    'utf8'
+  )
+
+  assert.doesNotMatch(appContainer, /\b(?:Taro\.)?showModal\s*\(/)
+  assert.doesNotMatch(
+    appContainer,
+    /\b(?:Taro\.)?switchTab\s*\(\s*\{[^}]*\/pages\/profile\/index/s
+  )
+})
+
+test('guest recipes provide complete read-only browsing fixtures', () => {
+  assert.ok(guestRecipes.length >= 2)
+
+  for (const recipe of guestRecipes) {
+    assert.match(recipe._id, /^guest:/)
+    assert.ok(recipe.name)
+    assert.ok(recipe.type)
+    assert.ok(recipe.description)
+    assert.ok(recipe.ingredients.length > 0)
+    assert.ok(recipe.ingredients.every(ingredient => ingredient.name && ingredient.amount))
+    assert.ok(recipe.steps.length > 0)
+    assert.ok(recipe.steps.every(Boolean))
+    assert.equal(recipe.deleted, false)
+  }
+})
+
+test('guests receive fixtures while signed-in users receive only real recipes', () => {
+  const realRecipes = [
+    { _id: 'recipe:family-1', name: '家常菜', type: '大荤', deleted: false }
+  ]
+
+  assert.deepEqual(getVisibleRecipes(realRecipes, false), guestRecipes)
+  assert.deepEqual(getVisibleRecipes(realRecipes, true), realRecipes)
+})
+
+test('recipe lookup respects login state', () => {
+  const realRecipe = { _id: 'recipe:family-1', name: '家常菜', type: '大荤', deleted: false }
+  const guestRecipe = guestRecipes[0]
+
+  assert.equal(findVisibleRecipe([realRecipe], guestRecipe._id, false), guestRecipe)
+  assert.equal(findVisibleRecipe([realRecipe], realRecipe._id, false), undefined)
+  assert.equal(findVisibleRecipe([realRecipe], realRecipe._id, true), realRecipe)
+  assert.equal(findVisibleRecipe([realRecipe], guestRecipe._id, true), undefined)
+})
+
+test('guest recipe helpers remain compatible with JavaScript type checking', () => {
+  const result = spawnSync('pnpm', [
+    'exec',
+    'tsc',
+    '--allowJs',
+    '--checkJs',
+    '--noEmit',
+    '--target',
+    'es2017',
+    '--module',
+    'commonjs',
+    '--skipLibCheck',
+    'src/data/guestRecipes.js'
+  ], {
+    cwd: require('node:path').resolve(__dirname, '..'),
+    encoding: 'utf8',
+    shell: true
+  })
+
+  assert.equal(result.status, 0, result.stdout + result.stderr + (result.error || ''))
+})
+
+test('visible recipe union exposes an optional image to list rendering', () => {
+  const result = spawnSync('pnpm', [
+    'exec',
+    'tsc',
+    '--allowJs',
+    '--checkJs',
+    '--noEmit',
+    '--target',
+    'es2017',
+    '--module',
+    'commonjs',
+    '--skipLibCheck',
+    'src/data/guestRecipes.js',
+    'scripts/fixtures/guest-recipe-image-typecheck.ts'
+  ], {
+    cwd: path.resolve(__dirname, '..'),
+    encoding: 'utf8',
+    shell: true
+  })
+
+  assert.equal(result.status, 0, result.stdout + result.stderr + (result.error || ''))
+})
+
+test('recipe list derives guest-safe visible recipes', () => {
+  const indexPage = readFileSync(
+    path.resolve(__dirname, '../src/pages/index/index.tsx'),
+    'utf8'
+  )
+
+  assert.match(indexPage, /import guestRecipeModule = require\('@\/data\/guestRecipes'\)/)
+  assert.doesNotMatch(indexPage, /import \{[^}]*getVisibleRecipes[^}]*\} from '@\/data\/guestRecipes'/)
+  assert.match(indexPage, /const \{ getVisibleRecipes \} = guestRecipeModule/)
+  assert.match(indexPage, /const isGuest = !user/)
+  assert.match(indexPage, /getVisibleRecipes\(recipes, !!user\)/)
+})
+
+test('recipe detail resolves the current id from guest-safe Redux recipes', () => {
+  const detailPage = readFileSync(
+    path.resolve(__dirname, '../src/pages/recipe/detail/index.tsx'),
+    'utf8'
+  )
+
+  assert.match(detailPage, /import \{ selectRecipes \} from '@\/store\/recipe\/selectors'/)
+  assert.match(detailPage, /import guestRecipeModule = require\('@\/data\/guestRecipes'\)/)
+  assert.doesNotMatch(detailPage, /import \{[^}]*findVisibleRecipe[^}]*\} from '@\/data\/guestRecipes'/)
+  assert.match(detailPage, /const \{ findVisibleRecipe \} = guestRecipeModule/)
+  assert.match(detailPage, /const recipes = useSelector\(selectRecipes\)/)
+  assert.match(detailPage, /const user = useSelector\(selectUser\)/)
+  assert.match(detailPage, /findVisibleRecipe\(recipes, id \|\| '', !!user\)/)
+  assert.match(detailPage, /const canEdit = !!user/)
+})
+
+test('recipe list visibly identifies guest read-only mode', () => {
+  const indexPage = readFileSync(
+    path.resolve(__dirname, '../src/pages/index/index.tsx'),
+    'utf8'
+  )
+
+  assert.match(indexPage, /游客体验/)
+  assert.match(indexPage, /只读/)
+})
+
+test('guest recipe cards cannot swipe to delete', () => {
+  const indexPage = readFileSync(
+    path.resolve(__dirname, '../src/pages/index/index.tsx'),
+    'utf8'
+  )
+
+  assert.match(indexPage, /swipeToDelete=\{!isGuest\}/)
+  assert.match(indexPage, /onRemove=\{isGuest \? undefined :/)
+})
+
+test('guest creation action switches to profile while signed-in creation opens editor', () => {
+  const indexPage = readFileSync(
+    path.resolve(__dirname, '../src/pages/index/index.tsx'),
+    'utf8'
+  )
+
+  assert.match(
+    indexPage,
+    /if \(isGuest\)[\s\S]*Taro\.switchTab\(\{[\s\S]*url: '\/pages\/profile\/index'/
+  )
+  assert.match(
+    indexPage,
+    /Taro\.navigateTo\(\{[\s\S]*url: '\/pages\/recipe\/edit\/index'/
+  )
+})

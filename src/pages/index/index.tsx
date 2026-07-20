@@ -13,12 +13,16 @@ import type { AppDispatch } from '@/store'
 import Loading from '@/components/Loading'
 import { selectRecipeLoading } from '@/store/recipe/selectors'
 import SearchBar from '@/components/SearchBar'
+import guestRecipeModule = require('@/data/guestRecipes')
 
 const CATEGORIES = ['全部', ...RECIPE_CATEGORIES]
+const { getVisibleRecipes } = guestRecipeModule
 
 const Index = () => {
   const recipes = useSelector(selectRecipes)
   const user = useSelector(selectUser)
+  const isGuest = !user
+  const visibleRecipes = getVisibleRecipes(recipes, !!user)
   const familyId = user?.family_id
   const [searchText, setSearchText] = useState('')
   const [activeCategory, setActiveCategory] = useState('全部')
@@ -53,7 +57,7 @@ const Index = () => {
   }
 
   // 过滤食谱
-  const filteredRecipes = recipes.filter(recipe => {
+  const filteredRecipes = visibleRecipes.filter(recipe => {
     const matchSearch = recipe.name.toLowerCase().includes(searchText.toLowerCase())
     const matchCategory = activeCategory === '全部' || recipe.type === activeCategory
     return matchSearch && matchCategory
@@ -68,6 +72,12 @@ const Index = () => {
 
   // 处理新建食谱
   const handleAddRecipe = () => {
+    if (isGuest) {
+      Taro.switchTab({
+        url: '/pages/profile/index'
+      })
+      return
+    }
     Taro.navigateTo({
       url: '/pages/recipe/edit/index'
     })
@@ -94,10 +104,10 @@ const Index = () => {
   return (
     <View className='index'>
       {/* 仅首屏冷启动（无任何食谱时）用全屏遮罩；增删走 toast 反馈，不再全屏挡屏 */}
-      <Loading visible={fetchLoading && recipes.length === 0} />
+      <Loading visible={!isGuest && fetchLoading && visibleRecipes.length === 0} />
       <View className='index-header'>
         <View>
-          <Text className='index-eyebrow'>{recipes.length} 道家庭食谱</Text>
+          <Text className='index-eyebrow'>{visibleRecipes.length} 道{isGuest ? '体验' : '家庭'}食谱</Text>
           <Text className='index-title'>家的食谱</Text>
         </View>
         <View className='index-create' onClick={handleAddRecipe}>
@@ -106,6 +116,15 @@ const Index = () => {
         </View>
       </View>
       <View className='content'>
+        {isGuest && (
+          <View className='index-guest-banner'>
+            <View>
+              <Text className='index-guest-banner__title'>游客体验 · 只读浏览</Text>
+              <Text className='index-guest-banner__copy'>以下是示例食谱，登录后即可创建和管理你的家庭食谱。</Text>
+            </View>
+            <Text className='index-guest-banner__action' onClick={handleAddRecipe}>去登录</Text>
+          </View>
+        )}
         <View className='index-search-bar-wrap'>
           <SearchBar
             value={searchText}
@@ -125,9 +144,9 @@ const Index = () => {
           {filteredRecipes.length === 0 ? (
             <View className='index-empty'>
               <View className='index-empty__plate' />
-              <Text className='index-empty__title'>{recipes.length === 0 ? '还没有家庭食谱' : '没有找到相关食谱'}</Text>
-              <Text className='index-empty__hint'>{recipes.length === 0 ? '先记下家里最常做的一道菜' : '试试其他关键词或分类'}</Text>
-              {recipes.length === 0 && <View className='index-empty__action' onClick={handleAddRecipe}>新建第一道食谱</View>}
+              <Text className='index-empty__title'>{visibleRecipes.length === 0 ? '还没有家庭食谱' : '没有找到相关食谱'}</Text>
+              <Text className='index-empty__hint'>{visibleRecipes.length === 0 ? '先记下家里最常做的一道菜' : '试试其他关键词或分类'}</Text>
+              {visibleRecipes.length === 0 && <View className='index-empty__action' onClick={handleAddRecipe}>新建第一道食谱</View>}
             </View>
           ) : filteredRecipes.map(recipe => (
             <RecipeCard
@@ -138,8 +157,8 @@ const Index = () => {
               // 已按分类筛选时，卡片上的分类标签是冗余的，仅在「全部」视图展示
               type={activeCategory === '全部' ? recipe.type : ''}
               onClick={() => handleRecipeClick(recipe._id)}
-              swipeToDelete
-              onRemove={() => handleDeleteRecipe(recipe._id)}
+              swipeToDelete={!isGuest}
+              onRemove={isGuest ? undefined : () => handleDeleteRecipe(recipe._id)}
             />
           ))}
         </View>
