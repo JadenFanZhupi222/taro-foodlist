@@ -37,10 +37,14 @@ const RecipeEdit: FC = () => {
   const [imageLocal, setImageLocal] = useState(editingRecipe?.image || '')
   const [description, setDescription] = useState(editingRecipe?.description || '')
   const [ingredients, setIngredients] = useState(
-    editingRecipe?.ingredients?.map(i => ({ ...i, id: genId() })) || [{ id: genId(), name: '', amount: '' }]
+    editingRecipe?.ingredients?.length
+      ? editingRecipe.ingredients.map(i => ({ ...i, id: genId() }))
+      : [{ id: genId(), name: '', amount: '' }]
   )
   const [steps, setSteps] = useState(
-    editingRecipe?.steps?.map(s => ({ id: genId(), text: s })) || [{ id: genId(), text: '' }]
+    editingRecipe?.steps?.length
+      ? editingRecipe.steps.map(s => ({ id: genId(), text: s }))
+      : [{ id: genId(), text: '' }]
   )
   const [deletingIngredientIds, setDeletingIngredientIds] = useState<string[]>([])
   const [deletingStepIds, setDeletingStepIds] = useState<string[]>([])
@@ -222,4 +226,4 @@ const RecipeEdit: FC = () => {
   )
 }
 
-export default RecipeEdit 
+export default RecipeEdit

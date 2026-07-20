@@ -47,24 +47,24 @@ const RecipeDetail: FC = () => {
         <View className='recipe-detail__section'>
           <Text className='recipe-detail__section-title'>食材</Text>
           <View className='recipe-detail__ingredients'>
-            {(recipe.ingredients || []).map((ingredient, index) => (
+            {recipe.ingredients?.length ? recipe.ingredients.map((ingredient, index) => (
               <View key={index} className='recipe-detail__ingredient'>
                 <Text className='recipe-detail__ingredient-name'>{ingredient.name}</Text>
                 <Text className='recipe-detail__ingredient-amount'>{ingredient.amount}</Text>
               </View>
-            ))}
+            )) : <Text className='recipe-detail__empty'>暂未填写食材</Text>}
           </View>
         </View>
 
         <View className='recipe-detail__section'>
           <Text className='recipe-detail__section-title'>步骤</Text>
           <View className='recipe-detail__steps'>
-            {(recipe.steps || []).map((step, index) => (
+            {recipe.steps?.length ? recipe.steps.map((step, index) => (
               <View key={index} className='recipe-detail__step'>
                 <Text className='recipe-detail__step-number'>{index + 1}</Text>
                 <Text className='recipe-detail__step-content'>{step}</Text>
               </View>
-            ))}
+            )) : <Text className='recipe-detail__empty'>暂未填写步骤</Text>}
           </View>
         </View>
 
