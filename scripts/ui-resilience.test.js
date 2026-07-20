@@ -397,9 +397,9 @@ test('family pages distinguish retryable failures from confirmed absence and unr
   assert.match(familyPage, /NoFamilyScreen/)
 
   assert.match(invitePage, /selectInviteFamilyError/)
-  assert.match(invitePage, /if \(!queryFamilyId\)/)
-  assert.match(invitePage, /fetchFamilyById\(queryFamilyId\)/)
-  assert.match(invitePage, /inviteError \|\| !familyId/)
+  assert.match(invitePage, /if \(familyId\) dispatch\(fetchFamilyById\(familyId\)\)/)
+  assert.doesNotMatch(invitePage, /fetchFamilyById\(''\)/)
+  assert.match(invitePage, /classifyInviteView/)
   assert.match(invitePage, /kind='error'/)
   assert.match(invitePage, /inviteFamily && familyId/)
   assert.match(invitePage, /disabled=\{joined \|\| !inviteFamily \|\| !familyId\}/)
@@ -412,4 +412,22 @@ test('family pages distinguish retryable failures from confirmed absence and unr
   assert.match(thunks, /async \(\) => \{[\s\S]*?return r\.data \?\? null/)
   assert.match(slice, /setFamily\(state, action\)[\s\S]*?state\.fetchRequestId = null/)
   assert.match(slice, /clearInviteFamily\(state\)[\s\S]*?state\.inviteRequest = null/)
+})
+
+test('invite view treats a valid unresolved route as loading and a missing route as error', () => {
+  const helperPath = path.join(root, 'src/pages/family/acceptInvite/inviteView.js')
+  assert.equal(fs.existsSync(helperPath), true, 'invite view classifier must exist')
+  const { classifyInviteView } = require(helperPath)
+
+  assert.equal(classifyInviteView({ familyId: 'family-a', inviteFamily: null, inviteError: null }), 'loading')
+  assert.equal(classifyInviteView({ familyId: '', inviteFamily: null, inviteError: null }), 'error')
+  assert.equal(classifyInviteView({ familyId: 'family-a', inviteFamily: null, inviteError: 'network' }), 'error')
+  assert.equal(classifyInviteView({ familyId: 'family-a', inviteFamily: { _id: 'family-a' }, inviteError: null }), 'ready')
+
+  const source = read('src/pages/family/acceptInvite/index.tsx')
+  assert.match(source, /useState\(\(\) => getRouteFamilyId\(\)\)/)
+  assert.match(source, /classifyInviteView\(\{ familyId, inviteFamily, inviteError \}\)/)
+  assert.doesNotMatch(source, /fetchFamilyById\(''\)/)
+  assert.match(source, /inviteView === 'loading'/)
+  assert.match(source, /inviteView === 'error'/)
 })
