@@ -423,6 +423,7 @@ test('invite view treats a valid unresolved route as loading and a missing route
   assert.equal(classifyInviteView({ familyId: '', inviteFamily: null, inviteError: null }), 'error')
   assert.equal(classifyInviteView({ familyId: 'family-a', inviteFamily: null, inviteError: 'network' }), 'error')
   assert.equal(classifyInviteView({ familyId: 'family-a', inviteFamily: { _id: 'family-a' }, inviteError: null }), 'ready')
+  assert.equal(classifyInviteView({ familyId: 'family-b', inviteFamily: { _id: 'family-a' }, inviteError: null }), 'loading')
 
   const source = read('src/pages/family/acceptInvite/index.tsx')
   assert.match(source, /useState\(\(\) => getRouteFamilyId\(\)\)/)
