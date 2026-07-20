@@ -48,7 +48,16 @@ jobs:
           cloudbase login --apiKeyId "$TC_SECRET_ID" --apiKey "$TC_SECRET_KEY"
 
           # ---- 决定部署哪些函数：默认增量，任何不确定的情况一律退回全量（宁可慢不可漏）----
-          all_funcs() { for d in cloudfunctions/*/; do basename "$d"; done; }
+          is_deployable() {
+            case "$1" in _*) return 1 ;; esac
+            [ -f "cloudfunctions/$1/index.js" ] && [ -f "cloudfunctions/$1/package.json" ]
+          }
+          all_funcs() {
+            for d in cloudfunctions/*/; do
+              name="$(basename "$d")"
+              if is_deployable "$name"; then echo "$name"; fi
+            done
+          }
           targets=""; reason=""
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             targets="$(all_funcs)"; reason="手动触发 → 全量（强制全量入口）"
@@ -66,6 +75,9 @@ jobs:
               reason="增量：仅部署本次改动的函数"
             fi
           fi
+
+          # 增量 diff 也可能只包含 _shared 等辅助目录，统一过滤后再部署。
+          targets="$(for name in $targets; do if is_deployable "$name"; then echo "$name"; fi; done)"
 
           echo "::notice::部署策略：$reason"
           if [ -z "$targets" ]; then
