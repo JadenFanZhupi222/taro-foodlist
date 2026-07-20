@@ -426,7 +426,7 @@ test('recipe catalog transitions ignore older-family and post-reset completions'
 
 test('successful recipe writes invalidate an older catalog without losing newer local state', () => {
   const catalog = require(path.join(root, 'src/store/recipe/catalogRequest.js'))
-  for (const name of ['addLocalRecipe', 'updateLocalRecipe', 'deleteLocalRecipe', 'replaceLocalRecipes']) {
+  for (const name of ['addLocalRecipe', 'updateLocalRecipe', 'deleteLocalRecipe', 'replaceLocalRecipes', 'patchLocalRecipe']) {
     assert.equal(typeof catalog[name], 'function', `${name} must be production-callable`)
   }
 
@@ -452,6 +452,19 @@ test('successful recipe writes invalidate an older catalog without losing newer 
   catalog.deleteLocalRecipe(deleted, 'recipe')
   assert.equal(catalog.fulfillCatalogRequest(deleted, 'family-a', 'delete-read', [{ _id: 'recipe', name: 'resurrected' }]), false)
   assert.equal(deleted.recipes.length, 0)
+
+  const replaced = makeState([{ _id: 'old', name: 'old' }])
+  catalog.startCatalogRequest(replaced, 'family-a', 'replace-read')
+  catalog.replaceLocalRecipes(replaced, [{ _id: 'replacement', name: 'replacement' }])
+  assert.equal(catalog.fulfillCatalogRequest(replaced, 'family-a', 'replace-read', [{ _id: 'old', name: 'stale' }]), false)
+  assert.deepEqual(replaced.recipes.map(recipe => recipe._id), ['replacement'])
+
+  const patched = makeState([{ _id: 'recipe', name: 'before', description: 'before' }])
+  catalog.startCatalogRequest(patched, 'family-a', 'patch-read')
+  catalog.patchLocalRecipe(patched, 'recipe', { description: 'after' })
+  assert.equal(catalog.fulfillCatalogRequest(patched, 'family-a', 'patch-read', [{ _id: 'recipe', description: 'stale' }]), false)
+  assert.equal(patched.recipes[0].name, 'before')
+  assert.equal(patched.recipes[0].description, 'after')
 })
 
 test('recipe writes remain correct when the catalog finishes before the write', () => {
@@ -466,11 +479,13 @@ test('recipe writes remain correct when the catalog finishes before the write', 
   catalog.addLocalRecipe(state, { _id: 'created', name: 'created' })
   catalog.updateLocalRecipe(state, { _id: 'update', name: 'updated' })
   catalog.deleteLocalRecipe(state, 'delete')
+  catalog.patchLocalRecipe(state, 'update', { description: 'patched-after-catalog' })
 
   assert.deepEqual(state.recipes.map(recipe => `${recipe._id}:${recipe.name}`), [
     'update:updated',
     'created:created'
   ])
+  assert.equal(state.recipes.find(recipe => recipe._id === 'update').description, 'patched-after-catalog')
 })
 
 test('recipe catalog thunk returns data and slice gates lifecycle by request identity', () => {
@@ -486,6 +501,7 @@ test('recipe catalog thunk returns data and slice gates lifecycle by request ide
   assert.match(slice, /addRecipe\(state, action\)[\s\S]*addLocalRecipe\(state, action\.payload\)/)
   assert.match(slice, /updateRecipe\(state, action\)[\s\S]*updateLocalRecipe\(state, action\.payload\)/)
   assert.match(slice, /deleteRecipe\(state, action\)[\s\S]*deleteLocalRecipe\(state, action\.payload\)/)
+  assert.match(slice, /updateRecipeInStore\(state, action\)[\s\S]*patchLocalRecipe\(state, recipeId, recipe\)/)
 })
 
 test('recipe catalog failure notifications are limited to the current request', () => {
