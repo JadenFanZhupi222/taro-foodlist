@@ -82,4 +82,4 @@ export default RecipeDetail
 
 export const config = {
   navigationBarTitleText: '食谱详情'
-} 
+}
