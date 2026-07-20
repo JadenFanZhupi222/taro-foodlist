@@ -2,55 +2,27 @@ import { createAsyncThunk } from '@reduxjs/toolkit'
 import { DailyMenu } from '@/store/dailyMenu/types'
 import { callCloud } from '@/utils/cloud'
 import {
-  setDailyMenus,
-  clearDailyMenus,
-  addEmptyDate,
-  deleteDailyMenuByDate,
-  upsertDailyMenuByDate,
   optimisticAddRecipe,
   optimisticRemoveRecipe
 } from '@/store/dailyMenu/dailyMenuSlice'
 import { RootState } from '@/store'
 import  { toast } from '@/utils/toast'
-import { isSameDay, toDateKey } from '@/utils/date'
 
 // 获取当前家庭所有 dailyMenus
 export const fetchDailyMenus = createAsyncThunk(
   'dailyMenu/fetchDailyMenus',
-  async ({ familyId }: { familyId: string }, { dispatch, getState }) => {
-    try {
-      const res = await callCloud<DailyMenu[]>('get-family-daily-menus', { familyId })
-      const state = getState() as RootState
-      const today = toDateKey(new Date())
-      const localToday = state.dailyMenu.dailyMenus.find(m => isSameDay(m.date, today))
-      const remoteMenus = res.data || []
-      let mergedMenus = remoteMenus
-      if (localToday) {
-        mergedMenus = [
-          ...remoteMenus.filter(m => !isSameDay(m.date, today)),
-          localToday
-        ]
-      }
-      dispatch(setDailyMenus(mergedMenus))
-    } catch (error) {
-      dispatch(clearDailyMenus())
-      throw error
-    }
+  async ({ familyId }: { familyId: string }) => {
+    const res = await callCloud<DailyMenu[]>('get-family-daily-menus', { familyId })
+    return { familyId, menus: res.data || [] }
   }
 )
 
 // 获取当前家庭某天的 dailyMenu（以服务端为权威，校正本地乐观状态）
 export const fetchDailyMenuByDate = createAsyncThunk(
   'dailyMenu/fetchDailyMenuByDate',
-  async ({ familyId, date }: { familyId: string, date: string }, { dispatch }) => {
+  async ({ familyId, date }: { familyId: string, date: string }) => {
     const res = await callCloud<DailyMenu>('get-family-daily-menu-by-date', { familyId, date })
-    if (res.data) {
-      dispatch(upsertDailyMenuByDate(res.data))
-    } else {
-      // 服务端确认该日期无菜单：清掉可能存在的临时菜单并标记为空
-      dispatch(deleteDailyMenuByDate(date))
-      dispatch(addEmptyDate(date))
-    }
+    return res.data || null
   }
 )
 
@@ -93,7 +65,7 @@ export const removeRecipeFromMenu = createAsyncThunk(
     const date = menu ? (typeof menu.date === 'string' ? menu.date.slice(0, 10) : menu.date) : ''
 
     // 1. 乐观移除：本地立即移除（纯 UI，不写服务端）
-    if (date) dispatch(optimisticRemoveRecipe({ date, recipeId }))
+    if (date && familyId) dispatch(optimisticRemoveRecipe({ familyId, date, recipeId }))
     try {
       // 2. 写服务端
       await callCloud('remove-recipe-from-menu', { menuId, recipeId })

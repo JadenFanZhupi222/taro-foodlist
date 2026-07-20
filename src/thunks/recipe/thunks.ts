@@ -4,25 +4,31 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import { callCloud } from '@/utils/cloud'
 import type { Recipe, Comment } from '@/store/recipe/types'
+import type { RootState } from '@/store'
+import detailRequestModule = require('@/store/recipe/detailRequest')
+import catalogRequestModule = require('@/store/recipe/catalogRequest')
 import {
-  setRecipes,
   setComments,
   addRecipe,
   updateRecipe,
   deleteRecipe,
-  addComment,
-  updateRecipeInStore
+  addComment
 } from '@/store/recipe/recipeSlice'
 import { toast } from '@/utils/toast'
 
+const { canStartDetailRequest } = detailRequestModule
+const { isCurrentCatalogRequest } = catalogRequestModule
+
 export const fetchRecipes = createAsyncThunk(
   'recipe/fetchRecipes',
-  async (familyId: string, { dispatch }) => {
+  async (familyId: string, { getState, requestId }) => {
     try {
       const r = await callCloud<Recipe[]>('get-recipes', { familyId })
-      dispatch(setRecipes(r.data!))
+      return r.data || []
     } catch (error) {
-      toast({ title: '获取食谱失败', icon: 'error' })
+      if (isCurrentCatalogRequest((getState() as RootState).recipe, familyId, requestId)) {
+        toast({ title: '获取食谱失败', icon: 'error' })
+      }
       throw error
     }
   }
@@ -30,15 +36,20 @@ export const fetchRecipes = createAsyncThunk(
 
 export const fetchRecipeById = createAsyncThunk(
   'recipe/fetchRecipeById',
-  async (recipeId: string, { dispatch }) => {
+  async (recipeId: string, { getState }) => {
     try {
-      const r = await callCloud<Recipe>('get-recipe', { recipeId })
-      dispatch(updateRecipeInStore({ recipeId, recipe: r.data! }))
+      const familyId = (getState() as RootState).user.current?.family_id
+      const r = await callCloud<Recipe[]>('get-recipes', { familyId })
+      return r.data?.find(recipe => recipe._id === recipeId) ?? null
     } catch (error) {
       console.error('获取食谱详情失败:', error)
       toast({ title: '获取食谱详情失败', icon: 'error' })
       throw error
     }
+  },
+  {
+    condition: (recipeId, { getState }) =>
+      canStartDetailRequest((getState() as RootState).recipe.detailRequests, recipeId)
   }
 )
 
@@ -48,9 +59,7 @@ export const createRecipe = createAsyncThunk(
     try {
       const r = await callCloud<Recipe>('create-recipe', { familyId, recipe })
       dispatch(addRecipe(r.data!))
-      toast({ title: '创建成功', icon: 'success' })
     } catch (error) {
-      toast({ title: '创建失败', icon: 'error' })
       throw error
     }
   }
@@ -62,9 +71,7 @@ export const updateRecipeById = createAsyncThunk(
     try {
       const r = await callCloud<Recipe>('update-recipe', { recipeId, recipe })
       dispatch(updateRecipe(r.data!))
-      toast({ title: '更新成功', icon: 'success' })
     } catch (error) {
-      toast({ title: '更新失败', icon: 'error' })
       throw error
     }
   }
@@ -73,14 +80,8 @@ export const updateRecipeById = createAsyncThunk(
 export const deleteRecipeById = createAsyncThunk(
   'recipe/deleteRecipeById',
   async ({ familyId, recipeId }: { familyId: string; recipeId: string }, { dispatch }) => {
-    try {
-      await callCloud<null>('delete-recipe', { familyId, recipeId })
-      dispatch(deleteRecipe(recipeId))
-      toast({ title: '删除成功', icon: 'success' })
-    } catch (error) {
-      toast({ title: '删除失败', icon: 'error' })
-      throw error
-    }
+    await callCloud<null>('delete-recipe', { familyId, recipeId })
+    dispatch(deleteRecipe(recipeId))
   }
 )
 

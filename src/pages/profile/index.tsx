@@ -8,8 +8,7 @@ import Loading from '@/components/Loading'
 import UserCard from '@/components/profile/userCard'
 import { login } from '@/thunks/user/thunks'
 import type { AppDispatch } from '@/store'
-
-const defaultAvatarUrl = 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0'
+import { DEFAULT_AVATAR_URL } from '@/constants/avatar'
 
 const Profile = () => {
   const user = useSelector(selectUser)
@@ -25,7 +24,7 @@ const Profile = () => {
   const getDefaultNickname = () => (user?._id ? '微信用户' + user._id.slice(-5) : '微信用户')
 
   // 判断显示头像和昵称
-  const displayAvatar = !user ? defaultAvatarUrl : user.avatar
+  const displayAvatar = user?.avatar?.trim() || DEFAULT_AVATAR_URL
 
   const displayNickname = !user
     ? '未登录'
@@ -107,7 +106,7 @@ const Profile = () => {
       {!user ? (
         /* 未登录：醒目的登录 CTA，替代角落小按钮 + 引导遮罩 */
         <View className='login-cta'>
-          <Image className='login-cta__avatar' src={defaultAvatarUrl} />
+          <Image className='login-cta__avatar' src={DEFAULT_AVATAR_URL} />
           <Text className='login-cta__title'>把家里的味道存下来</Text>
           <Text className='login-cta__subtitle'>登录后可与家人共享食谱、收藏和每日菜单</Text>
           <LoginButton className='login-cta__btn' />

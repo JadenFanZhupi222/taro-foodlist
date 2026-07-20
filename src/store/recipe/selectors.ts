@@ -6,8 +6,11 @@ export const selectRecipes = createSelector(
   (recipes) => recipes.filter(r => !r.deleted)
 )
 export const selectComments = (state: RootState) => state.recipe.comments
+export const selectRecipeCatalogStatus = (state: RootState) => state.recipe.catalogStatus
 export const selectRecipeById = (id: string) => (state: RootState) =>
   state.recipe.recipes.find(r => r._id === id)
+export const selectRecipeDetailRequest = (id: string) => (state: RootState) =>
+  state.recipe.detailRequests[id]
 export const selectRecipesByType = (type: string) => createSelector(
   (state: RootState) => state.recipe.recipes,
   (recipes) => recipes.filter(recipe => recipe.type === type)
@@ -20,4 +23,4 @@ export const selectRecipeLoading = createSelector(
     updateLoading: recipe.updateLoading,
     deleteLoading: recipe.deleteLoading
   })
-) 
+)

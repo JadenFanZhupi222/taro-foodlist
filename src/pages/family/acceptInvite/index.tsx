@@ -8,28 +8,31 @@ import Loading from '@/components/Loading'
 import type { AppDispatch } from '@/store'
 import { toast } from '@/utils/toast'
 import MemberCardList from '@/components/family/memberCardList'
-import { selectJoinLoading, selectInviteFamily, selectInviteFamilyLoading } from '@/store/family/selectors'
+import StateView from '@/components/StateView'
+import { selectJoinLoading, selectInviteFamily, selectInviteFamilyLoading, selectInviteFamilyError, selectInviteFamilyErrorFamilyId } from '@/store/family/selectors'
+import inviteViewModule = require('./inviteView')
+
+const { classifyInviteView } = inviteViewModule
+const getRouteFamilyId = () => Taro.getCurrentInstance().router?.params?.familyId || ''
 
 export default function AcceptInvite() {
   const dispatch = useDispatch<AppDispatch>()
-  const [familyId, setFamilyId] = useState('')
+  const [familyId] = useState(() => getRouteFamilyId())
   const [loading, setLoading] = useState(false)
   const [joined, setJoined] = useState(false)
   const joinLoading = useSelector(selectJoinLoading)
   const inviteFamily = useSelector(selectInviteFamily)
   const inviteFamilyLoading = useSelector(selectInviteFamilyLoading)
+  const inviteError = useSelector(selectInviteFamilyError)
+  const inviteErrorFamilyId = useSelector(selectInviteFamilyErrorFamilyId)
+  const inviteView = classifyInviteView({ familyId, inviteFamily, inviteError, inviteErrorFamilyId })
 
   useEffect(() => {
-    const router = Taro.getCurrentInstance().router
-    const queryFamilyId = router?.params?.familyId
-    if (queryFamilyId) {
-      setFamilyId(queryFamilyId);
-      dispatch(fetchFamilyById(queryFamilyId))
-    }
-  }, [dispatch])
+    if (familyId) dispatch(fetchFamilyById(familyId))
+  }, [dispatch, familyId])
 
   const handleAccept = async () => {
-    if (!familyId) return
+    if (!familyId || !inviteFamily) return
     setLoading(true)
     try {
       await dispatch(joinFamily(familyId)).unwrap()
@@ -49,6 +52,11 @@ export default function AcceptInvite() {
   return (
     <View className='accept-invite'>
       <Loading visible={inviteFamilyLoading || loading || joinLoading} text={inviteFamilyLoading ? '加载家庭信息中...' : '正在加入...'} mask />
+      {inviteView === 'loading' ? (
+        <StateView kind='info' title='正在加载家庭信息' description='请稍候。' />
+      ) : inviteView === 'error' ? (
+        <StateView kind='error' title='邀请加载失败' description='邀请可能无效，或网络暂时不可用。' actionLabel={familyId ? '重试' : '返回'} onAction={() => familyId ? dispatch(fetchFamilyById(familyId)) : Taro.navigateBack()} />
+      ) : inviteFamily && familyId ? <>
       <View className='family-header'>
         <Text className='family-title'>{inviteFamily?.name || '家庭'}</Text>
       </View>
@@ -58,9 +66,10 @@ export default function AcceptInvite() {
           role: m.openId === inviteFamily?.family_owner ? 'owner' : 'member',
         }))} />
       </View>
-      <Button className='accept-btn' onClick={handleAccept} disabled={joined || !familyId}>
+      <Button className='accept-btn' onClick={handleAccept} disabled={joined || !inviteFamily || !familyId}>
         {joined ? '已加入' : '接受邀请'}
       </Button>
+      </> : null}
     </View>
   )
-} 
+}

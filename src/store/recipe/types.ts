@@ -41,9 +41,12 @@ export interface RecipeState {
   recipes: Recipe[]
   comments: Comment[]
   fetchLoading: boolean
+  catalogStatus: 'idle' | 'loading' | 'ready' | 'failed'
+  catalogRequest: { requestId: string; familyId: string } | null
   createLoading: boolean
   updateLoading: boolean
   deleteLoading: boolean
+  detailRequests: Record<string, { status: 'loading' | 'failed' | 'not-found'; requestId: string }>
 }
 
 export const RECIPE_ACTIONS = {

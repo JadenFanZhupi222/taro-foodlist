@@ -5,8 +5,13 @@ export const initialState: DailyMenuState = {
   fetchLoading: false,
   fetchDailyLoading: false,
   createLoading: false,
+  createPendingRequests: {},
   updateLoading: false,
   removeLoading: false,
+  removePendingRequests: {},
   selectedRecipes: [],
-  emptyDates: []
-} 
+  dateRequests: {},
+  familyRequests: {},
+  menuRevision: 0,
+  menuRevisions: {}
+}

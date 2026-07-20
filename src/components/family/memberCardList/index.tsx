@@ -37,7 +37,9 @@ export default function MemberCardList({ members, currentUserId }: MemberCardLis
             )
           })
         ) : (
-          <Text>暂无成员</Text>
+          <View className='member-list-empty'>
+            <Text>暂无成员</Text>
+          </View>
         )}
       </View>
     </View>

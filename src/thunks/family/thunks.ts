@@ -1,7 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import { callCloud } from '@/utils/cloud'
 import type { Family } from '@/store/family/types'
-import { setFamily, clearFamily, setInviteFamily } from '@/store/family/familySlice'
+import { setFamily, clearFamily } from '@/store/family/familySlice'
 import { toast } from '@/utils/toast'
 import Taro from '@tarojs/taro'
 import type { User } from '@/store/user/types'
@@ -15,18 +15,13 @@ import type { RootState } from '@/store'
 // 获取家庭信息
 export const fetchFamily = createAsyncThunk(
   'family/fetchFamily',
-  async (_, { dispatch }) => {
+  async () => {
     try {
       const r = await callCloud<Family>('get-family-info')
       // data 为 null 表示用户未加入家庭，属于正常状态
-      if (r.data) {
-        dispatch(setFamily(r.data))
-      } else {
-        dispatch(clearFamily())
-      }
+      return r.data ?? null
     } catch (error) {
       console.error('获取家庭信息失败:', error)
-      dispatch(clearFamily())
       throw error
     }
   }
@@ -107,15 +102,13 @@ export const leaveFamily = createAsyncThunk(
 // 通过 familyId 获取任意家庭信息
 export const fetchFamilyById = createAsyncThunk(
   'family/fetchFamilyById',
-  async (familyId: string, { dispatch }) => {
+  async (familyId: string) => {
     try {
-      dispatch(setInviteFamily(null))
+      if (!familyId.trim()) throw new Error('Invalid family invitation')
       const r = await callCloud<Family>('get-family-info-by-id', { familyId })
-      dispatch(setInviteFamily(r.data!))
-      return r
+      return r.data ?? null
     } catch (error) {
-      dispatch(setInviteFamily(null))
       throw error
     }
   }
-) 
+)

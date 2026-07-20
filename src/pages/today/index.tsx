@@ -7,10 +7,9 @@ import RecipeCard from '@/components/RecipeCard'
 import Loading from '@/components/Loading'
 import { SwitchTransition, CSSTransition } from 'react-transition-group'
 import { fetchDailyMenus, fetchDailyMenuByDate, createOrUpdateDailyMenu, removeRecipeFromMenu } from '@/thunks/dailyMenu/thunks'
-import { selectDailyMenus, selectDailyMenuLoading, selectSelectedRecipes, selectEmptyDates } from '@/store/dailyMenu/selectors'
+import { selectDailyMenus, selectDailyMenuLoading, selectSelectedRecipes, selectDateRequests, selectFamilyRequests } from '@/store/dailyMenu/selectors'
 import { selectFamily } from '@/store/family/selectors'
-import { selectRecipes } from '@/store/recipe/selectors'
-import { DailyMenuRecipeItem } from '@/store/dailyMenu/types'
+import { selectRecipeCatalogStatus, selectRecipes } from '@/store/recipe/selectors'
 import 'taro-ui/dist/style/components/float-layout.scss'
 import './index.scss'
 import { AppDispatch } from '@/store'
@@ -19,7 +18,14 @@ import { Recipe } from '@/store/recipe/types'
 import { selectUser } from '@/store/user/selectors'
 import { removeSelectedRecipe } from '@/store/dailyMenu/dailyMenuSlice'
 import { toast } from '@/utils/toast'
-import { isSameDay, toDateKey } from '@/utils/date'
+import { toDateKey } from '@/utils/date'
+import todayStateModule = require('./todayState')
+import dateRequestModule = require('@/store/dailyMenu/dateRequest')
+import recipeHydrationModule = require('./recipeHydration')
+
+const { classifyTodayState, getTodayAddAction, findFamilyMenu, shouldFetchDate } = todayStateModule
+const { getDateRequestKey } = dateRequestModule
+const { hydrateTodayRecipes } = recipeHydrationModule
 
 const getDateKey = (date: Date) => toDateKey(date)
 
@@ -42,16 +48,16 @@ const Today = () => {
   const dailyMenus = useSelector(selectDailyMenus)
   const loading = useSelector(selectDailyMenuLoading)
   const allRecipes = useSelector(selectRecipes)
+  const recipeCatalogStatus = useSelector(selectRecipeCatalogStatus)
   const selectedRecipes = useSelector(selectSelectedRecipes)
   const user = useSelector(selectUser)
-  const emptyDates = useSelector(selectEmptyDates)
+  const dateRequests = useSelector(selectDateRequests)
+  const familyRequests = useSelector(selectFamilyRequests)
 
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [pendingDate, setPendingDate] = useState<Date | null>(null)
   const [slideDir, setSlideDir] = useState<'left' | 'right'>('left')
   const [isPlannerOpen, setIsPlannerOpen] = useState(false)
-  const [hasFetchedToday, setHasFetchedToday] = useState(false)
-  const [hasFetchedAll, setHasFetchedAll] = useState(false)
 
   useDidShow(() => {
     const page = Taro.getCurrentInstance().page
@@ -70,52 +76,30 @@ const Today = () => {
 
   // 当前日期的菜单
   const todayMenu = useMemo(() => 
-    dailyMenus.find(m => isSameDay(m.date, dateKey)), [dailyMenus, dateKey])
-  const todayRecipes = useMemo(() => {
-    if (!todayMenu) return []
-    return todayMenu.recipes
-      .map((r: DailyMenuRecipeItem) => {
-        const recipe = allRecipes.find(item => item._id === r.recipe_id)
-        if (!recipe) {
-          // 菜谱已被删除：回退到下单时的快照，保住历史记录
-          if (r.name) {
-            return { _id: r.recipe_id, name: r.name, type: r.type || '其他', image: '', order: r.order }
-          }
-          return null
-        }
-        // 保证 id、order、image 字段存在
-        return {
-          ...recipe,
-          _id: recipe._id,
-          order: r.order,
-          image: recipe.image || ''
-        }
-      })
-      .filter(Boolean)
-  }, [todayMenu, allRecipes])
+    findFamilyMenu(dailyMenus, family?._id, dateKey), [dailyMenus, family?._id, dateKey])
+  const todayRecipes = useMemo(() =>
+    hydrateTodayRecipes(todayMenu, allRecipes, recipeCatalogStatus),
+  [todayMenu, allRecipes, recipeCatalogStatus])
 
   // 进入页面优先拉取今天
   useEffect(() => {
     if (!family?._id) return;
     // 只要 store 内没有该日期的 dailyMenu，就按日拉取（避免 emptyDates/批量数据不全导致误判）
-    const hasMenu = dailyMenus.some(m => isSameDay(m.date, dateKey));
-    if (!hasMenu && !hasFetchedToday) {
-      setHasFetchedToday(true);
+    const requestStatus = dateRequests[getDateRequestKey(family._id, dateKey)]?.status
+    if (shouldFetchDate({ familyId: family._id, menu: todayMenu, requestStatus })) {
       dispatch(fetchDailyMenuByDate({ familyId: family._id, date: dateKey }));
     }
-  }, [family?._id, dateKey, hasFetchedToday, dailyMenus, emptyDates, dispatch]);
+  }, [family?._id, dateKey, todayMenu, dateRequests, dispatch]);
 
   // 后台异步拉取所有
   useEffect(() => {
     if (
       family?._id &&
-      !hasFetchedAll &&
-      dailyMenus.length === 0
+      !familyRequests[family._id]
     ) {
-      setHasFetchedAll(true)
       dispatch(fetchDailyMenus({ familyId: family._id }))
     }
-  }, [family?._id, hasFetchedAll, dailyMenus.length, dispatch])
+  }, [family?._id, familyRequests, dispatch])
 
   // 👇 用 useLayoutEffect 保证方向先于 date 更新
   useLayoutEffect(() => {
@@ -129,7 +113,6 @@ const Today = () => {
     if (!inDateRange(newDate)) return
     setSlideDir(newDate > selectedDate ? 'right' : 'left')
     setPendingDate(newDate)
-    setHasFetchedToday(false)
   }
 
   const handleDateChange = (date: Date) => {
@@ -160,24 +143,28 @@ const Today = () => {
     }
   }
 
-  const handleRecipeClick = (id: string) => {
+  const handleRecipeClick = (recipe: { _id: string; unavailable?: boolean }) => {
+    if (recipe.unavailable) return
     Taro.navigateTo({
-      url: `/pages/recipe/detail/index?id=${id}`
+      url: `/pages/recipe/detail/index?id=${recipe._id}`
     })
   }
 
   // 添加菜品（乐观更新，本地立即可见）
   const handleAddRecipe = useCallback((recipe: Recipe) => {
+    const addAction = getTodayAddAction({ userId: user?._id, familyId: family?._id })
+    if (addAction !== 'add') return
+    if (!user?._id || !family?._id) return
     // 判断是否已存在
     if (todayMenu && todayMenu.recipes.some(r => r.recipe_id === recipe._id)) {
       toast({ title: '该菜品已在今日菜单中', icon: 'none' })
       return
     }
     dispatch(createOrUpdateDailyMenu({
-      familyId: family?._id || '',
+      familyId: family._id,
       date: dateKey,
       recipe: { recipe_id: recipe._id },
-      userId: user?._id || ''
+      userId: user._id
     }))
     dispatch(removeSelectedRecipe(recipe._id))
   }, [family, dateKey, todayMenu, user, dispatch])
@@ -205,15 +192,31 @@ const Today = () => {
     Taro.navigateTo({ url: '/pages/today/addRecipes/index' })
   }
 
+  const handlePlannerAction = () => {
+    const addAction = getTodayAddAction({ userId: user?._id, familyId: family?._id })
+    if (addAction === 'login') Taro.switchTab({ url: '/pages/profile/index' })
+    else if (addAction === 'family') Taro.navigateTo({ url: '/pages/family/index' })
+    else setIsPlannerOpen(true)
+  }
+
+  const retryDateFetch = () => {
+    if (family?._id) dispatch(fetchDailyMenuByDate({ familyId: family._id, date: dateKey }))
+  }
+
   // 判断是否为今天以前
   const todayStr = toDateKey(new Date())
   const selectedStr = toDateKey(selectedDate)
   const isPast = selectedStr < todayStr
+  const todayRecipeCount = todayMenu?.recipes.length || 0
 
-  // 该日期已确认为空（命中 emptyDates，或菜单存在但无菜品）
-  const isCurrentDateEmpty = !family?._id || emptyDates.includes(dateKey) || (!!todayMenu && todayRecipes.length === 0)
-  // 既无数据也未确认为空 → 仍在拉取，显示占位而非"空"，消除切换时的空状态闪烁
-  const isResolvingDate = todayRecipes.length === 0 && !isCurrentDateEmpty
+  const todayState = classifyTodayState({
+    userId: user?._id,
+    familyId: family?._id,
+    requestStatus: family?._id ? dateRequests[getDateRequestKey(family._id, dateKey)]?.status : undefined,
+    menu: todayMenu,
+    totalRecipeCount: todayMenu?.recipes.length || 0,
+    resolvedRecipeCount: todayRecipes.length
+  })
 
   usePullDownRefresh(() => {
     if (!family?._id) {
@@ -267,10 +270,10 @@ const Today = () => {
         <View>
           <Text className='menu-summary__label'>{isPast ? '历史菜单' : '今日菜单'}</Text>
           <Text className='menu-summary__title'>
-            {todayRecipes.length > 0 ? `已经安排 ${todayRecipes.length} 道菜` : '还没有安排菜品'}
+            {todayRecipeCount > 0 ? `已经安排 ${todayRecipeCount} 道菜` : '还没有安排菜品'}
           </Text>
         </View>
-        <View className='menu-summary__count'>{todayRecipes.length}</View>
+        <View className='menu-summary__count'>{todayRecipeCount}</View>
       </View>
       <View
         className='recipe-swipe-area'
@@ -284,13 +287,19 @@ const Today = () => {
             classNames={slideDir === 'right' ? 'slide-left' : 'slide-right'}
           >
             <View className='recipe-display'>
-              {isResolvingDate ? (
+              {todayState === 'login' ? (
+                <View className='empty-menu'><Text>登录后安排今日菜单</Text><Button onClick={() => Taro.switchTab({ url: '/pages/profile/index' })}>去登录</Button></View>
+              ) : todayState === 'family' ? (
+                <View className='empty-menu'><Text>加入或创建家庭后安排菜单</Text><Button onClick={() => Taro.navigateTo({ url: '/pages/family/index' })}>去建立家庭</Button></View>
+              ) : todayState === 'failed' ? (
+                <View className='empty-menu'><Text>菜单加载失败，请重试</Text><Button onClick={retryDateFetch}>重试</Button></View>
+              ) : todayState === 'resolving' ? (
                 <View className='empty-menu'>
                   <View className='loading-content'>
                     <View className='loading-spinner' />
                   </View>
                 </View>
-              ) : isCurrentDateEmpty ? (
+              ) : todayState === 'empty' ? (
                 <View className='empty-menu'>
                   <View className='empty-icon'>🍽️</View>
                   <Text>当天菜单暂时为空</Text>
@@ -309,7 +318,7 @@ const Today = () => {
                     image={recipe.image}
                     type={recipe.type}
                     className='fade-in-card'
-                    onClick={() => handleRecipeClick(recipe._id)}
+                    onClick={() => handleRecipeClick(recipe)}
                     onRemove={() => handleRemoveRecipe(recipe)}
                     showRemove={!isPast}
                   />
@@ -324,7 +333,7 @@ const Today = () => {
         <View className='page-footer'>
           <Button
             className='planner-toggle'
-            onClick={() => setIsPlannerOpen(true)}
+            onClick={handlePlannerAction}
           >
             ＋ 添加一道菜
           </Button>

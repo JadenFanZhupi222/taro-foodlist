@@ -11,14 +11,14 @@ import { useCloudUpload } from '@/hooks/useCloudImageUpload'
 import Loading from '@/components/Loading'
 import { toast } from '@/utils/toast'
 
-const defaultAvatarUrl = 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0'
+import { DEFAULT_AVATAR_URL } from '@/constants/avatar'
 
 const ProfileEdit = () => {
   const user = useSelector(selectUser)
   const profileLoading = useSelector((state: RootState) => state.user.profileLoading)
   const dispatch = useDispatch<AppDispatch>()
   const [nickname, setNickname] = useState(user?.nickname || '')
-  const [avatar, setAvatar] = useState(user?.avatar || defaultAvatarUrl)
+  const [avatar, setAvatar] = useState(user?.avatar || DEFAULT_AVATAR_URL)
   const [avatarFileId, setAvatarFileId] = useState('')
 
   // 选择微信头像
@@ -61,7 +61,7 @@ const ProfileEdit = () => {
           loading={profileLoading}
           disabled={profileLoading}
         >
-          <Image className='avatar' src={avatar || defaultAvatarUrl} />
+          <Image className='avatar' src={avatar || DEFAULT_AVATAR_URL} />
         </Button>
       </View>
       <Input
@@ -78,4 +78,4 @@ const ProfileEdit = () => {
   )
 }
 
-export default ProfileEdit 
+export default ProfileEdit

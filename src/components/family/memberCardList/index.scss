@@ -1,3 +1,3 @@
 @use '../../../use/variables' as *;
 
-.member-list-bg{padding:.9rem;border-radius:1.2rem;background:#eef0eb}.member-list-header{display:flex;justify-content:flex-end;margin-bottom:.5rem}.member-list-count{font-size:.72rem;color:$color-text-secondary}.member-list-scroll{max-height:22rem;overflow-y:auto}.member-list-scroll .member-row{margin-bottom:.55rem}.member-list-scroll .member-row:last-child{margin-bottom:0}
+.member-list-bg{padding:.9rem;border-radius:1.2rem;background:#eef0eb}.member-list-header{display:flex;justify-content:flex-end;margin-bottom:.5rem}.member-list-count{font-size:.72rem;color:$color-text-secondary}.member-list-scroll{max-height:22rem;overflow-y:auto}.member-list-empty{display:flex;align-items:center;justify-content:center;min-height:4rem;border-radius:$radius-lg;background:$color-bg-card;color:$color-text-secondary;font-size:.75rem}.member-list-scroll .member-row{margin-bottom:.55rem}.member-list-scroll .member-row:last-child{margin-bottom:0}

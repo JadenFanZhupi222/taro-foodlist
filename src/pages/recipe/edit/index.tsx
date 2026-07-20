@@ -4,7 +4,7 @@ import { useRouter } from '@tarojs/taro'
 import { FC, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { selectUser } from '@/store/user/selectors'
-import { selectRecipes, selectRecipeLoading } from '@/store/recipe/selectors'
+import { selectRecipes } from '@/store/recipe/selectors'
 import { selectCurrentFamily } from '@/store/family/selectors'
 import { createRecipe, updateRecipeById } from '@/thunks/recipe/thunks'
 import './index.scss'
@@ -12,9 +12,11 @@ import { toast } from '@/utils/toast'
 import { User as GlobalUser } from '@/types/store'
 import { AppDispatch } from '@/store'
 import { RecipeCategory, RECIPE_CATEGORIES } from '@/store/recipe/types'
-import { updateRecipeInStore } from '@/store/recipe/recipeSlice'
 import { useCloudUpload } from '@/hooks/useCloudImageUpload'
 import Loading from '@/components/Loading'
+import recipeSaveModule = require('./recipeSave')
+
+const { createRecipeSaveController } = recipeSaveModule
 
 // 用于生成唯一id，兼容小程序
 function genId() {
@@ -27,7 +29,6 @@ const RecipeEdit: FC = () => {
   const user = useSelector(selectUser) as GlobalUser | null
   const recipes = useSelector(selectRecipes)
   const currentFamily = useSelector(selectCurrentFamily)
-  const { createLoading, updateLoading } = useSelector(selectRecipeLoading)
   const dispatch = useDispatch<AppDispatch>()
 
   const editingRecipe = id ? recipes.find(r => r._id === id) : null
@@ -37,13 +38,19 @@ const RecipeEdit: FC = () => {
   const [imageLocal, setImageLocal] = useState(editingRecipe?.image || '')
   const [description, setDescription] = useState(editingRecipe?.description || '')
   const [ingredients, setIngredients] = useState(
-    editingRecipe?.ingredients?.map(i => ({ ...i, id: genId() })) || [{ id: genId(), name: '', amount: '' }]
+    editingRecipe?.ingredients?.length
+      ? editingRecipe.ingredients.map(i => ({ ...i, id: genId() }))
+      : [{ id: genId(), name: '', amount: '' }]
   )
   const [steps, setSteps] = useState(
-    editingRecipe?.steps?.map(s => ({ id: genId(), text: s })) || [{ id: genId(), text: '' }]
+    editingRecipe?.steps?.length
+      ? editingRecipe.steps.map(s => ({ id: genId(), text: s }))
+      : [{ id: genId(), text: '' }]
   )
   const [deletingIngredientIds, setDeletingIngredientIds] = useState<string[]>([])
   const [deletingStepIds, setDeletingStepIds] = useState<string[]>([])
+  const [saving, setSaving] = useState(false)
+  const [saveController] = useState(() => createRecipeSaveController(setSaving))
 
   const handleChooseImage = async () => {
     const res = await Taro.chooseImage({ count: 1, sizeType: ['compressed'] })
@@ -71,28 +78,35 @@ const RecipeEdit: FC = () => {
       toast({ title: '请选择分类', icon: 'none' })
       return
     }
-    let imageUrl = imageLocal
-    if (imageLocal) {
-      imageUrl = await useCloudUpload(imageLocal, 'recipes', user._id)
-    }
-    const recipe = {
-      name: name.trim(),
-      type: type,
-      image: imageUrl.trim(),
-      description: description.trim(),
-      steps: steps.map(s => s.text.trim()).filter(Boolean),
-      ingredients: ingredients.filter(i => i.name.trim()).map(({ name, amount }) => ({ name, amount })),
-      createdBy: user._id,
-      deleted: false
-    }
-    if (editingRecipe) {
-      dispatch(updateRecipeInStore({ recipeId: editingRecipe._id, recipe }))
-      await dispatch(updateRecipeById({ recipeId: editingRecipe._id, recipe }))
-    } else {
-      await dispatch(createRecipe({ familyId, recipe }))
-    }
-    toast({ title: '保存成功', icon: 'success' })
-    Taro.navigateBack()
+    await saveController.run({
+      upload: async () => imageLocal
+        ? useCloudUpload(imageLocal, 'recipes', user._id)
+        : imageLocal,
+      persist: async imageUrl => {
+        const recipe = {
+          name: name.trim(),
+          type: type,
+          image: imageUrl.trim(),
+          description: description.trim(),
+          steps: steps.map(s => s.text.trim()).filter(Boolean),
+          ingredients: ingredients.filter(i => i.name.trim()).map(({ name, amount }) => ({ name, amount })),
+          createdBy: user._id,
+          deleted: false
+        }
+        if (editingRecipe) {
+          await dispatch(updateRecipeById({ recipeId: editingRecipe._id, recipe })).unwrap()
+        } else {
+          await dispatch(createRecipe({ familyId, recipe })).unwrap()
+        }
+      },
+      onSuccess: () => {
+        toast({ title: '保存成功', icon: 'success' })
+        Taro.navigateBack()
+      },
+      onFailure: () => {
+        toast({ title: '保存失败，请重试', icon: 'none' })
+      }
+    })
   }
 
   // 食材操作
@@ -164,7 +178,7 @@ const RecipeEdit: FC = () => {
 
   return (
     <View className='recipe-edit-page'>
-      <Loading visible={createLoading || updateLoading} />
+      <Loading visible={saving} />
       <ScrollView 
         className='recipe-edit-scroll' 
         scrollY 
@@ -214,7 +228,7 @@ const RecipeEdit: FC = () => {
             <Button className='form-add-btn' onClick={handleAddStep}>添加步骤</Button>
           </View>
           <View className='form-actions'>
-            <Button className='form-save-btn' onClick={handleSave} disabled={createLoading || updateLoading}>保存</Button>
+            <Button className='form-save-btn' onClick={handleSave} disabled={saving}>保存</Button>
           </View>
         </View>
       </ScrollView>
@@ -222,4 +236,4 @@ const RecipeEdit: FC = () => {
   )
 }
 
-export default RecipeEdit 
+export default RecipeEdit

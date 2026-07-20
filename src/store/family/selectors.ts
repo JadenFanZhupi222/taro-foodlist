@@ -3,6 +3,7 @@ import { createSelector } from 'reselect'
 
 export const selectFamily = (state: RootState) => state.family.currentFamily
 export const selectFamilyLoading = (state: RootState) => state.family.fetchLoading
+export const selectFamilyError = (state: RootState) => state.family.fetchError
 export const selectCreateFamilyLoading = (state: RootState) => state.family.createLoading
 export const selectJoinLoading = (state: RootState) => state.family.joinLoading
 export const selectMembersInfo = (state: RootState) => state.family.membersInfo
@@ -18,3 +19,5 @@ export const selectIsFamilyOwner = createSelector(
 )
 export const selectInviteFamily = (state: RootState) => state.family.inviteFamily
 export const selectInviteFamilyLoading = (state: RootState) => state.family.inviteFamilyLoading
+export const selectInviteFamilyError = (state: RootState) => state.family.inviteError
+export const selectInviteFamilyErrorFamilyId = (state: RootState) => state.family.inviteErrorFamilyId
