@@ -426,10 +426,14 @@ test('member lists render a dedicated compact centered empty state', () => {
 test('profile and member cards share the default avatar fallback', () => {
   const avatar = read('src/constants/avatar.ts')
   const profile = read('src/pages/profile/index.tsx')
+  const userCard = read('src/components/profile/userCard/index.tsx')
   const memberCard = read('src/components/family/memberCard/index.tsx')
 
   assert.match(avatar, /export const DEFAULT_AVATAR_URL\s*=/)
   assert.match(profile, /user\?\.avatar\?\.trim\(\)\s*\|\|\s*DEFAULT_AVATAR_URL/)
+  assert.match(userCard, /useState\(avatar\?\.trim\(\)\s*\|\|\s*DEFAULT_AVATAR_URL\)/)
+  assert.match(userCard, /useEffect\([\s\S]*setAvatarSrc\(avatar\?\.trim\(\)\s*\|\|\s*DEFAULT_AVATAR_URL\)[\s\S]*\[avatar\]\)/)
+  assert.match(userCard, /onError=\{\(\) => \{[\s\S]*avatarSrc !== DEFAULT_AVATAR_URL[\s\S]*setAvatarSrc\(DEFAULT_AVATAR_URL\)/)
   assert.match(memberCard, /avatar\?\.trim\(\)\s*\|\|\s*DEFAULT_AVATAR_URL/)
   assert.match(memberCard, /onError=/)
 })
