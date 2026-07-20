@@ -7,7 +7,6 @@ import type { Recipe, Comment } from '@/store/recipe/types'
 import type { RootState } from '@/store'
 import detailRequestModule = require('@/store/recipe/detailRequest')
 import {
-  setRecipes,
   setComments,
   addRecipe,
   updateRecipe,
@@ -20,10 +19,10 @@ const { canStartDetailRequest } = detailRequestModule
 
 export const fetchRecipes = createAsyncThunk(
   'recipe/fetchRecipes',
-  async (familyId: string, { dispatch }) => {
+  async (familyId: string) => {
     try {
       const r = await callCloud<Recipe[]>('get-recipes', { familyId })
-      dispatch(setRecipes(r.data!))
+      return r.data || []
     } catch (error) {
       toast({ title: '获取食谱失败', icon: 'error' })
       throw error

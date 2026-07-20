@@ -387,12 +387,53 @@ test('today consumes catalog status and guards unavailable recipe navigation', (
   assert.match(page, /selectRecipeCatalogStatus/)
   assert.match(page, /hydrateTodayRecipes\(todayMenu, allRecipes, recipeCatalogStatus\)/)
   assert.match(page, /if \(recipe\.unavailable\) return/)
-  assert.match(recipeSlice, /catalogStatus = 'loading'/)
-  assert.match(recipeSlice, /catalogStatus = 'ready'/)
-  assert.match(recipeSlice, /catalogStatus = 'failed'/)
+  assert.match(recipeSlice, /startCatalogRequest/)
+  assert.match(recipeSlice, /fulfillCatalogRequest/)
+  assert.match(recipeSlice, /rejectCatalogRequest/)
   assert.match(recipeSlice, /resetRecipes: \(\) => initialState/)
   assert.match(initialState, /catalogStatus: 'idle'/)
   assert.match(selectors, /selectRecipeCatalogStatus/)
+})
+
+test('recipe catalog transitions ignore older-family and post-reset completions', () => {
+  const catalog = require(path.join(root, 'src/store/recipe/catalogRequest.js'))
+  const state = { recipes: [], fetchLoading: false, catalogStatus: 'idle', catalogRequest: null }
+  const oldRecipes = [{ _id: 'old' }]
+  const currentRecipes = [{ _id: 'current' }]
+
+  catalog.startCatalogRequest(state, 'family-a', 'request-a')
+  catalog.startCatalogRequest(state, 'family-b', 'request-b')
+  assert.equal(catalog.fulfillCatalogRequest(state, 'family-a', 'request-a', oldRecipes), false)
+  assert.equal(state.fetchLoading, true)
+  assert.equal(state.catalogStatus, 'loading')
+  assert.deepEqual(state.recipes, [])
+  assert.equal(catalog.rejectCatalogRequest(state, 'family-a', 'request-a'), false)
+  assert.equal(catalog.fulfillCatalogRequest(state, 'family-b', 'request-b', currentRecipes), true)
+  assert.equal(state.fetchLoading, false)
+  assert.equal(state.catalogStatus, 'ready')
+  assert.equal(state.recipes[0]._id, 'current')
+
+  catalog.startCatalogRequest(state, 'family-b', 'request-c')
+  state.catalogRequest = null
+  state.catalogStatus = 'idle'
+  state.fetchLoading = false
+  state.recipes = []
+  assert.equal(catalog.fulfillCatalogRequest(state, 'family-b', 'request-c', oldRecipes), false)
+  assert.equal(catalog.rejectCatalogRequest(state, 'family-b', 'request-c'), false)
+  assert.equal(state.catalogStatus, 'idle')
+  assert.deepEqual(state.recipes, [])
+})
+
+test('recipe catalog thunk returns data and slice gates lifecycle by request identity', () => {
+  const thunk = read('src/thunks/recipe/thunks.ts')
+  const slice = read('src/store/recipe/recipeSlice.ts')
+
+  assert.match(thunk, /return r\.data \|\| \[\]/)
+  assert.doesNotMatch(thunk, /dispatch\(setRecipes/)
+  assert.match(slice, /startCatalogRequest\(state, action\.meta\.arg, action\.meta\.requestId\)/)
+  assert.match(slice, /fulfillCatalogRequest\(state, action\.meta\.arg, action\.meta\.requestId, action\.payload\)/)
+  assert.match(slice, /rejectCatalogRequest\(state, action\.meta\.arg, action\.meta\.requestId\)/)
+  assert.match(slice, /setRecipes\(state, action\)[\s\S]*state\.recipes = action\.payload/)
 })
 
 test('per-date menu request transitions ignore stale completion and allow retry', () => {

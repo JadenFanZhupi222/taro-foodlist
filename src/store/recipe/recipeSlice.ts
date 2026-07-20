@@ -2,8 +2,10 @@ import { createSlice } from '@reduxjs/toolkit'
 import { initialState } from './initialState'
 import { fetchRecipes, fetchRecipeById, createRecipe, updateRecipeById, deleteRecipeById } from '@/thunks/recipe/thunks'
 import detailRequestModule = require('./detailRequest')
+import catalogRequestModule = require('./catalogRequest')
 
 const { startDetailRequest, fulfillDetailRequest, rejectDetailRequest } = detailRequestModule
+const { startCatalogRequest, fulfillCatalogRequest, rejectCatalogRequest } = catalogRequestModule
 
 const recipeSlice = createSlice({
   name: 'recipe',
@@ -41,9 +43,15 @@ const recipeSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchRecipes.pending, (state) => { state.fetchLoading = true; state.catalogStatus = 'loading' })
-      .addCase(fetchRecipes.fulfilled, (state) => { state.fetchLoading = false; state.catalogStatus = 'ready' })
-      .addCase(fetchRecipes.rejected, (state) => { state.fetchLoading = false; state.catalogStatus = 'failed' })
+      .addCase(fetchRecipes.pending, (state, action) => {
+        startCatalogRequest(state, action.meta.arg, action.meta.requestId)
+      })
+      .addCase(fetchRecipes.fulfilled, (state, action) => {
+        fulfillCatalogRequest(state, action.meta.arg, action.meta.requestId, action.payload)
+      })
+      .addCase(fetchRecipes.rejected, (state, action) => {
+        rejectCatalogRequest(state, action.meta.arg, action.meta.requestId)
+      })
       .addCase(fetchRecipeById.pending, (state, action) => {
         startDetailRequest(state, action.meta.arg, action.meta.requestId)
       })
