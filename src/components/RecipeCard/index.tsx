@@ -118,9 +118,6 @@ const RecipeCard: FC<RecipeCardProps> = ({ id, name, image, type, onClick, onRem
             </View>
           </View>
         </View>
-        <View className='recipe-card__swipe-action'>
-          <View className='recipe-card__swipe-delete' onClick={handleSwipeDelete}><Text>删除</Text></View>
-        </View>
         <MovableArea className='recipe-card__swipe-area'>
           <MovableView
             className='recipe-card__swipe-movable'
@@ -133,6 +130,9 @@ const RecipeCard: FC<RecipeCardProps> = ({ id, name, image, type, onClick, onRem
             onChange={handleNativeChange}
           >
             {cardContent}
+            <View className='recipe-card__swipe-action'>
+              <View className='recipe-card__swipe-delete' onClick={handleSwipeDelete}><Text>删除</Text></View>
+            </View>
           </MovableView>
         </MovableArea>
       </View>
