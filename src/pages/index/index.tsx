@@ -28,6 +28,7 @@ const Index = () => {
   const familyId = user?.family_id
   const [searchText, setSearchText] = useState('')
   const [activeCategory, setActiveCategory] = useState('全部')
+  const [openRecipeId, setOpenRecipeId] = useState<string | null>(null)
   const dispatch = useDispatch<AppDispatch>()
   const { fetchLoading } = useSelector(selectRecipeLoading)
 
@@ -50,11 +51,13 @@ const Index = () => {
 
   // 处理搜索
   const handleSearch = (value: string) => {
+    setOpenRecipeId(null)
     setSearchText(value)
   }
 
   // 处理分类选择
   const handleCategorySelect = (category: string) => {
+    setOpenRecipeId(null)
     setActiveCategory(category)
   }
 
@@ -163,6 +166,8 @@ const Index = () => {
               type={activeCategory === '全部' ? recipe.type : ''}
               onClick={() => handleRecipeClick(recipe._id)}
               swipeToDelete={!isGuest}
+              activeSwipeId={openRecipeId}
+              onSwipeOpen={setOpenRecipeId}
               onRemove={isGuest ? undefined : () => handleDeleteRecipe(recipe._id)}
             />
           ))}
