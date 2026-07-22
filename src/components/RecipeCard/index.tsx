@@ -1,8 +1,10 @@
 import { View, Image, Text } from '@tarojs/components'
-import { FC, useEffect, useRef } from 'react'
-import { Swipe } from '@nutui/nutui-react-taro'
-import type { SwipeRef } from '@nutui/nutui-react-taro'
+import Taro from '@tarojs/taro'
+import { FC, useEffect, useRef, useState } from 'react'
 import './index.scss'
+
+const SWIPE_ACTION_WIDTH = Taro.getSystemInfoSync().windowWidth * 144 / 750
+const DIRECTION_THRESHOLD = 6
 
 interface RecipeCardProps {
   id: string
@@ -21,17 +23,75 @@ interface RecipeCardProps {
 }
 
 const RecipeCard: FC<RecipeCardProps> = ({ id, name, image, type, onClick, onRemove, showRemove, className, swipeToDelete, selected, activeSwipeId, onSwipeOpen, onSwipeClose }) => {
-  const swipeRef = useRef<SwipeRef>(null)
+  const [offset, setOffset] = useState(0)
+  const [dragging, setDragging] = useState(false)
+  const offsetRef = useRef(0)
+  const touchStartRef = useRef<{ x: number; y: number; offset: number; axis: 'horizontal' | 'vertical' | null } | null>(null)
+  const suppressClickUntilRef = useRef(0)
   const isSwipeOpen = activeSwipeId === id
 
+  const updateOffset = (nextOffset: number) => {
+    offsetRef.current = nextOffset
+    setOffset(nextOffset)
+  }
+
+  const closeSwipe = () => {
+    updateOffset(0)
+    onSwipeClose?.(id)
+  }
+
   useEffect(() => {
-    if (activeSwipeId !== id) swipeRef.current?.close()
+    if (activeSwipeId !== id && offsetRef.current !== 0) updateOffset(0)
   }, [activeSwipeId, id])
 
+  const handleTouchStart = (e: any) => {
+    const touch = e.touches?.[0]
+    if (!touch) return
+    touchStartRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+      offset: isSwipeOpen ? -SWIPE_ACTION_WIDTH : offsetRef.current,
+      axis: null
+    }
+  }
+
+  const handleTouchMove = (e: any) => {
+    const start = touchStartRef.current
+    const touch = e.touches?.[0]
+    if (!start || !touch) return
+    const dx = touch.clientX - start.x
+    const dy = touch.clientY - start.y
+    if (!start.axis) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < DIRECTION_THRESHOLD) return
+      start.axis = Math.abs(dx) > Math.abs(dy) * 1.2 ? 'horizontal' : 'vertical'
+    }
+    if (start.axis !== 'horizontal') return
+    e.preventDefault?.()
+    e.stopPropagation?.()
+    suppressClickUntilRef.current = Date.now() + 250
+    setDragging(true)
+    updateOffset(Math.max(-SWIPE_ACTION_WIDTH, Math.min(0, start.offset + dx)))
+  }
+
+  const handleTouchEnd = () => {
+    const start = touchStartRef.current
+    touchStartRef.current = null
+    setDragging(false)
+    if (start?.axis !== 'horizontal') return
+    if (Math.abs(offsetRef.current) > SWIPE_ACTION_WIDTH * 0.35) {
+      updateOffset(-SWIPE_ACTION_WIDTH)
+      onSwipeOpen?.(id)
+    } else {
+      closeSwipe()
+    }
+  }
+
   const handleCardClick = () => {
+    if (Date.now() < suppressClickUntilRef.current) {
+      return
+    }
     if (isSwipeOpen) {
-      swipeRef.current?.close()
-      onSwipeClose?.(id)
+      closeSwipe()
       return
     }
     onClick?.()
@@ -39,8 +99,7 @@ const RecipeCard: FC<RecipeCardProps> = ({ id, name, image, type, onClick, onRem
 
   const handleSwipeDelete = (e: { stopPropagation: () => void }) => {
     e.stopPropagation()
-    swipeRef.current?.close()
-    onSwipeClose?.(id)
+    closeSwipe()
     onRemove?.()
   }
 
@@ -73,23 +132,27 @@ const RecipeCard: FC<RecipeCardProps> = ({ id, name, image, type, onClick, onRem
 
   if (swipeToDelete && onRemove) {
     return (
-      <Swipe
-        ref={swipeRef}
-        name={id}
-        onOpen={() => onSwipeOpen?.(id)}
-        onClose={() => onSwipeClose?.(id)}
-        rightAction={
-          <View
-            className='recipe-card__swipe-delete'
-            onClick={handleSwipeDelete}
-          >
-            <Text>删除</Text>
-          </View>
-        }
+      <View
         className='recipe-card__swipe-wrap'
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
-        {cardContent}
-      </Swipe>
+        <View
+          className='recipe-card__swipe-track'
+          style={{
+            transform: `translate3d(${offset}px, 0, 0)`,
+            transitionDuration: dragging ? '0ms' : '180ms'
+          }}
+        >
+          {cardContent}
+          <View className='recipe-card__swipe-action'>
+            <View className='recipe-card__swipe-delete' onClick={handleSwipeDelete}>
+              <Text>删除</Text>
+            </View>
+          </View>
+        </View>
+      </View>
     )
   }
   return cardContent
