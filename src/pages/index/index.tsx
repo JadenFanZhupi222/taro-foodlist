@@ -32,6 +32,10 @@ const Index = () => {
   const dispatch = useDispatch<AppDispatch>()
   const { fetchLoading } = useSelector(selectRecipeLoading)
 
+  const handleSwipeClose = (id: string) => {
+    setOpenRecipeId(current => current === id ? null : current)
+  }
+
   useDidShow(() => {
     const page = Taro.getCurrentInstance().page
     ;(page as any)?.getTabBar?.()?.setData({ selected: 0 })
@@ -168,6 +172,7 @@ const Index = () => {
               swipeToDelete={!isGuest}
               activeSwipeId={openRecipeId}
               onSwipeOpen={setOpenRecipeId}
+              onSwipeClose={handleSwipeClose}
               onRemove={isGuest ? undefined : () => handleDeleteRecipe(recipe._id)}
             />
           ))}

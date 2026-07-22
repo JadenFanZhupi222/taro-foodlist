@@ -17,9 +17,10 @@ interface RecipeCardProps {
   selected?: boolean
   activeSwipeId?: string | null
   onSwipeOpen?: (id: string | null) => void
+  onSwipeClose?: (id: string) => void
 }
 
-const RecipeCard: FC<RecipeCardProps> = ({ id, name, image, type, onClick, onRemove, showRemove, className, swipeToDelete, selected, activeSwipeId, onSwipeOpen }) => {
+const RecipeCard: FC<RecipeCardProps> = ({ id, name, image, type, onClick, onRemove, showRemove, className, swipeToDelete, selected, activeSwipeId, onSwipeOpen, onSwipeClose }) => {
   const swipeRef = useRef<SwipeRef>(null)
   const isSwipeOpen = activeSwipeId === id
 
@@ -30,7 +31,7 @@ const RecipeCard: FC<RecipeCardProps> = ({ id, name, image, type, onClick, onRem
   const handleCardClick = () => {
     if (isSwipeOpen) {
       swipeRef.current?.close()
-      onSwipeOpen?.(null)
+      onSwipeClose?.(id)
       return
     }
     onClick?.()
@@ -39,7 +40,7 @@ const RecipeCard: FC<RecipeCardProps> = ({ id, name, image, type, onClick, onRem
   const handleSwipeDelete = (e: { stopPropagation: () => void }) => {
     e.stopPropagation()
     swipeRef.current?.close()
-    onSwipeOpen?.(null)
+    onSwipeClose?.(id)
     onRemove?.()
   }
 
@@ -76,9 +77,7 @@ const RecipeCard: FC<RecipeCardProps> = ({ id, name, image, type, onClick, onRem
         ref={swipeRef}
         name={id}
         onOpen={() => onSwipeOpen?.(id)}
-        onClose={() => {
-          if (isSwipeOpen) onSwipeOpen?.(null)
-        }}
+        onClose={() => onSwipeClose?.(id)}
         rightAction={
           <View
             className='recipe-card__swipe-delete'
