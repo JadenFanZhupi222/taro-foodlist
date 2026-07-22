@@ -90,3 +90,33 @@ test('WeChat styles keep full motion without unsupported reduced-motion blocks',
     assert.doesNotMatch(fs.readFileSync(file, 'utf8'), /prefers-reduced-motion/, path.relative(root, file))
   }
 })
+
+test('custom tab bar stays interactive without becoming a native overlay', () => {
+  const template = read('src/custom-tab-bar/index.wxml')
+  const styles = read('src/custom-tab-bar/index.wxss')
+  assert.doesNotMatch(template, /cover-view/)
+  assert.match(template, /custom-tab-icon__head/)
+  assert.match(template, /custom-tab-icon__body/)
+  assert.match(styles, /\.custom-tab-shell\{[^}]*position:fixed[^}]*pointer-events:none/)
+  assert.match(styles, /\.custom-tab-bar\{[^}]*pointer-events:auto/)
+})
+
+test('recipe swipe deletion is coordinated, full-height, and transform-only', () => {
+  const card = read('src/components/RecipeCard/index.tsx')
+  const styles = read('src/components/RecipeCard/index.scss')
+  const page = read('src/pages/index/index.tsx')
+  assert.match(card, /activeSwipeId\?: string \| null/)
+  assert.match(card, /onSwipeOpen\?: \(id: string \| null\) => void/)
+  assert.match(card, /onSwipeClose\?: \(id: string\) => void/)
+  assert.match(card, /SwipeRef/)
+  assert.match(card, /onOpen=/)
+  assert.match(card, /onClose=/)
+  assert.match(card, />删除<\/Text>/)
+  assert.match(page, /const \[openRecipeId, setOpenRecipeId\] = useState<string \| null>\(null\)/)
+  assert.match(page, /activeSwipeId=\{openRecipeId\}/)
+  assert.match(page, /onSwipeOpen=\{setOpenRecipeId\}/)
+  assert.match(page, /setOpenRecipeId\(current => current === id \? null : current\)/)
+  assert.match(styles, /\.nut-swipe-wrapper\{[^}]*transition:transform \.22s/)
+  assert.match(styles, /\.nut-swipe-right\{[^}]*bottom:0[^}]*height:100%/)
+  assert.doesNotMatch(styles, /\.recipe-card[^}]*:active[^}]*transform/)
+})

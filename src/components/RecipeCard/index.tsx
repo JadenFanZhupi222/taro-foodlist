@@ -1,6 +1,7 @@
 import { View, Image, Text } from '@tarojs/components'
-import { FC } from 'react'
+import { FC, useEffect, useRef } from 'react'
 import { Swipe } from '@nutui/nutui-react-taro'
+import type { SwipeRef } from '@nutui/nutui-react-taro'
 import './index.scss'
 
 interface RecipeCardProps {
@@ -14,11 +15,37 @@ interface RecipeCardProps {
   className?: string
   swipeToDelete?: boolean
   selected?: boolean
+  activeSwipeId?: string | null
+  onSwipeOpen?: (id: string | null) => void
+  onSwipeClose?: (id: string) => void
 }
 
-const RecipeCard: FC<RecipeCardProps> = ({ name, image, type, onClick, onRemove, showRemove, className, swipeToDelete, selected }) => {
+const RecipeCard: FC<RecipeCardProps> = ({ id, name, image, type, onClick, onRemove, showRemove, className, swipeToDelete, selected, activeSwipeId, onSwipeOpen, onSwipeClose }) => {
+  const swipeRef = useRef<SwipeRef>(null)
+  const isSwipeOpen = activeSwipeId === id
+
+  useEffect(() => {
+    if (activeSwipeId !== id) swipeRef.current?.close()
+  }, [activeSwipeId, id])
+
+  const handleCardClick = () => {
+    if (isSwipeOpen) {
+      swipeRef.current?.close()
+      onSwipeClose?.(id)
+      return
+    }
+    onClick?.()
+  }
+
+  const handleSwipeDelete = (e: { stopPropagation: () => void }) => {
+    e.stopPropagation()
+    swipeRef.current?.close()
+    onSwipeClose?.(id)
+    onRemove?.()
+  }
+
   const cardContent = (
-    <View className={`recipe-card ${className || ''}`} onClick={onClick}>
+    <View className={`recipe-card ${className || ''}`} onClick={handleCardClick}>
       <View className='recipe-card__media'>
         {image ? <Image className='recipe-card__image' src={image} mode='aspectFill' /> : (
           <View className='recipe-card__placeholder'>
@@ -47,16 +74,16 @@ const RecipeCard: FC<RecipeCardProps> = ({ name, image, type, onClick, onRemove,
   if (swipeToDelete && onRemove) {
     return (
       <Swipe
+        ref={swipeRef}
+        name={id}
+        onOpen={() => onSwipeOpen?.(id)}
+        onClose={() => onSwipeClose?.(id)}
         rightAction={
           <View
             className='recipe-card__swipe-delete'
-            onClick={(e) => {
-              e.stopPropagation()
-              onRemove()
-            }}
+            onClick={handleSwipeDelete}
           >
-            <Text>删</Text>
-            <Text>除</Text>
+            <Text>删除</Text>
           </View>
         }
         className='recipe-card__swipe-wrap'
