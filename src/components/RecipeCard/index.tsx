@@ -1,10 +1,9 @@
-import { View, Image, Text } from '@tarojs/components'
+import { View, Image, Text, MovableArea, MovableView } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { FC, useEffect, useRef, useState } from 'react'
 import './index.scss'
 
-const SWIPE_ACTION_WIDTH = Taro.getSystemInfoSync().windowWidth * 144 / 750
-const DIRECTION_THRESHOLD = 6
+const SWIPE_DISTANCE = Taro.getSystemInfoSync().windowWidth * 160 / 750
 
 interface RecipeCardProps {
   id: string
@@ -23,63 +22,40 @@ interface RecipeCardProps {
 }
 
 const RecipeCard: FC<RecipeCardProps> = ({ id, name, image, type, onClick, onRemove, showRemove, className, swipeToDelete, selected, activeSwipeId, onSwipeOpen, onSwipeClose }) => {
-  const [offset, setOffset] = useState(0)
-  const [dragging, setDragging] = useState(false)
-  const offsetRef = useRef(0)
-  const touchStartRef = useRef<{ x: number; y: number; offset: number; axis: 'horizontal' | 'vertical' | null } | null>(null)
+  const [nativeX, setNativeX] = useState(SWIPE_DISTANCE)
+  const nativeXRef = useRef(SWIPE_DISTANCE)
+  const snapToggleRef = useRef(false)
   const suppressClickUntilRef = useRef(0)
   const isSwipeOpen = activeSwipeId === id
 
-  const updateOffset = (nextOffset: number) => {
-    offsetRef.current = nextOffset
-    setOffset(nextOffset)
+  const snapTo = (target: number) => {
+    snapToggleRef.current = !snapToggleRef.current
+    const nextX = target + (snapToggleRef.current ? 0.01 : 0)
+    nativeXRef.current = target
+    setNativeX(nextX)
   }
 
   const closeSwipe = () => {
-    updateOffset(0)
+    snapTo(SWIPE_DISTANCE)
     onSwipeClose?.(id)
   }
 
   useEffect(() => {
-    if (activeSwipeId !== id && offsetRef.current !== 0) updateOffset(0)
+    if (activeSwipeId !== id && nativeXRef.current < SWIPE_DISTANCE - 1) snapTo(SWIPE_DISTANCE)
   }, [activeSwipeId, id])
 
-  const handleTouchStart = (e: any) => {
-    const touch = e.touches?.[0]
-    if (!touch) return
-    touchStartRef.current = {
-      x: touch.clientX,
-      y: touch.clientY,
-      offset: isSwipeOpen ? -SWIPE_ACTION_WIDTH : offsetRef.current,
-      axis: null
+  const handleNativeChange = (e: any) => {
+    const { x, source } = e.detail || {}
+    if (typeof x !== 'number') return
+    nativeXRef.current = x
+    if (source === 'touch' || source === 'touch-out-of-bounds') {
+      suppressClickUntilRef.current = Date.now() + 250
     }
   }
 
-  const handleTouchMove = (e: any) => {
-    const start = touchStartRef.current
-    const touch = e.touches?.[0]
-    if (!start || !touch) return
-    const dx = touch.clientX - start.x
-    const dy = touch.clientY - start.y
-    if (!start.axis) {
-      if (Math.max(Math.abs(dx), Math.abs(dy)) < DIRECTION_THRESHOLD) return
-      start.axis = Math.abs(dx) > Math.abs(dy) * 1.2 ? 'horizontal' : 'vertical'
-    }
-    if (start.axis !== 'horizontal') return
-    e.preventDefault?.()
-    e.stopPropagation?.()
-    suppressClickUntilRef.current = Date.now() + 250
-    setDragging(true)
-    updateOffset(Math.max(-SWIPE_ACTION_WIDTH, Math.min(0, start.offset + dx)))
-  }
-
-  const handleTouchEnd = () => {
-    const start = touchStartRef.current
-    touchStartRef.current = null
-    setDragging(false)
-    if (start?.axis !== 'horizontal') return
-    if (Math.abs(offsetRef.current) > SWIPE_ACTION_WIDTH * 0.35) {
-      updateOffset(-SWIPE_ACTION_WIDTH)
+  const handleNativeTouchEnd = () => {
+    if (nativeXRef.current < SWIPE_DISTANCE * 0.65) {
+      snapTo(0)
       onSwipeOpen?.(id)
     } else {
       closeSwipe()
@@ -132,26 +108,33 @@ const RecipeCard: FC<RecipeCardProps> = ({ id, name, image, type, onClick, onRem
 
   if (swipeToDelete && onRemove) {
     return (
-      <View
-        className='recipe-card__swipe-wrap'
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        <View
-          className='recipe-card__swipe-track'
-          style={{
-            transform: `translate3d(${offset}px, 0, 0)`,
-            transitionDuration: dragging ? '0ms' : '180ms'
-          }}
-        >
-          {cardContent}
-          <View className='recipe-card__swipe-action'>
-            <View className='recipe-card__swipe-delete' onClick={handleSwipeDelete}>
-              <Text>删除</Text>
+      <View className='recipe-card__swipe-wrap' onTouchEnd={handleNativeTouchEnd}>
+        <View className='recipe-card__swipe-sizer' aria-hidden>
+          <View className={`recipe-card ${className || ''}`}>
+            <View className='recipe-card__media'><View className='recipe-card__placeholder' /></View>
+            <View className='recipe-card__content'>
+              <Text className='recipe-card__name'>{name}</Text>
+              {type ? <Text className='recipe-card__type'>{type}</Text> : null}
             </View>
           </View>
         </View>
+        <View className='recipe-card__swipe-action'>
+          <View className='recipe-card__swipe-delete' onClick={handleSwipeDelete}><Text>删除</Text></View>
+        </View>
+        <MovableArea className='recipe-card__swipe-area'>
+          <MovableView
+            className='recipe-card__swipe-movable'
+            direction='horizontal'
+            x={nativeX}
+            y={0}
+            inertia={false}
+            outOfBounds={false}
+            animation
+            onChange={handleNativeChange}
+          >
+            {cardContent}
+          </MovableView>
+        </MovableArea>
       </View>
     )
   }
