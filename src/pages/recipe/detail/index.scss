@@ -1,3 +1,34 @@
 @use '../../../use/variables' as *;
 
+.recipe-detail__image-wrap {
+  width: 100%;
+  height: 18rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.recipe-detail__image {
+  height: 100%;
+  transition: transform $duration-fast $ease-out;
+  transform-origin: center;
+}
+
+.recipe-detail__image-wrap--pressed .recipe-detail__image {
+  transform: scale(.985);
+}
+
+.recipe-detail__image-hint {
+  position: absolute;
+  right: .75rem;
+  bottom: 2rem;
+  padding: .35rem .55rem;
+  border-radius: $radius-pill;
+  background: rgba(32, 36, 31, .66);
+  color: $color-text-light;
+  font-size: .7rem;
+  font-weight: $font-weight-medium;
+  line-height: 1.2;
+  pointer-events: none;
+}
+
 .recipe-detail{min-height:100vh;min-height:100dvh;background:$color-bg-main;color:$color-text-main;padding-bottom:calc(6rem + env(safe-area-inset-bottom))}.recipe-detail__image,.recipe-detail__image-placeholder{width:100%;height:18rem;display:block}.recipe-detail__image-placeholder{background:linear-gradient(145deg,#d89a73,#b75b42);display:flex;align-items:center;justify-content:center}.recipe-detail__plate{width:6.5rem;height:6.5rem;border:.22rem solid rgba(255,255,255,.72);border-radius:50%;position:relative}.recipe-detail__plate::after{content:'';position:absolute;inset:1.15rem;border:.14rem solid rgba(255,255,255,.58);border-radius:50%}.recipe-detail__content{position:relative;margin-top:-1.4rem;padding:1.5rem 1rem 2rem;border-radius:1.5rem 1.5rem 0 0;background:$color-bg-main;animation:detail-rise $duration-content $ease-out both}.recipe-detail__header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:.7rem}.recipe-detail__name{min-width:0;overflow-wrap:anywhere;font-size:1.75rem;line-height:1.2;font-weight:$font-weight-bold;letter-spacing:-.025em}.recipe-detail__type{flex-shrink:0;padding:.42rem .7rem;border-radius:$radius-pill;background:$color-bg-muted;color:$color-text-secondary;font-size:.75rem;font-weight:$font-weight-medium}.recipe-detail__description{display:block;margin-bottom:1.25rem;padding:1rem;border-left:.2rem solid $color-primary;border-radius:0 $radius-md $radius-md 0;background:#f1e8df;color:$color-text-secondary;font-size:.875rem;line-height:1.65}.recipe-detail__section{margin-top:1.45rem}.recipe-detail__section-title{display:block;margin-bottom:.7rem;font-size:1rem;font-weight:$font-weight-bold}.recipe-detail__ingredients{overflow:hidden;border-radius:$radius-lg;background:$color-bg-card}.recipe-detail__ingredient{min-height:3rem;padding:.65rem .9rem;display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;border-bottom:.05rem solid $color-border}.recipe-detail__ingredient:last-child{border-bottom:0}.recipe-detail__ingredient-name{min-width:0;overflow-wrap:anywhere;flex:1;font-size:.9rem;font-weight:$font-weight-medium}.recipe-detail__ingredient-amount{max-width:40%;overflow-wrap:anywhere;text-align:right;font-size:.8125rem;color:$color-text-secondary}.recipe-detail__steps{display:flex;flex-direction:column;gap:.65rem}.recipe-detail__step{padding:.9rem;display:flex;gap:.8rem;align-items:flex-start;border-radius:$radius-lg;background:$color-bg-card}.recipe-detail__step-number{width:1.8rem;height:1.8rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:.65rem;background:$color-text-main;color:#fff;font-size:.78rem;font-weight:$font-weight-bold}.recipe-detail__step-content{min-width:0;overflow-wrap:anywhere;flex:1;padding-top:.2rem;font-size:.875rem;line-height:1.65}.recipe-detail__empty{display:block;padding:.8rem .9rem;border-radius:$radius-lg;background:$color-bg-card;color:$color-text-secondary;font-size:.8125rem;line-height:1.4}.recipe-detail__edit-btn{position:fixed;left:1rem;right:1rem;bottom:calc(1rem + env(safe-area-inset-bottom));height:3rem;margin:0;padding:0;border:0;border-radius:$radius-md;background:$color-primary;color:#fff;font-size:.9rem;font-weight:$font-weight-bold;box-shadow:$shadow-md;z-index:20;transition:transform $duration-fast $ease-out,background $duration-fast}.recipe-detail__edit-btn::after{border:0}.recipe-detail__edit-btn:active{transform:scale(.98);background:$color-primary-deep}@keyframes detail-rise{from{opacity:0;transform:translateY(.7rem)}to{opacity:1;transform:translateY(0)}}

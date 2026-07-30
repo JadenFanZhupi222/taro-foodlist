@@ -9,6 +9,7 @@ import { AppDispatch } from '@/store'
 import * as guestRecipeModule from '@/data/guestRecipes'
 import * as recipeDetailContent from './recipeDetailContent'
 import StateView from '@/components/StateView'
+import { showToast } from '@/utils/toast'
 import './index.scss'
 
 const { findVisibleRecipe, isGuestRecipeId } = guestRecipeModule
@@ -53,11 +54,29 @@ const RecipeDetail: FC = () => {
   const canEdit = !!user // 这里只判断登录，后续可扩展为更细粒度权限
   const ingredients = meaningfulIngredients(recipe.ingredients)
   const steps = meaningfulSteps(recipe.steps)
+  const handlePreviewImage = () => {
+    if (!recipe.image) return
+
+    Taro.previewImage({
+      current: recipe.image,
+      urls: [recipe.image]
+    }).catch(() => {
+      showToast({ title: '图片暂时无法预览' })
+    })
+  }
 
   return (
     <View className='recipe-detail'>
       {recipe.image ? (
-        <Image className='recipe-detail__image' src={recipe.image} mode='aspectFill' />
+        <View
+          className='recipe-detail__image-wrap'
+          hoverClass='recipe-detail__image-wrap--pressed'
+          hoverStayTime={160}
+          onClick={handlePreviewImage}
+        >
+          <Image className='recipe-detail__image' src={recipe.image} mode='aspectFill' />
+          <Text className='recipe-detail__image-hint'>放大查看</Text>
+        </View>
       ) : (
         <View className='recipe-detail__image-placeholder'><View className='recipe-detail__plate' /></View>
       )}
