@@ -35,6 +35,24 @@ test('recipe detail renders compact empty ingredient and step states', () => {
   assert.match(styles, /padding-bottom:\s*calc\(6rem \+ env\(safe-area-inset-bottom\)\)/)
 })
 
+test('recipe detail previews real hero images with a restrained press affordance', () => {
+  const source = read('src/pages/recipe/detail/index.tsx')
+  const styles = read('src/pages/recipe/detail/index.scss')
+
+  assert.match(source, /Taro\.previewImage\(\{\s*current:\s*recipe\.image,\s*urls:\s*\[recipe\.image\]\s*\}\)/s)
+  assert.match(source, /recipe-detail__image-wrap/)
+  assert.match(source, /hoverClass='recipe-detail__image-wrap--pressed'/)
+  assert.match(source, />放大查看<\/Text>/)
+  assert.match(source, /图片暂时无法预览/)
+  assert.match(
+    source,
+    /recipe\.image\s*\?\s*\([\s\S]*recipe-detail__image-wrap[\s\S]*\)\s*:\s*\([\s\S]*recipe-detail__image-placeholder/
+  )
+  assert.match(styles, /\.recipe-detail__image-wrap--pressed\s+\.recipe-detail__image\s*\{[^}]*transform:\s*scale\(\.985\)/s)
+  assert.match(styles, /\.recipe-detail__image-hint\s*\{[^}]*position:\s*absolute/s)
+  assert.doesNotMatch(styles, /prefers-reduced-motion/)
+})
+
 test('recipe editor seeds blank rows when persisted arrays are empty', () => {
   const source = read('src/pages/recipe/edit/index.tsx')
 
